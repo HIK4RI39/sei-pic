@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.common.PageRequest;
 import com.sei.seipicbackend.model.dto.user.UserAddRequest;
 import com.sei.seipicbackend.model.dto.user.UserPageRequest;
+import com.sei.seipicbackend.model.dto.user.UserUpdateRequest;
 import com.sei.seipicbackend.model.pojo.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sei.seipicbackend.model.vo.UserVO;
@@ -34,4 +35,6 @@ public interface UserService extends IService<User> {
     Boolean deleteUserById(long id);
 
     Page<UserVO>  listUserVoByPage(UserPageRequest userPageRequest);
+
+    Boolean updateUser(UserUpdateRequest userUpdateRequest);
 }

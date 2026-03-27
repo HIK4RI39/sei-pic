@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.sei.seipicbackend.model.dto.user.UserAddRequest;
 import com.sei.seipicbackend.model.vo.UserVO;
 import lombok.Data;
 
@@ -81,5 +82,11 @@ public class User implements Serializable {
         UserVO userVO = new UserVO();
         BeanUtil.copyProperties(this, userVO);
         return userVO;
+    }
+
+    public static User toBean(Object object) {
+        User user = new User();
+        BeanUtil.copyProperties(object, user);
+        return user;
     }
 }

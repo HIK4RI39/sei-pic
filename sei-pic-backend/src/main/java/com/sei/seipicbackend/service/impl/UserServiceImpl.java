@@ -3,6 +3,7 @@ package com.sei.seipicbackend.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +14,7 @@ import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.mapper.UserMapper;
 import com.sei.seipicbackend.model.dto.user.UserAddRequest;
 import com.sei.seipicbackend.model.dto.user.UserPageRequest;
+import com.sei.seipicbackend.model.dto.user.UserUpdateRequest;
 import com.sei.seipicbackend.model.enums.UserRoleEnum;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.UserVO;
@@ -177,7 +179,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         pageVo.setTotal(total).setRecords(userVoList);
         return pageVo;
     }
+
+    @Override
+    public Boolean updateUser(UserUpdateRequest userUpdateRequest) {
+        Long id = userUpdateRequest.getId();
+        User user = getById(id);
+        ThrowUtils.throwIf(user==null, ErrorCode.NOT_FOUND_ERROR);
+
+        String userName = userUpdateRequest.getUserName();
+        String userProfile = userUpdateRequest.getUserProfile();
+        String userPassword = userUpdateRequest.getUserPassword();
+        String userRole = userUpdateRequest.getUserRole();
+        ThrowUtils.throwIf(StrUtil.isAllBlank(userName, userProfile, userProfile, userRole), ErrorCode.PARAMS_ERROR);
+
+        User newUser = new User();
+        // id
+        newUser.setId(id);
+        // username
+        if (StrUtil.isNotBlank(userUpdateRequest.getUserName())) {
+            newUser.setUserName(userUpdateRequest.getUserName());
+        }
+        // profile
+        if (StrUtil.isNotBlank(userUpdateRequest.getUserProfile())) {
+            newUser.setUserProfile(userUpdateRequest.getUserProfile());
+        }
+        // pwd
+        if (StrUtil.isNotBlank(userPassword)) {
+            String encryptPassword = getEncryptPassword(userPassword);
+            newUser.setUserPassword(encryptPassword);
+        }
+        // role
+        if (StrUtil.isNotBlank(userUpdateRequest.getUserRole())) {
+            newUser.setUserRole(userUpdateRequest.getUserRole());
+        }
+
+        boolean result = updateById(newUser);
+
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return true;
+    }
     // endregion
+
+    public String getEncryptPassword(String password) {
+        return DigestUtils.md5DigestAsHex((SALT + password).getBytes());
+    }
 
 }
 

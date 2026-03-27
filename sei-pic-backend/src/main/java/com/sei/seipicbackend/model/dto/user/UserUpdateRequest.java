@@ -1,7 +1,6 @@
 package com.sei.seipicbackend.model.dto.user;
 
 import lombok.Data;
-
 import java.io.Serializable;
 
 /**
@@ -9,11 +8,11 @@ import java.io.Serializable;
  * @since 2026-03-28
  */
 @Data
-public class UserRegisterRequest implements Serializable {
+public class UserUpdateRequest implements Serializable {
     /**
      * 账号
      */
-    private String userAccount;
+    private Long id;
 
     /**
      * 密码
@@ -21,9 +20,19 @@ public class UserRegisterRequest implements Serializable {
     private String userPassword;
 
     /**
-     * 确认密码
+     * 用户昵称
      */
-    private String checkPassword;
+    private String userName;
+
+    /**
+     * 用户简介
+     */
+    private String userProfile;
+
+    /**
+     * 用户角色：user/admin
+     */
+    private String userRole;
 
     private static final long serialVersionUID = 1L;
 }

@@ -1,16 +1,15 @@
 package com.sei.seipicbackend.controller;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.annotation.AuthCheck;
 import com.sei.seipicbackend.common.BaseResponse;
 import com.sei.seipicbackend.common.IdRequest;
-import com.sei.seipicbackend.common.PageRequest;
 import com.sei.seipicbackend.common.ResponseUtils;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import com.sei.seipicbackend.model.dto.user.UserUpdateRequest;
 import com.sei.seipicbackend.model.dto.user.UserAddRequest;
 import com.sei.seipicbackend.model.dto.user.UserLoginRequest;
 import com.sei.seipicbackend.model.dto.user.UserPageRequest;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 /**
  * @author hikari39_
@@ -51,7 +49,7 @@ public class UserController {
     public BaseResponse<Long> register(@RequestBody UserRegisterRequest userRegisterRequest) {
         ThrowUtils.throwIf(ObjUtil.isNull(userRegisterRequest), ErrorCode.PARAMS_ERROR);
         String userAccount = userRegisterRequest.getUserAccount();
-        String password = userRegisterRequest.getPassword();
+        String password = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
         long userId = userService.userRegister(userAccount, password, checkPassword);
         return ResponseUtils.success(userId);
@@ -66,7 +64,7 @@ public class UserController {
     public BaseResponse<UserVO> login(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(ObjUtil.isNull(userLoginRequest), ErrorCode.PARAMS_ERROR);
         String userAccount = userLoginRequest.getUserAccount();
-        String password = userLoginRequest.getPassword();
+        String password = userLoginRequest.getUserPassword();
         UserVO userVO = userService.login(userAccount, password, request);
         return ResponseUtils.success(userVO);
     }
@@ -145,6 +143,19 @@ public class UserController {
         ThrowUtils.throwIf(ObjUtil.isNull(idRequest) || idRequest.getId()<=0, ErrorCode.PARAMS_ERROR);
         long id = idRequest.getId();
         return ResponseUtils.success(userService.deleteUserById(id));
+    }
+
+    /**
+     * 管理员 更新用户
+     * @param userUpdateRequest
+     * @return
+     */
+    @PostMapping("/update")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
+        ThrowUtils.throwIf(ObjUtil.isNull(userUpdateRequest), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(userUpdateRequest.getId()==null || userUpdateRequest.getId()<=0, ErrorCode.PARAMS_ERROR);
+        return ResponseUtils.success(userService.updateUser(userUpdateRequest));
     }
 
     /**
