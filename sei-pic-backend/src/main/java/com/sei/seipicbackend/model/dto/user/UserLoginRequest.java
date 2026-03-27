@@ -1,4 +1,4 @@
-package com.sei.seipicbackend.model.dto;
+package com.sei.seipicbackend.model.dto.user;
 
 import lombok.Data;
 
@@ -9,7 +9,8 @@ import java.io.Serializable;
  * @since 2026-03-28
  */
 @Data
-public class UserAddRequest implements Serializable {
+public class UserLoginRequest implements Serializable {
     private String userAccount;
+    private String password;
     private static final long serialVersionUID = 1L;
 }

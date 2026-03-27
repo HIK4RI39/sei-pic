@@ -30,6 +30,12 @@
             <artifactId>mybatis-plus-boot-starter</artifactId>
             <version>3.5.14</version>
         </dependency>
+        <!-- mp分页, 版本和mp一致 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
+            <version>3.5.14</version>
+        </dependency>
         <!-- hutool工具库: https://doc.hutool.cn/pages/index/ -->
         <dependency>
             <groupId>cn.hutool</groupId>

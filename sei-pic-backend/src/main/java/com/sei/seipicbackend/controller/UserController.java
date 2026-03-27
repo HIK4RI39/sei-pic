@@ -1,24 +1,28 @@
 package com.sei.seipicbackend.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.annotation.AuthCheck;
 import com.sei.seipicbackend.common.BaseResponse;
 import com.sei.seipicbackend.common.IdRequest;
+import com.sei.seipicbackend.common.PageRequest;
 import com.sei.seipicbackend.common.ResponseUtils;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
-import com.sei.seipicbackend.model.dto.UserAddRequest;
-import com.sei.seipicbackend.model.dto.UserLoginRequest;
-import com.sei.seipicbackend.model.dto.UserRegisterRequest;
+import com.sei.seipicbackend.model.dto.user.UserAddRequest;
+import com.sei.seipicbackend.model.dto.user.UserLoginRequest;
+import com.sei.seipicbackend.model.dto.user.UserPageRequest;
+import com.sei.seipicbackend.model.dto.user.UserRegisterRequest;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.print.DocFlavor;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author hikari39_
@@ -141,6 +145,17 @@ public class UserController {
         ThrowUtils.throwIf(ObjUtil.isNull(idRequest) || idRequest.getId()<=0, ErrorCode.PARAMS_ERROR);
         long id = idRequest.getId();
         return ResponseUtils.success(userService.deleteUserById(id));
+    }
+
+    /**
+     * 管理员 批量获取用户vo
+     * @return
+     */
+    @PostMapping("/list/page/vo")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Page<UserVO>> listUserVoByPage(@RequestBody UserPageRequest userPageRequest) {
+        ThrowUtils.throwIf(ObjUtil.isNull(userPageRequest), ErrorCode.PARAMS_ERROR);
+        return ResponseUtils.success(userService.listUserVoByPage(userPageRequest));
     }
 
     // endregion

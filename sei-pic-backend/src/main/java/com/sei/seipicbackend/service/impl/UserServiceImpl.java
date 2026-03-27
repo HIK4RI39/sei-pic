@@ -1,14 +1,18 @@
 package com.sei.seipicbackend.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.sei.seipicbackend.common.IdRequest;
+import com.sei.seipicbackend.common.PageRequest;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.mapper.UserMapper;
-import com.sei.seipicbackend.model.dto.UserAddRequest;
+import com.sei.seipicbackend.model.dto.user.UserAddRequest;
+import com.sei.seipicbackend.model.dto.user.UserPageRequest;
 import com.sei.seipicbackend.model.enums.UserRoleEnum;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.UserVO;
@@ -17,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
+import java.util.List;
 
 /**
 * @author hikari39
@@ -139,6 +145,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         boolean result = removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return true;
+    }
+
+    @Override
+    public Page<UserVO>  listUserVoByPage(UserPageRequest userPageRequest) {
+        Long id = userPageRequest.getId();
+        String userAccount = userPageRequest.getUserAccount();
+        String userName = userPageRequest.getUserName();
+        String userRole = userPageRequest.getUserRole();
+        Date createBeginTime = userPageRequest.getCreateBeginTime();
+        Date createEndTime = userPageRequest.getCreateEndTime();
+
+        Page<User> page = new Page<>();
+        int pageSize = userPageRequest.getPageSize();
+        int current = userPageRequest.getCurrent();
+        page.setCurrent(current>0 ? current : 1);
+        page.setSize(pageSize>0 ? pageSize : 10);
+
+        Page<User> userPage = lambdaQuery().eq(id != null, User::getId, id)
+                .like(StrUtil.isNotBlank(userAccount), User::getUserAccount, userAccount)
+                .like(StrUtil.isNotBlank(userName), User::getUserName, userName)
+                .eq(StrUtil.isNotBlank(userRole), User::getUserRole, userRole)
+                .gt(createBeginTime != null, User::getCreateTime, createBeginTime)
+                .lt(createEndTime != null, User::getCreateTime, createEndTime)
+                .page(page);
+
+        long total = page.getTotal();
+
+        List<UserVO> userVoList = BeanUtil.copyToList(userPage.getRecords(), UserVO.class);
+        Page<UserVO> pageVo = new Page<>();
+        pageVo.setTotal(total).setRecords(userVoList);
+        return pageVo;
     }
     // endregion
 

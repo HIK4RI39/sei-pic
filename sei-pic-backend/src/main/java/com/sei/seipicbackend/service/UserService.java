@@ -1,13 +1,15 @@
 package com.sei.seipicbackend.service;
 
-import com.sei.seipicbackend.common.BaseResponse;
-import com.sei.seipicbackend.common.IdRequest;
-import com.sei.seipicbackend.model.dto.UserAddRequest;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sei.seipicbackend.common.PageRequest;
+import com.sei.seipicbackend.model.dto.user.UserAddRequest;
+import com.sei.seipicbackend.model.dto.user.UserPageRequest;
 import com.sei.seipicbackend.model.pojo.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sei.seipicbackend.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author hikari39
@@ -30,4 +32,6 @@ public interface UserService extends IService<User> {
     User getUserById(Long id);
 
     Boolean deleteUserById(long id);
+
+    Page<UserVO>  listUserVoByPage(UserPageRequest userPageRequest);
 }

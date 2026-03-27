@@ -1,4 +1,4 @@
-package com.sei.seipicbackend.model.dto;
+package com.sei.seipicbackend.model.dto.user;
 
 import lombok.Data;
 
