@@ -1,6 +1,8 @@
 package com.sei.seipicbackend.service;
 
 import com.sei.seipicbackend.common.BaseResponse;
+import com.sei.seipicbackend.common.IdRequest;
+import com.sei.seipicbackend.model.dto.UserAddRequest;
 import com.sei.seipicbackend.model.pojo.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sei.seipicbackend.model.vo.UserVO;
@@ -20,4 +22,8 @@ public interface UserService extends IService<User> {
     UserVO getLoginUser(HttpServletRequest request);
 
     Boolean logout(HttpServletRequest request);
+
+    Long addUser(UserAddRequest userAddRequest);
+
+    UserVO getUserVoById(Long id);
 }

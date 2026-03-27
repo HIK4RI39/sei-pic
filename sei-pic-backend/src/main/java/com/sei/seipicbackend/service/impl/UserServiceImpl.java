@@ -3,11 +3,12 @@ package com.sei.seipicbackend.service.impl;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.sei.seipicbackend.common.BaseResponse;
+import com.sei.seipicbackend.common.IdRequest;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.mapper.UserMapper;
+import com.sei.seipicbackend.model.dto.UserAddRequest;
 import com.sei.seipicbackend.model.enums.UserRoleEnum;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.UserVO;
@@ -27,6 +28,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         implements UserService {
 
     private static final String SALT = "sei";
+    private static final String DEFAULT_PWD = "12345678";
+
+    // region -------------------------- 用户 --------------------------
 
     /**
      * 用户注册
@@ -94,6 +98,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
         return true;
     }
+
+    /**
+     * 用户 根据id获取用户vo
+     * @param id
+     * @return
+     */
+    @Override
+    public UserVO getUserVoById(Long id) {
+        User user = getById(id);
+        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NOT_FOUND_ERROR);
+        return user.beanToVo();
+    }
+
+
+    // endregion
+
+    // region -------------------------- 管理员 --------------------------
+
+
+    @Override
+    public Long addUser(UserAddRequest userAddRequest) {
+        String userAccount = userAddRequest.getUserAccount();
+        return this.userRegister(userAccount, DEFAULT_PWD, DEFAULT_PWD);
+    }
+
+
+    // endregion
+
 }
 
 
