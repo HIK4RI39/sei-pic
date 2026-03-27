@@ -63,4 +63,9 @@ public class UserController {
     public BaseResponse<UserVO> getLoginUser(HttpServletRequest request) {
         return ResponseUtils.success(userService.getLoginUser(request));
     }
+
+    @GetMapping("/logout")
+    public BaseResponse<Boolean> logout(HttpServletRequest request) {
+        return ResponseUtils.success(userService.logout(request));
+    }
 }

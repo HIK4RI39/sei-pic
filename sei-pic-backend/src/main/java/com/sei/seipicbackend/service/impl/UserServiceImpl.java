@@ -85,6 +85,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NO_AUTH_ERROR);
         return user.beanToVo();
     }
+
+    @Override
+    public Boolean logout(HttpServletRequest request) {
+        Object attribute = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        User user = (User) attribute;
+        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NO_AUTH_ERROR);
+        request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+        return true;
+    }
 }
 
 
