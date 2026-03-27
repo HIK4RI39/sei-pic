@@ -58,4 +58,9 @@ public class UserController {
         UserVO userVO = userService.login(userAccount, password, request);
         return ResponseUtils.success(userVO);
     }
+
+    @GetMapping("/get/login")
+    public BaseResponse<UserVO> getLoginUser(HttpServletRequest request) {
+        return ResponseUtils.success(userService.getLoginUser(request));
+    }
 }

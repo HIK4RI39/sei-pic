@@ -3,6 +3,7 @@ package com.sei.seipicbackend.service.impl;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sei.seipicbackend.common.BaseResponse;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
@@ -75,6 +76,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NO_AUTH_ERROR);
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
 
+        return user.beanToVo();
+    }
+
+    @Override
+    public UserVO getLoginUser(HttpServletRequest request) {
+        User user =  (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NO_AUTH_ERROR);
         return user.beanToVo();
     }
 }
