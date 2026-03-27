@@ -2,6 +2,9 @@ package com.sei.seipicbackend.service;
 
 import com.sei.seipicbackend.model.pojo.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sei.seipicbackend.model.vo.UserVO;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
 * @author hikari39
@@ -10,4 +13,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface UserService extends IService<User> {
     long userRegister(String userAccount, String password, String checkPassword);
+
+    UserVO login(String userAccount, String password, HttpServletRequest request);
 }

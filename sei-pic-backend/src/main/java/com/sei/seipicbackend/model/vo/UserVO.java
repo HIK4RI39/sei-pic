@@ -1,38 +1,26 @@
-package com.sei.seipicbackend.model.pojo;
+package com.sei.seipicbackend.model.vo;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.sei.seipicbackend.model.vo.UserVO;
+import com.sei.seipicbackend.model.pojo.User;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 用户
- * @TableName user
+ * 用户VO
  */
 @Data
-@TableName(value ="user")
-public class User implements Serializable {
+public class UserVO implements Serializable {
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
      * 账号
      */
     private String userAccount;
-
-    /**
-     * 密码
-     */
-    private String userPassword;
 
     /**
      * 用户昵称
@@ -69,17 +57,11 @@ public class User implements Serializable {
      */
     private Date updateTime;
 
-    /**
-     * 是否删除
-     */
-    private Integer isDelete;
-
-    @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public UserVO beanToVo() {
-        UserVO userVO = new UserVO();
-        BeanUtil.copyProperties(this, userVO);
-        return userVO;
+    public User voToBean() {
+        User user = new User();
+        BeanUtil.copyProperties(this, user);
+        return user;
     }
 }

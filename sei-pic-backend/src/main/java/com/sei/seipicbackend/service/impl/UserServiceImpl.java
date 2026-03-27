@@ -1,16 +1,20 @@
 package com.sei.seipicbackend.service.impl;
 
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.sei.seipicbackend.common.ResponseUtils;
+import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.mapper.UserMapper;
 import com.sei.seipicbackend.model.enums.UserRoleEnum;
 import com.sei.seipicbackend.model.pojo.User;
+import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
 * @author hikari39
@@ -32,10 +36,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public long userRegister(String userAccount, String password, String checkPassword) {
-        ThrowUtils.throwIf(
-            !StrUtil.isAllNotBlank(userAccount, password, checkPassword),
-            ErrorCode.PARAMS_ERROR
-        );
+        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, password, checkPassword), ErrorCode.PARAMS_ERROR);
         // 账号长度>=4
         ThrowUtils.throwIf(userAccount.length()<4, ErrorCode.PARAMS_ERROR);
         // 密码长度>=4
@@ -54,6 +55,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         boolean save = save(user);
         ThrowUtils.throwIf(!save, ErrorCode.SYSTEM_ERROR);
         return user.getId();
+    }
+
+    /**
+     * 用户登录
+     * @param userAccount
+     * @param password
+     * @param request
+     * @return
+     */
+    @Override
+    public UserVO login(String userAccount, String password, HttpServletRequest request) {
+        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, password), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(userAccount.length()<4, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(password.length()<8, ErrorCode.PARAMS_ERROR);
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
+
+        User user = lambdaQuery().eq(User::getUserAccount, userAccount).eq(User::getUserPassword, encryptPassword).one();
+        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NO_AUTH_ERROR);
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
+
+        return user.beanToVo();
     }
 }
 
