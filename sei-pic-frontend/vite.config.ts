@@ -4,6 +4,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
+const BASE_URL_LOCAL = 'http://localhost:8123'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -11,6 +13,11 @@ export default defineConfig({
     // footer位置开发帮助工具
     // vueDevTools(),
   ],
+  server: {
+    proxy: {
+      '/api': BASE_URL_LOCAL,
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
