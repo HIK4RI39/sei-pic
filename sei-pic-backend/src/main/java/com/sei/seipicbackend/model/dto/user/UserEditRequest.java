@@ -10,11 +10,6 @@ import java.io.Serializable;
 @Data
 public class UserEditRequest implements Serializable {
     /**
-     * 账号
-     */
-    private Long id;
-
-    /**
      * 密码
      */
     private String userPassword;

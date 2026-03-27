@@ -1,6 +1,7 @@
 package com.sei.seipicbackend.controller;
 
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.annotation.AuthCheck;
 import com.sei.seipicbackend.common.BaseResponse;
@@ -9,11 +10,7 @@ import com.sei.seipicbackend.common.ResponseUtils;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
-import com.sei.seipicbackend.model.dto.user.UserUpdateRequest;
-import com.sei.seipicbackend.model.dto.user.UserAddRequest;
-import com.sei.seipicbackend.model.dto.user.UserLoginRequest;
-import com.sei.seipicbackend.model.dto.user.UserPageRequest;
-import com.sei.seipicbackend.model.dto.user.UserRegisterRequest;
+import com.sei.seipicbackend.model.dto.user.*;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.UserService;
@@ -102,8 +99,24 @@ public class UserController {
         return ResponseUtils.success(userService.getUserVoById(id));
     }
 
+    /**
+     * 用户 编辑用户
+     * @param userEditRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/edit")
+    public BaseResponse<Boolean> editUser(@RequestBody UserEditRequest userEditRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(ObjUtil.isNull(userEditRequest), ErrorCode.PARAMS_ERROR);
+        String userName = userEditRequest.getUserName();
+        String userProfile = userEditRequest.getUserProfile();
+        String userPassword = userEditRequest.getUserPassword();
+        ThrowUtils.throwIf(StrUtil.isAllBlank(userName, userProfile, userPassword), ErrorCode.PARAMS_ERROR);
+        return ResponseUtils.success(userService.editUser(userEditRequest, request));
+    }
 
     // endregion
+
 
     // region -------------------------- 管理员 --------------------------
 
@@ -155,6 +168,11 @@ public class UserController {
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
         ThrowUtils.throwIf(ObjUtil.isNull(userUpdateRequest), ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(userUpdateRequest.getId()==null || userUpdateRequest.getId()<=0, ErrorCode.PARAMS_ERROR);
+        String userName = userUpdateRequest.getUserName();
+        String userProfile = userUpdateRequest.getUserProfile();
+        String userPassword = userUpdateRequest.getUserPassword();
+        String userRole = userUpdateRequest.getUserRole();
+        ThrowUtils.throwIf(StrUtil.isAllBlank(userName, userProfile, userPassword, userRole), ErrorCode.PARAMS_ERROR);
         return ResponseUtils.success(userService.updateUser(userUpdateRequest));
     }
 
