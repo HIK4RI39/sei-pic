@@ -26,4 +26,6 @@ public interface UserService extends IService<User> {
     Long addUser(UserAddRequest userAddRequest);
 
     UserVO getUserVoById(Long id);
+
+    User getUserById(Long id);
 }

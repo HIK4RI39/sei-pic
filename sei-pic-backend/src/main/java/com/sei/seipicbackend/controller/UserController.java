@@ -93,6 +93,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/get/vo")
+    @AuthCheck // 需要登录
     public BaseResponse<UserVO> getUserVoById(@RequestBody IdRequest idRequest) {
         ThrowUtils.throwIf(ObjUtil.isNull(idRequest) || idRequest.getId()<=0, ErrorCode.PARAMS_ERROR);
         long id = idRequest.getId();
@@ -116,7 +117,18 @@ public class UserController {
         return ResponseUtils.success(userService.addUser(userAddRequest));
     }
 
-
+    /**
+     * 管理员 根据id获取用户
+     * @param idRequest
+     * @return
+     */
+    @PostMapping("/get")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<User> getUserById(@RequestBody IdRequest idRequest) {
+        ThrowUtils.throwIf(ObjUtil.isNull(idRequest) || idRequest.getId()<=0, ErrorCode.PARAMS_ERROR);
+        long id = idRequest.getId();
+        return ResponseUtils.success(userService.getUserById(id));
+    }
 
     // endregion
 }

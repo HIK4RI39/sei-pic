@@ -111,7 +111,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return user.beanToVo();
     }
 
-
     // endregion
 
     // region -------------------------- 管理员 --------------------------
@@ -123,7 +122,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return this.userRegister(userAccount, DEFAULT_PWD, DEFAULT_PWD);
     }
 
-
+    /**
+     * 管理员 根据id获取用户
+     * @param id
+     * @return
+     */
+    @Override
+    public User getUserById(Long id) {
+        User user = getById(id);
+        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NOT_FOUND_ERROR);
+        return user;
+    }
     // endregion
 
 }
