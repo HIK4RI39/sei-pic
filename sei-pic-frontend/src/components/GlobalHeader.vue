@@ -15,6 +15,9 @@
             </a-col>
             <a-col flex="120px">
                 <div class="userLoginStatus">
+                    <div v-if="loginUserStore?.loginUser?.id">
+                        {{ userInfo.userName ?? '无名' }}
+                    </div>
                     <a-button type="primary" href="/user/login">登录</a-button>
                 </div>
             </a-col>
@@ -27,6 +30,7 @@ import { h, ref } from 'vue';
 import { HomeOutlined } from '@ant-design/icons-vue';
 import { MenuProps } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
+import { useLoginUserStore } from '@/stores/useLoginStore';
 
 const router = useRouter();
 const current = ref<string[]>(['/']);
@@ -57,6 +61,10 @@ router.afterEach((to, from, next) => {
     current.value = [to.path]
 })
 
+const loginUserStore: any = useLoginUserStore()
+const userInfo = loginUserStore.loginUser
+
+
 </script>
 <style scoped>
 #globalHeader .title-bar {
@@ -74,4 +82,9 @@ router.afterEach((to, from, next) => {
 .logo {
     height: 48px;
 }
+
+/* .userLoginStatus {
+    display: flex;
+    align-items: center;
+} */
 </style>
