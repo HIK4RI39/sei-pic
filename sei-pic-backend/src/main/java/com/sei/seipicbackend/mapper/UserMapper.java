@@ -1,7 +1,7 @@
 package com.sei.seipicbackend.mapper;
 
-import com.sei.seipicbackend.model.pojo.user;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.sei.seipicbackend.model.pojo.User;
 
 /**
 * @author hikari39
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2026-03-28 03:18:14
 * @Entity com.sei.seipicbackend.model.pojo.user
 */
-public interface userMapper extends BaseMapper<user> {
+public interface UserMapper extends BaseMapper<User> {
 
 }
 
