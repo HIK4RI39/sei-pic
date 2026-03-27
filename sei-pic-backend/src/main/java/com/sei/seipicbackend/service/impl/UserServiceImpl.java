@@ -82,7 +82,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public UserVO getLoginUser(HttpServletRequest request) {
         User user =  (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
-        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NO_AUTH_ERROR);
+        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NOT_LOGIN_ERROR);
         return user.beanToVo();
     }
 
@@ -90,7 +90,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public Boolean logout(HttpServletRequest request) {
         Object attribute = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         User user = (User) attribute;
-        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NO_AUTH_ERROR);
+        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NOT_LOGIN_ERROR);
         request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
         return true;
     }
