@@ -130,5 +130,18 @@ public class UserController {
         return ResponseUtils.success(userService.getUserById(id));
     }
 
+    /**
+     * 管理员 删除用户
+     * @param idRequest
+     * @return
+     */
+    @PostMapping("/delete")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> deleteUserById(@RequestBody IdRequest idRequest) {
+        ThrowUtils.throwIf(ObjUtil.isNull(idRequest) || idRequest.getId()<=0, ErrorCode.PARAMS_ERROR);
+        long id = idRequest.getId();
+        return ResponseUtils.success(userService.deleteUserById(id));
+    }
+
     // endregion
 }

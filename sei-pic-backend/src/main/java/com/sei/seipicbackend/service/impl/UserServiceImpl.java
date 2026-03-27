@@ -133,6 +133,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NOT_FOUND_ERROR);
         return user;
     }
+
+    @Override
+    public Boolean deleteUserById(long id) {
+        boolean result = removeById(id);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return true;
+    }
     // endregion
 
 }

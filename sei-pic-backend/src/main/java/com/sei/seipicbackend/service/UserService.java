@@ -28,4 +28,6 @@ public interface UserService extends IService<User> {
     UserVO getUserVoById(Long id);
 
     User getUserById(Long id);
+
+    Boolean deleteUserById(long id);
 }
