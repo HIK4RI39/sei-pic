@@ -33,6 +33,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public BaseResponse<?> exceptionHandler(RuntimeException e) {
         log.error("RuntimeException", e);
-        return ResponseUtils.error(ErrorCode.SYSTEM_ERROR, e.getMessage());
+        return ResponseUtils.error(ErrorCode.SYSTEM_ERROR, "系统错误");
     }
 }
