@@ -21,4 +21,6 @@ public interface PictureService extends IService<Picture> {
     boolean deletePictureById(long pictureId, HttpServletRequest request);
 
     Picture getPictureById(long pictureId);
+
+    PictureVO getPictureVoById(long pictureId);
 }

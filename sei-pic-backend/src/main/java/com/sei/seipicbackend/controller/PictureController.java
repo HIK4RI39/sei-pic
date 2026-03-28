@@ -78,5 +78,16 @@ public class PictureController {
         return ResponseUtils.success(picture);
     }
 
+    @PostMapping("/get/vo")
+    public BaseResponse<PictureVO> getPictureVoById(@RequestBody IdRequest idRequest) {
+        if (ObjUtil.isNull(idRequest) || idRequest.getId() <=0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long pictureId = idRequest.getId();
+        PictureVO pictureVO = pictureService.getPictureVoById(pictureId);
+        return ResponseUtils.success(pictureVO);
+    }
+
+
 
 }
