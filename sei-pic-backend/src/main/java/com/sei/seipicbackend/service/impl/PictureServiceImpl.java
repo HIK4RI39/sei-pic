@@ -1,14 +1,14 @@
 package com.sei.seipicbackend.service.impl;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
@@ -18,6 +18,7 @@ import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
 import com.sei.seipicbackend.model.dto.picture.UploadPictureResult;
 import com.sei.seipicbackend.model.pojo.Picture;
+import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.PictureVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.PictureService;
@@ -48,12 +49,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * 上传图片
      * @param multipartFile
      * @param pictureUploadRequest
-     * @param loginUser
+     * @param request
      * @return
      */
     @Override
-    public PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, UserVO loginUser) {
+    public PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, HttpServletRequest request) {
         // 校验登录, 需要填充上传者id
+        UserVO loginUser = userService.getLoginUser(request);
         ThrowUtils.throwIf(ObjUtil.isNull(loginUser), ErrorCode.NOT_LOGIN_ERROR);
 
         // 如果存在pictureId, 说明是图片更新
@@ -77,8 +79,26 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         boolean result = this.saveOrUpdate(picture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片上传失败");
-        
-        return PictureVO.objToVo(picture);
+
+        // 封装图片
+        return getPictureVO(picture);
+    }
+
+    /**
+     * pojo转vo, 关联查询用户信息
+     * @param picture
+     * @return
+     */
+    private PictureVO getPictureVO(Picture picture) {
+        PictureVO pictureVO = PictureVO.objToVo(picture);
+        // 关联查询脱敏用户信息
+        Long userId = picture.getUserId();
+        if (ObjUtil.isNotEmpty(userId) && userId>0) {
+            User user = userService.getById(userId);
+            UserVO userVO = userService.getUserVO(user);
+            pictureVO.setUser(userVO);
+        }
+        return pictureVO;
     }
 
     @Override
@@ -108,14 +128,62 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return PictureVO.objToVo(picture);
     }
 
+    @Override
+    public Page<PictureVO> getPictureVoPage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        LambdaQueryWrapper<Picture> queryWrapper = getQueryWrapper(pictureQueryRequest);
+
+        int current = pictureQueryRequest.getCurrent();
+        int pageSize = pictureQueryRequest.getPageSize();
+        Page<Picture> page = new Page<>();
+        page.setCurrent(current<=0 ? 1 : current);
+        page.setSize(pageSize<=0 || pageSize>=20 ? 20 : current);
+        Page<Picture> picturePage = page(page, queryWrapper);
+
+        return getPictureVoPoage(picturePage);
+    }
+
     /**
-     * 管理员鉴权
-     * @param loginUserVO
+     * pojo Page转vo Page
+     * @param picturePage
      * @return
      */
-    private boolean isAdmin(UserVO loginUserVO) {
-        return UserConstant.ADMIN_ROLE.equals(loginUserVO.getUserRole());
+    private Page<PictureVO> getPictureVoPoage(Page<Picture> picturePage) {
+        List<Picture> pictureList = picturePage.getRecords();
+
+        // 利用mp的Page转换工具，自动拷贝分页元数据
+        Page<PictureVO> pictureVoPage = (Page<PictureVO>) picturePage.convert(PictureVO::objToVo);
+
+        // 返回空数据
+        if (CollUtil.isEmpty(pictureList)) {
+            return pictureVoPage;
+        }
+
+        // 获取用户id列表
+        Set<Long> userIdSet = pictureList.stream().map(Picture::getUserId).collect(Collectors.toSet());
+
+        // id:user Map
+        Map<Long, UserVO> idUserVoMap = userService.listByIds(userIdSet).stream()
+                .collect(Collectors.toMap(User::getId, userService::getUserVO));
+
+        // 填充user信息
+        pictureVoPage.getRecords().forEach(pictureVO -> {
+            Long userId = pictureVO.getUserId();
+            if (idUserVoMap.containsKey(userId)) {
+                pictureVO.setUser(idUserVoMap.get(userId));
+            }
+        });
+
+        return pictureVoPage;
     }
+
+//    /**
+//     * 管理员鉴权
+//     * @param loginUserVO
+//     * @return
+//     */
+//    private boolean isAdmin(UserVO loginUserVO) {
+//        return UserConstant.ADMIN_ROLE.equals(loginUserVO.getUserRole());
+//    }
 
     /**
      * 拥有者或管理员 鉴权

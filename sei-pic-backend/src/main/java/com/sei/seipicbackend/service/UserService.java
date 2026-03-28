@@ -38,4 +38,6 @@ public interface UserService extends IService<User> {
     Boolean updateUser(UserUpdateRequest userUpdateRequest);
 
     Boolean editUser(UserEditRequest userEditRequest, HttpServletRequest request);
+
+    UserVO getUserVO(User user);
 }

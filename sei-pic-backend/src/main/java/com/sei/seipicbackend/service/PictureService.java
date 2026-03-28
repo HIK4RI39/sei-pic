@@ -1,10 +1,11 @@
 package com.sei.seipicbackend.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sei.seipicbackend.model.vo.PictureVO;
-import com.sei.seipicbackend.model.vo.UserVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,11 +17,13 @@ import javax.servlet.http.HttpServletRequest;
 */
 public interface PictureService extends IService<Picture> {
 
-    PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, UserVO loginUser);
+    PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, HttpServletRequest request);
 
     boolean deletePictureById(long pictureId, HttpServletRequest request);
 
     Picture getPictureById(long pictureId);
 
     PictureVO getPictureVoById(long pictureId);
+
+    Page<PictureVO> getPictureVoPage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
 }

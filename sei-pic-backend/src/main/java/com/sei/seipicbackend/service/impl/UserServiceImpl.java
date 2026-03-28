@@ -24,7 +24,6 @@ import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
-import java.util.List;
 
 /**
 * @author hikari39
@@ -138,6 +137,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         boolean result = update(updateWrapper);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return true;
+    }
+
+    @Override
+    public UserVO getUserVO(User user) {
+        UserVO userVO = new UserVO();
+        BeanUtil.copyProperties(user, userVO);
+        return userVO;
     }
 
     // endregion
