@@ -40,7 +40,7 @@
 
 <script lang="ts" setup>
 import { h, ref } from 'vue';
-import { HomeOutlined, LogoutOutlined } from '@ant-design/icons-vue';
+import { InsertRowAboveOutlined, HomeOutlined, LogoutOutlined } from '@ant-design/icons-vue';
 import { MenuProps, message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { useLoginUserStore } from '@/stores/useLoginStore';
@@ -55,9 +55,9 @@ const items = ref<MenuProps['items']>([
         label: '主页'
     },
     {
-        key: '/about',
-        icon: () => h(HomeOutlined),
-        label: '关于'
+        key: '/user/manage',
+        icon: () => h(InsertRowAboveOutlined),
+        label: '用户管理'
     }
 ]);
 

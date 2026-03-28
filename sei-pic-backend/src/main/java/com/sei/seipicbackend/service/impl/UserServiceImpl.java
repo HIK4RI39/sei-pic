@@ -184,20 +184,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         page.setCurrent(current>0 ? current : 1);
         page.setSize(pageSize>0 ? pageSize : 10);
 
-        Page<User> userPage = lambdaQuery().eq(id != null, User::getId, id)
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(id != null, User::getId, id)
                 .like(StrUtil.isNotBlank(userAccount), User::getUserAccount, userAccount)
                 .like(StrUtil.isNotBlank(userName), User::getUserName, userName)
                 .eq(StrUtil.isNotBlank(userRole), User::getUserRole, userRole)
                 .gt(createBeginTime != null, User::getCreateTime, createBeginTime)
-                .lt(createEndTime != null, User::getCreateTime, createEndTime)
-                .page(page);
+                .lt(createEndTime != null, User::getCreateTime, createEndTime);
 
-        long total = page.getTotal();
+        page(page, queryWrapper);
 
-        List<UserVO> userVoList = BeanUtil.copyToList(userPage.getRecords(), UserVO.class);
-        Page<UserVO> pageVo = new Page<>();
-        pageVo.setTotal(total).setRecords(userVoList);
-        return pageVo;
+        return (Page<UserVO>) page.convert(User::beanToVo);
     }
 
     @Override
