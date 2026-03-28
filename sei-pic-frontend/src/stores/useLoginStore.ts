@@ -4,14 +4,15 @@ import { message } from 'ant-design-vue'
 import { ref } from 'vue'
 
 const useLoginUserStore = defineStore('loginUser', () => {
-  const loginUser = ref<any>({
-    username: '未登录',
+  const loginUser = ref<API.UserVO>({
+    userName: '未登录',
   })
 
   const fetchLoginUser = async () => {
     const res = await getLoginUserUsingGet()
     try {
       if (res.data.code === 0 && res.data.data) {
+        loginUser.value.userName = undefined
         loginUser.value = res.data.data
       } else {
         message.error('获取登录用户失败' + res.data.message)

@@ -11,7 +11,6 @@ import zhCN from 'ant-design-vue/es/locale/zh_CN';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import BasicLayout from '@/layouts/BasicLayout.vue';
-import { healthUsingGet } from './api/userController';
 import { useLoginUserStore } from './stores/useLoginStore';
 dayjs.locale('zh-cn');
 
