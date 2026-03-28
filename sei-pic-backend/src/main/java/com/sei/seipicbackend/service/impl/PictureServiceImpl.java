@@ -1,11 +1,20 @@
 package com.sei.seipicbackend.service.impl;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.mapper.FileManager;
+import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
 import com.sei.seipicbackend.model.dto.picture.UploadPictureResult;
 import com.sei.seipicbackend.model.pojo.Picture;
@@ -19,7 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
 
 /**
 * @author hikari39
@@ -140,7 +148,80 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return picture;
     }
 
+    /**
+     * 将查询请求体转化为queryWrapper
+     * @param pictureQueryRequest
+     * @return
+     */
+    private LambdaQueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest) {
+        Long id = pictureQueryRequest.getId();
+        String name = pictureQueryRequest.getName();
+        String introduction = pictureQueryRequest.getIntroduction();
+        String category = pictureQueryRequest.getCategory();
+        List<String> tags = pictureQueryRequest.getTags();
+        Long picSize = pictureQueryRequest.getPicSize();
+        Integer picWidth = pictureQueryRequest.getPicWidth();
+        Integer picHeight = pictureQueryRequest.getPicHeight();
+        Double picScale = pictureQueryRequest.getPicScale();
+        String picFormat = pictureQueryRequest.getPicFormat();
+        String searchText = pictureQueryRequest.getSearchText();
+        Long userId = pictureQueryRequest.getUserId();
+        String sortField = pictureQueryRequest.getSortField();
+        String sortOrder = pictureQueryRequest.getSortOrder();
 
+        LambdaQueryWrapper<Picture> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ObjUtil.isNotEmpty(id), Picture::getId, id);
+        queryWrapper.eq(StrUtil.isNotBlank(name), Picture::getName, name);
+        queryWrapper.eq(StrUtil.isNotBlank(introduction), Picture::getIntroduction, introduction);
+        queryWrapper.eq(ObjUtil.isNotEmpty(picSize), Picture::getPicSize, picSize);
+        queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), Picture::getPicWidth, picWidth);
+        queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), Picture::getPicHeight, picHeight);
+        queryWrapper.eq(ObjUtil.isNotEmpty(picScale), Picture::getPicScale, picScale);
+        queryWrapper.eq(StrUtil.isNotBlank(picFormat), Picture::getPicFormat, picFormat);
+        queryWrapper.eq(StrUtil.isNotBlank(category), Picture::getCategory, category);
+        queryWrapper.eq(ObjUtil.isNotEmpty(userId), Picture::getUserId, userId);
+
+        // 处理json tags
+        if (CollUtil.isNotEmpty(tags)) {
+            for (String tag : tags) {
+                queryWrapper.like(Picture::getTags, "\"" + tag + "\"");
+            }
+        }
+
+        // searchText可以是name或intro, 使用and拼接2个条件
+        if (StrUtil.isNotBlank(searchText)) {
+            queryWrapper.and(qw -> qw
+                .like(Picture::getName, searchText).or()
+                .like(Picture::getIntroduction, searchText));
+        }
+
+        // 排序(写在最后)
+        queryWrapper.orderBy(StrUtil.isNotBlank(sortField), "ascend".equals(sortOrder), getOrderColumn(sortField));
+
+        return queryWrapper;
+    }
+
+
+    private static final Map<String, SFunction<Picture, ?>> COLUMN_MAP = new ConcurrentHashMap<>();
+    static {
+        COLUMN_MAP.put("id", Picture::getId);
+        COLUMN_MAP.put("name", Picture::getName);
+        COLUMN_MAP.put("picSize", Picture::getPicSize);
+        COLUMN_MAP.put("picWidth", Picture::getPicWidth);
+        COLUMN_MAP.put("picHeight", Picture::getPicHeight);
+        COLUMN_MAP.put("picScale", Picture::getPicScale);
+        COLUMN_MAP.put("createTime", Picture::getCreateTime);
+        COLUMN_MAP.put("updateTime", Picture::getUpdateTime);
+    }
+
+    /**
+     * 返回排序字段的方法引用
+     * @param sortField
+     * @return
+     */
+    private SFunction<Picture, ?> getOrderColumn(String sortField) {
+        return COLUMN_MAP.getOrDefault(sortField, Picture::getCreateTime);
+    }
 }
 
 
