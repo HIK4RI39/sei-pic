@@ -10,6 +10,7 @@ import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
+import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.vo.PictureVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.PictureService;
@@ -35,6 +36,13 @@ public class PictureController {
     @Resource
     private UserService userService;
 
+    /**
+     * 上传或更新已有图片
+     * @param multipartFile
+     * @param pictureUploadRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/upload")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<PictureVO> uploadPicture(
@@ -54,9 +62,21 @@ public class PictureController {
         if (ObjUtil.isNull(idRequest) || idRequest.getId() <=0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-
         long pictureId = idRequest.getId();
         boolean result = pictureService.deletePictureById(pictureId, request);
         return ResponseUtils.success(result);
     }
+
+    @PostMapping("/get")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Picture> getPictureById(@RequestBody IdRequest idRequest) {
+        if (ObjUtil.isNull(idRequest) || idRequest.getId() <=0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long pictureId = idRequest.getId();
+        Picture picture = pictureService.getPictureById(pictureId);
+        return ResponseUtils.success(picture);
+    }
+
+
 }

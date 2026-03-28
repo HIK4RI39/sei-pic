@@ -19,4 +19,6 @@ public interface PictureService extends IService<Picture> {
     PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, UserVO loginUser);
 
     boolean deletePictureById(long pictureId, HttpServletRequest request);
+
+    Picture getPictureById(long pictureId);
 }

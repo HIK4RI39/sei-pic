@@ -86,6 +86,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return true;
     }
 
+    @Override
+    public Picture getPictureById(long pictureId) {
+        Picture picture = this.getById(pictureId);
+        ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+        return picture;
+    }
+
     /**
      * 管理员鉴权
      * @param loginUserVO
