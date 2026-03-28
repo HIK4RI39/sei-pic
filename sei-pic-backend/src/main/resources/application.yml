@@ -3,13 +3,20 @@ server:
   servlet:
     context-path: /api
 spring:
+  servlet:
+    # 上传文件大小限制
+    multipart:
+      max-file-size: 10MB
+  profiles:
+    # 使用local配置
+    active: local
   application:
     name: sei-pic-backend
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/sei
-    username: root
-    password: 1234
+    url: ${my.db.url}
+    username: ${my.db.username}
+    password: ${my.db.password}
 # mybatis-plus
 mybatis-plus:
   configuration:
@@ -31,3 +38,11 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.sei.seipicbackend.controller
+# 腾讯云cos对象存储
+cos:
+  client:
+    host: ${my.cos.host}
+    secretId: ${my.cos.secretId}
+    secretKey: ${my.cos.secretKey}
+    region: ${my.cos.region}
+    bucket: ${my.cos.bucket}
