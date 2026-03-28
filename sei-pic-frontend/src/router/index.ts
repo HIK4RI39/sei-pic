@@ -6,12 +6,32 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('../views/HomePage.vue'),
+      component: () => import('@/views/HomePage.vue'),
     },
     {
       path: '/about',
       name: 'about',
-      component: () => import('../views/AboutePage.vue'),
+      component: () => import('@/views/AboutePage.vue'),
+    },
+    {
+      path: '/user/login',
+      name: '用户登录',
+      component: () => import('@/views/user/UserLoginPage.vue'),
+    },
+    {
+      path: '/user/register',
+      name: '用户注册',
+      component: () => import('@/views/user/UserRegisterPage.vue'),
+    },
+    {
+      path: '/user/manage',
+      name: '用户管理',
+      component: () => import('@/views/user/UserManagePage.vue'),
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: '404',
+      component: () => import('@/views/404Page.vue'),
     },
   ],
 })

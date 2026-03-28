@@ -85,7 +85,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
 
         User user = lambdaQuery().eq(User::getUserAccount, userAccount).eq(User::getUserPassword, encryptPassword).one();
-        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.NO_AUTH_ERROR);
+        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.OPERATION_ERROR);
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
 
         return user.beanToVo();
