@@ -12,7 +12,7 @@
             </a-form-item>
             <!-- userName -->
             <a-form-item label="用户名" name="userName">
-                <a-input v-model:value="searchParams.userName" allow-clear>
+                <a-input v-model:value="searchParams.userName" allow-clear>z
                     <template #prefix>
                         <LockOutlined class="site-form-item-icon" />
                     </template>
@@ -78,11 +78,11 @@
                             <a-space>
                                 <!-- 更新 -->
                                 <a-col>
-                                    <a href="">更新</a>
+                                    <a-button type="primary" ghost>更新</a-button>
                                 </a-col>
                                 <!-- 删除 -->
                                 <a-col>
-                                    <a href="" style="color: red;">删除</a>
+                                    <a-button danger @click="doDelete(record.id)">删除</a-button>
                                 </a-col>
                             </a-space>
                         </a-row>
@@ -99,7 +99,7 @@
 </template>
 
 <script lang="ts" setup>
-import { listUserVoByPageUsingPost } from '@/api/userController';
+import { deleteUserByIdUsingPost, listUserVoByPageUsingPost } from '@/api/userController';
 import { message } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import { computed } from 'vue';
@@ -203,7 +203,7 @@ const fetchData = async () => {
     })
     try {
         if (res.data.code === 0 && res.data.data) {
-            message.success("获取数据成功,")
+            message.success("获取数据成功")
             dataList.value = res.data.data.records
             total.value = res.data.data.total
         } else {
@@ -222,5 +222,25 @@ const doSearch = () => {
 onMounted(() => {
     fetchData()
 })
+
+const doDelete = async (id: number) => {
+    const result = confirm("确认删除?")
+    if (!result) {
+        return
+    }
+
+    const res = await deleteUserByIdUsingPost({ id })
+    try {
+        if (res.data.code === 0 && res.data.data) {
+            message.success("删除成功")
+            // 重新拉取数据
+            doSearch()
+        } else {
+            message.error("删除失败," + res.data.message)
+        }
+    } catch (e: any) {
+        message.error("删除失败," + e.message);
+    }
+}
 
 </script>
