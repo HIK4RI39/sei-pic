@@ -9,7 +9,8 @@
                     </div>
                 </router-link>
             </a-col>
-            <a-menu v-model:selectedKeys="current" mode="horizontal" :items="items" @click="doMenuClick" />
+            <!-- a menu -->
+            <a-menu v-model:selectedKeys="current" mode="horizontal" :items="filterMenuItems" @click="doMenuClick" />
             <a-col flex="auto">
             </a-col>
             <!-- 用户信息 -->
@@ -19,7 +20,7 @@
                     <a-dropdown>
                         <a-space>
                             <a-avatar :src="loginUserStore?.loginUser?.userAvatar" />
-                            {{ userInfo.userName ?? '无名' }}
+                            {{ loginUser?.userName?.length > 0 ? loginUser.userName : '无名' }}
                         </a-space>
                         <template #overlay>
                             <a-menu>
@@ -41,25 +42,42 @@
 <script lang="ts" setup>
 import { h, ref } from 'vue';
 import { InsertRowAboveOutlined, HomeOutlined, LogoutOutlined } from '@ant-design/icons-vue';
-import { MenuProps, message } from 'ant-design-vue';
+import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { useLoginUserStore } from '@/stores/useLoginStore';
 import { logoutUsingGet } from '@/api/userController';
+import { computed } from 'vue';
 
 const router = useRouter();
+const loginUserStore = useLoginUserStore()
+const loginUser = loginUserStore.loginUser
 const current = ref<string[]>(['/']);
-const items = ref<MenuProps['items']>([
+
+const menuItems = [
     {
         key: '/',
         icon: () => h(HomeOutlined),
         label: '主页'
-    },
-    {
-        key: '/user/manage',
+    }, {
+        key: '/admin/user/manage',
         icon: () => h(InsertRowAboveOutlined),
         label: '用户管理'
     }
-]);
+]
+
+/**
+ * 根据权限过滤顶部导航栏菜单项
+ */
+
+const filterMenuItems = computed(() => {
+    return menuItems.filter((item) => {
+        if (item?.key?.startsWith('/admin')) {
+            return loginUser?.userRole == 'admin'
+        }
+        return true
+    })
+})
+
 
 /**
  * 跳转菜单页
@@ -75,14 +93,16 @@ router.afterEach((to, from, next) => {
     current.value = [to.path]
 })
 
-const loginUserStore: any = useLoginUserStore()
-const userInfo = loginUserStore.loginUser
-
+/**
+ * 登出
+ * 清空pinia登录态, 并跳转登录页
+ */
 const doLogOut = async () => {
     const res = await logoutUsingGet()
     try {
         if (res.data.code === 0 && res.data.data) {
-            message.success("登出成功,")
+            message.success("登出成功")
+            loginUserStore.setLoginUser(undefined)
             await router.push('/user/login')
         } else {
             message.error("登出失败," + res.data.message)
