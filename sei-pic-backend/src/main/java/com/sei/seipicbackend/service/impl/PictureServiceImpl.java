@@ -1,11 +1,14 @@
 package com.sei.seipicbackend.service.impl;
+import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -15,6 +18,7 @@ import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.mapper.FileManager;
 import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
+import com.sei.seipicbackend.model.dto.picture.PictureUpdateRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
 import com.sei.seipicbackend.model.dto.picture.UploadPictureResult;
 import com.sei.seipicbackend.model.pojo.Picture;
@@ -131,15 +135,38 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Override
     public Page<PictureVO> getPictureVoPage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
         LambdaQueryWrapper<Picture> queryWrapper = getQueryWrapper(pictureQueryRequest);
-
         int current = pictureQueryRequest.getCurrent();
         int pageSize = pictureQueryRequest.getPageSize();
-        Page<Picture> page = new Page<>();
-        page.setCurrent(current<=0 ? 1 : current);
-        page.setSize(pageSize<=0 || pageSize>=20 ? 20 : current);
+        Page<Picture> page = new Page<>(current, pageSize);
         Page<Picture> picturePage = page(page, queryWrapper);
-
         return getPictureVoPoage(picturePage);
+    }
+
+    @Override
+    public Page<Picture> getPicturePage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        LambdaQueryWrapper<Picture> queryWrapper = getQueryWrapper(pictureQueryRequest);
+        int current = pictureQueryRequest.getCurrent();
+        int pageSize = pictureQueryRequest.getPageSize();
+        Page<Picture> page = new Page<>(current, pageSize);
+        return page(page, queryWrapper);
+    }
+
+    @Override
+    public boolean updatePicture(PictureUpdateRequest pictureUpdateRequest) {
+        Long pictureId = pictureUpdateRequest.getId();
+        Picture picture = this.getById(pictureId);
+        ThrowUtils.throwIf(picture==null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+
+        Picture newPicture = new Picture();
+        BeanUtil.copyProperties(pictureUpdateRequest, newPicture);
+        // tags需要转化为 json数组 字符串
+        picture.setTags(JSONUtil.toJsonStr(pictureUpdateRequest.getTags()));
+        // 校验
+        validPicture(picture);
+
+        boolean result = updateById(picture);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return true;
     }
 
     /**
@@ -290,6 +317,24 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     private SFunction<Picture, ?> getOrderColumn(String sortField) {
         return COLUMN_MAP.getOrDefault(sortField, Picture::getCreateTime);
     }
+
+
+    public void validPicture(Picture picture) {
+        ThrowUtils.throwIf(picture == null, ErrorCode.PARAMS_ERROR);
+        // 从对象中取值
+        Long id = picture.getId();
+        String url = picture.getUrl();
+        String introduction = picture.getIntroduction();
+        // 修改数据时，id 不能为空，有参数则校验
+        ThrowUtils.throwIf(ObjUtil.isNull(id), ErrorCode.PARAMS_ERROR, "id 不能为空");
+        if (StrUtil.isNotBlank(url)) {
+            ThrowUtils.throwIf(url.length() > 1024, ErrorCode.PARAMS_ERROR, "url 过长");
+        }
+        if (StrUtil.isNotBlank(introduction)) {
+            ThrowUtils.throwIf(introduction.length() > 800, ErrorCode.PARAMS_ERROR, "简介过长");
+        }
+    }
+
 }
 
 

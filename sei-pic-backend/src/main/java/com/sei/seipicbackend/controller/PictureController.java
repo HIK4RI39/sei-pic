@@ -11,11 +11,11 @@ import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
+import com.sei.seipicbackend.model.dto.picture.PictureUpdateRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.vo.PictureVO;
 import com.sei.seipicbackend.service.PictureService;
-import com.sei.seipicbackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +33,8 @@ import javax.servlet.http.HttpServletRequest;
 public class PictureController {
     @Resource
     private PictureService pictureService;
+
+    // region -------------------------- 用户 --------------------------
 
     /**
      * 上传图片
@@ -54,6 +56,12 @@ public class PictureController {
         return ResponseUtils.success(pictureVO);
     }
 
+    /**
+     * 根据id删除图片
+     * @param idRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deletePictureById(@RequestBody IdRequest idRequest, HttpServletRequest request) {
         if (ObjUtil.isEmpty(idRequest) || idRequest.getId() <=0) {
@@ -64,6 +72,44 @@ public class PictureController {
         return ResponseUtils.success(result);
     }
 
+    /**
+     * 用户 根据id获得pictureVo
+     * @param idRequest
+     * @return
+     */
+    @PostMapping("/get/vo")
+    public BaseResponse<PictureVO> getPictureVoById(@RequestBody IdRequest idRequest) {
+        if (ObjUtil.isEmpty(idRequest) || idRequest.getId() <=0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long pictureId = idRequest.getId();
+        PictureVO pictureVO = pictureService.getPictureVoById(pictureId);
+        return ResponseUtils.success(pictureVO);
+    }
+
+    /**
+     * 用户 分页获取pictureVo
+     * @param pictureQueryRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/page/vo")
+    public BaseResponse<Page<PictureVO>> getPictureVoPage(@RequestBody PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(pictureQueryRequest), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureQueryRequest.getCurrent() <= 0, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureQueryRequest.getPageSize() <= 0, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureQueryRequest.getPageSize() > 20, ErrorCode.PARAMS_ERROR);
+        Page<PictureVO> pictureVoPage = pictureService.getPictureVoPage(pictureQueryRequest, request);
+        return ResponseUtils.success(pictureVoPage);
+    }
+    // endregion
+
+    // region -------------------------- 管理员 --------------------------
+    /**
+     * 管理员 根据id查询图片
+     * @param idRequest
+     * @return
+     */
     @PostMapping("/get")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Picture> getPictureById(@RequestBody IdRequest idRequest) {
@@ -75,26 +121,36 @@ public class PictureController {
         return ResponseUtils.success(picture);
     }
 
-    @PostMapping("/get/vo")
-    public BaseResponse<PictureVO> getPictureVoById(@RequestBody IdRequest idRequest) {
-        if (ObjUtil.isEmpty(idRequest) || idRequest.getId() <=0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        long pictureId = idRequest.getId();
-        PictureVO pictureVO = pictureService.getPictureVoById(pictureId);
-        return ResponseUtils.success(pictureVO);
+    /**
+     * 管理员 分页获取图片数据
+     * @param pictureQueryRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/page")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Page<Picture>> getPicturePage(@RequestBody PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(pictureQueryRequest), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureQueryRequest.getCurrent() <= 0, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureQueryRequest.getPageSize() <= 0, ErrorCode.PARAMS_ERROR);
+        Page<Picture> picturePage = pictureService.getPicturePage(pictureQueryRequest, request);
+        return ResponseUtils.success(picturePage);
     }
 
-    @PostMapping("/page/vo")
-    public BaseResponse<Page<PictureVO>> getPictureVoPage(@RequestBody PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
-        if (ObjUtil.isEmpty(pictureQueryRequest)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        Page<PictureVO> pictureVoPage = pictureService.getPictureVoPage(pictureQueryRequest, request);
-        return ResponseUtils.success(pictureVoPage);
+    /**
+     * 管理员 更新图片
+     * @param pictureUpdateRequest
+     * @return
+     */
+    @PostMapping("/update")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> getPicturePage(@RequestBody PictureUpdateRequest pictureUpdateRequest) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(pictureUpdateRequest), ErrorCode.PARAMS_ERROR);
+        boolean update = pictureService.updatePicture(pictureUpdateRequest);
+        return ResponseUtils.success(update);
     }
 
 
-
+    // endregion
 
 }
