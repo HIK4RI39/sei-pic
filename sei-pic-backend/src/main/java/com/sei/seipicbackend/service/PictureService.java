@@ -7,6 +7,8 @@ import com.sei.seipicbackend.model.vo.PictureVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
 * @author hikari39
 * @description 针对表【picture(图片)】的数据库操作Service
@@ -15,4 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 public interface PictureService extends IService<Picture> {
 
     PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, UserVO loginUser);
+
+    boolean deletePictureById(long pictureId, HttpServletRequest request);
 }

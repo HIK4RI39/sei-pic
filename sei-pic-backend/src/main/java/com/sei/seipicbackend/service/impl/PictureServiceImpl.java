@@ -2,6 +2,7 @@ package com.sei.seipicbackend.service.impl;
 
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.mapper.FileManager;
@@ -12,10 +13,12 @@ import com.sei.seipicbackend.model.vo.PictureVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.mapper.PictureMapper;
+import com.sei.seipicbackend.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 
 /**
@@ -30,6 +33,16 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Resource
     private FileManager fileManager;
 
+    @Resource
+    private UserService userService;
+
+    /**
+     * 上传图片
+     * @param multipartFile
+     * @param pictureUploadRequest
+     * @param loginUser
+     * @return
+     */
     @Override
     public PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, UserVO loginUser) {
         // 校验登录, 需要填充上传者id
@@ -51,7 +64,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 如果是更新, 设置编辑时间和id
         if (ObjUtil.isNull(picture)) {
             picture.setId(pictureId);
-            picture.setEdittime(new Date());
+            picture.setEditTime(new Date());
         }
 
         boolean result = this.saveOrUpdate(picture);
@@ -60,18 +73,60 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return PictureVO.objToVo(picture);
     }
 
+    @Override
+    public boolean deletePictureById(long pictureId, HttpServletRequest request) {
+        UserVO loginUser = userService.getLoginUser(request);
+        Picture picture = this.getById(pictureId);
+        ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR);
+        ThrowUtils.throwIf(!isOwnerOrAdmin(picture, loginUser), ErrorCode.NO_AUTH_ERROR);
+
+        boolean result = this.removeById(pictureId);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片删除失败");
+
+        return true;
+    }
+
+    /**
+     * 管理员鉴权
+     * @param loginUserVO
+     * @return
+     */
+    private boolean isAdmin(UserVO loginUserVO) {
+        return UserConstant.ADMIN_ROLE.equals(loginUserVO.getUserRole());
+    }
+
+    /**
+     * 拥有者或管理员 鉴权
+     * @param picture
+     * @param loginUserVO
+     * @return
+     */
+    private boolean isOwnerOrAdmin(Picture picture, UserVO loginUserVO) {
+        Long owner = picture.getUserId();
+        Long userId = loginUserVO.getId();
+        return owner.equals(userId) || UserConstant.ADMIN_ROLE.equals(loginUserVO.getUserRole());
+    }
+
+    /**
+     * 填充图片参数
+     * @param loginUser
+     * @param uploadPictureResult
+     * @return
+     */
     private static Picture getPicture(UserVO loginUser, UploadPictureResult uploadPictureResult) {
         Picture picture = new Picture();
         picture.setUrl(uploadPictureResult.getUrl());
         picture.setName(uploadPictureResult.getPicName());
-        picture.setPicsize(uploadPictureResult.getPicSize());
-        picture.setPicwidth(uploadPictureResult.getPicWidth());
-        picture.setPicheight(uploadPictureResult.getPicHeight());
-        picture.setPicscale(uploadPictureResult.getPicScale());
-        picture.setPicformat(uploadPictureResult.getPicFormat());
-        picture.setUserid(loginUser.getId());
+        picture.setPicSize(uploadPictureResult.getPicSize());
+        picture.setPicWidth(uploadPictureResult.getPicWidth());
+        picture.setPicHeight(uploadPictureResult.getPicHeight());
+        picture.setPicScale(uploadPictureResult.getPicScale());
+        picture.setPicFormat(uploadPictureResult.getPicFormat());
+        picture.setUserId(loginUser.getId());
         return picture;
     }
+
+
 }
 
 
