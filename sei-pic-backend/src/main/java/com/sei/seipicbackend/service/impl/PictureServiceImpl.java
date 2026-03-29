@@ -304,10 +304,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         queryWrapper.eq(StrUtil.isNotBlank(category), Picture::getCategory, category);
         queryWrapper.eq(ObjUtil.isNotEmpty(userId), Picture::getUserId, userId);
 
-        // 处理json tags
+        // 后端代码改进
         if (CollUtil.isNotEmpty(tags)) {
             for (String tag : tags) {
-                queryWrapper.like(Picture::getTags, "\"" + tag + "\"");
+                // 手动拼接引号，匹配 JSON 格式中的内容，例如 "%"水獭2"%"
+                // 这样可以避免搜索 "Java" 匹配到 "JavaScript"
+                String preciseTag = "\"" + tag + "\"";
+                queryWrapper.like(Picture::getTags, preciseTag);
             }
         }
 
