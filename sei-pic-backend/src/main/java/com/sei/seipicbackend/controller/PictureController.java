@@ -173,9 +173,9 @@ public class PictureController {
      */
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> updatePicture(@RequestBody PictureUpdateRequest pictureUpdateRequest) {
+    public BaseResponse<Boolean> updatePicture(@RequestBody PictureUpdateRequest pictureUpdateRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(ObjUtil.isEmpty(pictureUpdateRequest), ErrorCode.PARAMS_ERROR);
-        boolean update = pictureService.updatePicture(pictureUpdateRequest);
+        boolean update = pictureService.updatePicture(pictureUpdateRequest, request);
         return ResponseUtils.success(update);
     }
 

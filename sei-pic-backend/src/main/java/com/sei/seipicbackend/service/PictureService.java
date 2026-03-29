@@ -29,7 +29,7 @@ public interface PictureService extends IService<Picture> {
 
     Page<Picture> getPicturePage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
 
-    boolean updatePicture(PictureUpdateRequest pictureUpdateRequest);
+    boolean updatePicture(PictureUpdateRequest pictureUpdateRequest, HttpServletRequest request);
 
     boolean editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request);
 
