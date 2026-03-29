@@ -123,6 +123,7 @@ public class PictureVO implements Serializable {
         BeanUtils.copyProperties(picture, pictureVO);
         // 类型不同，需要转换
         pictureVO.setTags(JSONUtil.toList(picture.getTags(), String.class));
+
         return pictureVO;
     }
 }

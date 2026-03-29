@@ -28,6 +28,12 @@ const router = createRouter({
       name: '用户管理',
       component: () => import('@/views/user/UserManagePage.vue'),
     },
+    // PICTURE
+    {
+      path: '/picture/add',
+      name: '图片上传',
+      component: () => import('@/views/picture/AddPicturePage.vue'),
+    },
     {
       path: '/:pathMatch(.*)*',
       name: '404',

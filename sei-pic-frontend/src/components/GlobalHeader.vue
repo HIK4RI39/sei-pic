@@ -41,7 +41,7 @@
 
 <script lang="ts" setup>
 import { h, ref } from 'vue';
-import { InsertRowAboveOutlined, HomeOutlined, LogoutOutlined } from '@ant-design/icons-vue';
+import { InsertRowAboveOutlined, HomeOutlined, LogoutOutlined, PictureOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { useLoginUserStore } from '@/stores/useLoginStore';
@@ -58,10 +58,16 @@ const menuItems = [
         key: '/',
         icon: () => h(HomeOutlined),
         label: '主页'
-    }, {
+    },
+    {
         key: '/admin/user/manage',
         icon: () => h(InsertRowAboveOutlined),
         label: '用户管理'
+    },
+    {
+        key: '/picture/add',
+        icon: () => h(PictureOutlined),
+        label: '图片上传'
     }
 ]
 

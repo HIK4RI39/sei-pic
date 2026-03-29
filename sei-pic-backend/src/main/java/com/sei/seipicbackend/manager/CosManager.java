@@ -1,16 +1,20 @@
 package com.sei.seipicbackend.manager;
 
 import com.qcloud.cos.COSClient;
+import com.qcloud.cos.http.HttpMethodName;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.GetObjectRequest;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.PutObjectResult;
 import com.qcloud.cos.model.ciModel.persistence.PicOperations;
 import com.sei.seipicbackend.configuration.CosClientConfig;
+import io.swagger.models.HttpMethod;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.net.URL;
+import java.util.Date;
 
 /**
  * @author hikari39_
@@ -63,6 +67,4 @@ public class CosManager {
         GetObjectRequest getObjectRequest = new GetObjectRequest(cosClientConfig.getBucket(), key);
         return cosClient.getObject(getObjectRequest);
     }
-
-
 }

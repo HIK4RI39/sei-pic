@@ -48,14 +48,11 @@ public class PictureController {
      * @return
      */
     @PostMapping("/upload")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<PictureVO> uploadPicture(
         @RequestPart MultipartFile multipartFile,
-        PictureUploadRequest pictureUploadRequest,
+        PictureUploadRequest pictureUploadRequest, // 可以为空, 首次上传没有图片id
         HttpServletRequest request
     ) {
-        ThrowUtils.throwIf(ObjUtil.isEmpty(pictureUploadRequest), ErrorCode.PARAMS_ERROR);
-
         PictureVO pictureVO = pictureService.uploadPicture(multipartFile, pictureUploadRequest, request);
         return ResponseUtils.success(pictureVO);
     }
