@@ -1,8 +1,4 @@
 package com.sei.seipicbackend.service.impl;
-import java.util.List;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -17,7 +13,10 @@ import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
-import com.sei.seipicbackend.mapper.FileManager;
+import com.sei.seipicbackend.manager.upload.FilePictureUpload;
+import com.sei.seipicbackend.manager.upload.PictureUploadTemplate;
+import com.sei.seipicbackend.manager.upload.UrlPictureUpload;
+import com.sei.seipicbackend.mapper.PictureMapper;
 import com.sei.seipicbackend.model.dto.picture.*;
 import com.sei.seipicbackend.model.enums.PictureReviewStatusEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
@@ -25,13 +24,17 @@ import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.PictureVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.PictureService;
-import com.sei.seipicbackend.mapper.PictureMapper;
 import com.sei.seipicbackend.service.UserService;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
 * @author hikari39
@@ -42,21 +45,29 @@ import javax.servlet.http.HttpServletRequest;
 public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     implements PictureService{
 
-    @Resource
-    private FileManager fileManager;
+//    @Resource
+//    private FileManager fileManager;
 
     @Resource
     private UserService userService;
 
+    @Resource
+    private FilePictureUpload filePictureUpload;
+
+    @Resource
+    private UrlPictureUpload urlPictureUpload;
+
     /**
      * 上传图片
-     * @param multipartFile
+     * @param inputSource multipartFile或fileUrl
      * @param pictureUploadRequest
      * @param request
      * @return
      */
     @Override
-    public PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, HttpServletRequest request) {
+    public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(inputSource==null, ErrorCode.NOT_FOUND_ERROR);
+
         // 校验登录, 需要填充上传者id
         UserVO loginUser = userService.getLoginUser(request);
         ThrowUtils.throwIf(ObjUtil.isNull(loginUser), ErrorCode.NOT_LOGIN_ERROR);
@@ -71,8 +82,16 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
 
         // 上传图片
-        String uploadPathPrefix = String.format("public/%s", loginUser.getId()); 
-        UploadPictureResult uploadPictureResult = fileManager.uploadPicture(multipartFile, uploadPathPrefix);
+        String uploadPathPrefix = String.format("public/%s", loginUser.getId());
+
+        // 根据inputSource决定上传方式
+        PictureUploadTemplate pictureUploadTemplate = filePictureUpload;
+        if (inputSource instanceof String) {
+            pictureUploadTemplate = urlPictureUpload;
+        }
+        UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, uploadPathPrefix);
+
+
         // 从上传结果中获取图片信息, 并填充
         Picture picture = getPicture(loginUser, uploadPictureResult);
 

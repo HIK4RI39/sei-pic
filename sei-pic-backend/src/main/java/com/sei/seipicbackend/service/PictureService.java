@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 */
 public interface PictureService extends IService<Picture> {
 
-    PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, HttpServletRequest request);
+    PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, HttpServletRequest request);
 
     boolean deletePictureById(long pictureId, HttpServletRequest request);
 

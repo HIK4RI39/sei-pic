@@ -44,7 +44,7 @@ public class PictureController {
     // region -------------------------- 用户 --------------------------
 
     /**
-     * 上传图片
+     * 根据文件上传图片
      * @param multipartFile
      * @param pictureUploadRequest
      * @param request
@@ -59,6 +59,19 @@ public class PictureController {
         PictureVO pictureVO = pictureService.uploadPicture(multipartFile, pictureUploadRequest, request);
         return ResponseUtils.success(pictureVO);
     }
+
+    /**
+     * 通过 URL 上传图片（可重新上传）
+     */
+    @PostMapping("/upload/url")
+    public BaseResponse<PictureVO> uploadPictureByUrl(
+            @RequestBody PictureUploadRequest pictureUploadRequest,
+            HttpServletRequest request) {
+        String fileUrl = pictureUploadRequest.getFileUrl();
+        PictureVO pictureVO = pictureService.uploadPicture(fileUrl, pictureUploadRequest, request);
+        return ResponseUtils.success(pictureVO);
+    }
+
 
     /**
      * 根据id删除图片
