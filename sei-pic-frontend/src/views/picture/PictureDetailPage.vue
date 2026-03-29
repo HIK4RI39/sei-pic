@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { deletePictureByIdUsingPost, editPictureUsingPost, getPictureVoByIdUsingPost } from '@/api/pictureController';
 import { useLoginUserStore } from '@/stores/useLoginStore';
-import { formatSize } from '@/utils';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons-vue';
+import { downloadImage, formatSize } from '@/utils';
+import { DeleteOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
 import { computed, h } from 'vue';
 import { ref } from 'vue';
@@ -71,6 +71,10 @@ const doDelete = async () => {
             message.error("删除失败," + e.message);
         }
     }
+}
+
+const doDownload = () => {
+    downloadImage(picture.value.url)
 }
 
 </script>
@@ -145,13 +149,18 @@ const doDelete = async () => {
                         </a-row>
                     </div>
 
-                    <div class="action-footer" v-if="canEdit">
-                        <a-space size="middle">
-                            <a-button type="primary" ghost @click="doEdit" :icon="h(EditOutlined)">
+                    <div class="action-footer">
+                        <a-space size="small">
+                            <a-button size="small" type="primary" ghost @click="doEdit" :icon="h(EditOutlined)"
+                                v-if="canEdit">
                                 编辑
                             </a-button>
-                            <a-button danger ghost @click="doDelete" :icon="h(DeleteOutlined)">
+                            <a-button size="small" danger ghost @click="doDelete" :icon="h(DeleteOutlined)"
+                                v-if="canEdit">
                                 删除
+                            </a-button>
+                            <a-button size="small" type="primary" @click="doDownload" :icon="h(DownloadOutlined)">
+                                下载
                             </a-button>
                         </a-space>
                     </div>
@@ -180,8 +189,10 @@ const doDelete = async () => {
 
 .main-card :deep(.ant-card-body) {
     padding: 0;
-    background-color: #000;
+    background-color: #89868658;
     /* 黑色背景衬托 */
+    /* background-color: transparent; */
+    /* 改为透明 */
     height: 65vh;
     /* 设为视口高度的 65%，确保不超屏 */
     display: flex;
@@ -298,8 +309,8 @@ const doDelete = async () => {
 
 .action-footer .ant-btn {
     border-radius: 8px;
-    padding: 0 20px;
-    height: 36px;
+    /* padding: 0 20px; */
+    /* height: 36px; */
 }
 
 /* 响应式：针对窄屏幕（如平板）调整 */
