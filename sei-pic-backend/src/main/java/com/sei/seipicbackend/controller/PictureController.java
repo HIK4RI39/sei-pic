@@ -10,14 +10,14 @@ import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
-import com.sei.seipicbackend.model.dto.picture.PictureEditRequest;
-import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
-import com.sei.seipicbackend.model.dto.picture.PictureUpdateRequest;
-import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
+import com.sei.seipicbackend.model.dto.picture.*;
 import com.sei.seipicbackend.model.pojo.Picture;
+import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.PictureTagCategory;
 import com.sei.seipicbackend.model.vo.PictureVO;
+import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.PictureService;
+import com.sei.seipicbackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +37,9 @@ import java.util.List;
 public class PictureController {
     @Resource
     private PictureService pictureService;
+
+    @Resource
+    private UserService userService;
 
     // region -------------------------- 用户 --------------------------
 
@@ -174,6 +177,22 @@ public class PictureController {
         ThrowUtils.throwIf(ObjUtil.isEmpty(pictureUpdateRequest), ErrorCode.PARAMS_ERROR);
         boolean update = pictureService.updatePicture(pictureUpdateRequest);
         return ResponseUtils.success(update);
+    }
+
+    /**
+     * 管理员审核
+     * @param pictureReviewRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/review")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<?> reviewPicture(@RequestBody PictureReviewRequest pictureReviewRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(pictureReviewRequest), ErrorCode.PARAMS_ERROR);
+        UserVO loginUser = userService.getLoginUser(request);
+        User user = User.toBean(loginUser);
+        pictureService.doPictureReview(pictureReviewRequest, user);
+        return ResponseUtils.success();
     }
 
 

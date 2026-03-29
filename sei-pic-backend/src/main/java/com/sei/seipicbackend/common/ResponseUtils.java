@@ -8,9 +8,14 @@ import com.sei.seipicbackend.exception.ErrorCode;
  * @since 2026-03-27
  */
 public class ResponseUtils {
+    public static BaseResponse<?> success() {
+        return new BaseResponse<>(0, null, "ok");
+    }
+
     public static <T> BaseResponse<T> success(T data) {
         return new BaseResponse<>(0, data, "ok");
     }
+
 
     public static <T> BaseResponse<T> success(int code, T data, String message) {
         return new BaseResponse<>(0, data, "ok");

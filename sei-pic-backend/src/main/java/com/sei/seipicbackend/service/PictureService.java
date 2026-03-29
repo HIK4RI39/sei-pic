@@ -1,12 +1,10 @@
 package com.sei.seipicbackend.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.sei.seipicbackend.model.dto.picture.PictureEditRequest;
-import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
-import com.sei.seipicbackend.model.dto.picture.PictureUpdateRequest;
-import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
+import com.sei.seipicbackend.model.dto.picture.*;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.PictureVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,4 +32,12 @@ public interface PictureService extends IService<Picture> {
     boolean updatePicture(PictureUpdateRequest pictureUpdateRequest);
 
     boolean editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request);
+
+    /**
+     * 图片审核
+     * @param pictureReviewRequest
+     * @param loginUser
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
+
 }

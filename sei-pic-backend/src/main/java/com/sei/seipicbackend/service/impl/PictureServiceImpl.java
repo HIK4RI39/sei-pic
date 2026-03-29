@@ -14,10 +14,12 @@ import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sei.seipicbackend.constant.UserConstant;
+import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.mapper.FileManager;
 import com.sei.seipicbackend.model.dto.picture.*;
+import com.sei.seipicbackend.model.enums.PictureReviewStatusEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.PictureVO;
@@ -173,6 +175,36 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         boolean result = updateById(newPicture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return true;
+    }
+
+    @Override
+    public void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser) {
+        Long id = pictureReviewRequest.getId();
+        Integer reviewStatus = pictureReviewRequest.getReviewStatus();
+        PictureReviewStatusEnum pictureReviewStatusEnum = PictureReviewStatusEnum.getEnumByValue(reviewStatus);
+        String reviewMessage = pictureReviewRequest.getReviewMessage();
+
+        if (id==null || id<=0 || pictureReviewStatusEnum==null || PictureReviewStatusEnum.REVIEWING.equals(pictureReviewStatusEnum)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        Picture oldPicture = getById(id);
+        ThrowUtils.throwIf(oldPicture==null, ErrorCode.NOT_FOUND_ERROR);
+
+        // 不能重复审核
+        if (oldPicture.getReviewStatus().equals(reviewStatus)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请勿重复审核");
+        }
+
+        Picture reviewedPicture = new Picture();
+        BeanUtil.copyProperties(oldPicture, reviewedPicture);
+        reviewedPicture.setReviewStatus(reviewStatus);
+        reviewedPicture.setReviewMessage(reviewMessage);
+        reviewedPicture.setReviewerId(loginUser.getId());
+        reviewedPicture.setReviewTime(new Date());
+
+        boolean result = this.updateById(reviewedPicture);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
     }
 
     @Override
