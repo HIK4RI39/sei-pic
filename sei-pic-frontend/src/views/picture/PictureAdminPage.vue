@@ -23,6 +23,16 @@
                         <a-select v-model:value="searchParams.category" :options="categoryOptions" allow-clear />
                     </a-form-item>
                 </a-col>
+                <a-col :span="4">
+                    <a-form-item label="审核状态" name="reviewStatus">
+                        <a-select v-model:value="searchParams.reviewStatus" :options="[
+                            { 'label': '待审核', 'value': 0 },
+                            { 'label': '通过', 'value': 1 },
+                            { 'label': '拒绝', 'value': 2 },
+                        ]" allow-clear />
+                    </a-form-item>
+                </a-col>
+
             </a-row>
 
             <a-row :gutter="16">
@@ -137,6 +147,22 @@
                 <template v-else-if="column.dataIndex === 'userId'">
                     {{ record.userId }}
                 </template>
+                <!-- 审核信息 -->
+                <template v-else-if="column.dataIndex === 'reviewMessage'">
+                    <span class="review-info-text">
+                        <div>审核状态：
+                            <!-- {{ PIC_REVIEW_STATUS_MAP[record.reviewStatus] }} -->
+                            <a-tag v-if="PIC_REVIEW_STATUS_ENUM.REVIEWING === record.reviewStatus" color="blue"
+                                style="font-size: 8px;" :bordered="false">待审核</a-tag>
+                            <a-tag v-else-if="PIC_REVIEW_STATUS_ENUM.PASS === record.reviewStatus"
+                                style="font-size: 8px;" :bordered="false" color="green">通过</a-tag>
+                            <a-tag v-else-if="PIC_REVIEW_STATUS_ENUM.REJECT === record.reviewStatus"
+                                style="font-size: 8px;" :bordered="false" color="red">拒绝</a-tag>
+                        </div>
+                        <div>审核信息：{{ record.reviewMessage }}</div>
+                        <div>审核人id：{{ record.reviewerId }}</div>
+                    </span>
+                </template>
                 <!-- createTime -->
                 <template v-else-if="column.dataIndex === 'createTime'">
                     <span>
@@ -154,15 +180,28 @@
                     <span>
                         <a-row>
                             <a-space>
+
                                 <!-- 更新 -->
                                 <a-col>
-                                    <a-button type="primary" ghost size="small" style="font-size: 12px;"
+                                    <a-button type="primary" ghost size="small" style="font-size: 10px;"
                                         @click="doUpdate(record.id)">更新</a-button>
                                 </a-col>
                                 <!-- 删除 -->
                                 <a-col>
                                     <a-button danger @click="doDelete(record.id)" size="small"
-                                        style="font-size: 12px;">删除</a-button>
+                                        style="font-size: 10px;">删除</a-button>
+                                </a-col>
+                                <!-- 通过 -->
+                                <a-col>
+                                    <a-button type="primary" size="small" style="font-size: 10px;"
+                                        v-if="PIC_REVIEW_STATUS_ENUM.PASS !== record.reviewStatus"
+                                        @click="reviewPass(record.id)">通过</a-button>
+                                </a-col>
+                                <!-- 拒绝 -->
+                                <a-col>
+                                    <a-button type="primary" danger size="small" style="font-size: 10px;"
+                                        v-if="PIC_REVIEW_STATUS_ENUM.REJECT !== record.reviewStatus"
+                                        @click="reviewReject(record.id)">拒绝</a-button>
                                 </a-col>
                             </a-space>
 
@@ -180,7 +219,8 @@
 </template>
 
 <script lang="ts" setup>
-import { deletePictureByIdUsingPost, getPicturePageUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController';
+import { deletePictureByIdUsingPost, getPicturePageUsingPost, listPictureTagCategoryUsingGet, reviewPictureUsingPost } from '@/api/pictureController';
+import { PIC_REVIEW_STATUS_ENUM, PIC_REVIEW_STATUS_MAP } from '@/constants/picture';
 import { message } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import { computed } from 'vue';
@@ -223,6 +263,13 @@ const columns = [
         dataIndex: 'tags',
         width: 100,
     },
+
+    {
+        title: '审核信息',
+        dataIndex: 'reviewMessage',
+        width: 180,
+        ellipsis: true
+    },
     {
         title: '图片信息',
         dataIndex: 'picInfo',
@@ -247,7 +294,7 @@ const columns = [
         title: '操作',
         key: 'action',
         fixed: 'right',
-        width: 150,
+        width: 220,
     },
 ]
 
@@ -339,6 +386,36 @@ const doDelete = async (id: number) => {
     }
 }
 
+const reviewPass = async (id: number) => {
+    const res = await reviewPictureUsingPost({
+        id,
+        reviewStatus: PIC_REVIEW_STATUS_ENUM.PASS,
+        reviewMessage: '管理员操作通过'
+    })
+    if (res.data.code === 0) {
+        message.success("已通过")
+        fetchData()
+    } else {
+        message.error("审核失败," + res.data.message)
+    }
+}
+
+const reviewReject = async (id: number) => {
+    const msg = prompt("拒绝原因: ")
+
+    const res = await reviewPictureUsingPost({
+        id,
+        reviewStatus: PIC_REVIEW_STATUS_ENUM.REJECT,
+        reviewMessage: msg ? msg : '管理员操作拒绝'
+    })
+    if (res.data.code === 0) {
+        message.success("已通过")
+        fetchData()
+    } else {
+        message.error("审核失败," + res.data.message)
+    }
+}
+
 /**
  * 安全解析标签字符串
  * @param tagsJson 
@@ -422,6 +499,13 @@ onMounted(() => {
     font-size: 11px;
     /* 减小字号 */
     line-height: 1.2;
+    color: #666;
+}
+
+/* 紧凑型审核信息 */
+.review-info-text {
+    font-size: 11px;
+    line-height: 1.8;
     color: #666;
 }
 

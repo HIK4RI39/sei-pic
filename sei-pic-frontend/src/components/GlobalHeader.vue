@@ -15,27 +15,30 @@
                     @click="doMenuClick" />
             </a-col>
             <!-- 用户信息 -->
-            <a-col flex="150px">
+            <a-col flex="200px">
                 <div class="userLoginStatus">
                     <!-- dropdown -->
-                    <a-dropdown>
-                        <a-space>
-                            <a-avatar :src="loginUserStore?.loginUser?.userAvatar" />
-                            {{ (loginUserStore?.loginUser?.userName?.length ?? 0) > 0
-                                ? loginUserStore.loginUser.userName
-                                : '无名' }}
-                        </a-space>
-                        <template #overlay>
-                            <a-menu>
-                                <a-menu-item @click="doLogOut" style="color: red;">
-                                    <logout-outlined />
-                                    <a href="javascript:" style="margin-left: 5px;">退出登录</a>
-                                </a-menu-item>
-                            </a-menu>
-                        </template>
-                    </a-dropdown>
-                    <a-button v-if="!loginUserStore?.loginUser" type="primary" ghost href="/user/login"
-                        style="margin-left: 5px;">登录</a-button>
+                    <a-space>
+                        <a-dropdown>
+                            <a-space>
+                                <a-avatar :src="loginUserStore?.loginUser?.userAvatar" />
+                                {{ (loginUserStore?.loginUser?.userName?.length ?? 0) > 0
+                                    ? loginUserStore.loginUser.userName
+                                    : '无名' }}
+                            </a-space>
+                            <template #overlay>
+                                <a-menu>
+                                    <a-menu-item @click="doLogOut" style="color: red;">
+                                        <logout-outlined />
+                                        <a href="javascript:" style="margin-left: 5px;">退出登录</a>
+                                    </a-menu-item>
+                                </a-menu>
+                            </template>
+                        </a-dropdown>
+                        <a-button v-if="!loginUserStore?.loginUser?.id" type="primary" href="/user/login"
+                            style="margin-left: 5px;">登录</a-button>
+                    </a-space>
+
                 </div>
             </a-col>
         </a-row>
