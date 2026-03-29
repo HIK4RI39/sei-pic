@@ -27,7 +27,6 @@ interface Props {
 }
 
 const imageUrl = ref<string>('');
-
 const props = defineProps<Props>()
 
 
