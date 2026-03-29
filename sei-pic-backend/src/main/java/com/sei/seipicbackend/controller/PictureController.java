@@ -15,6 +15,7 @@ import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUpdateRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
 import com.sei.seipicbackend.model.pojo.Picture;
+import com.sei.seipicbackend.model.vo.PictureTagCategory;
 import com.sei.seipicbackend.model.vo.PictureVO;
 import com.sei.seipicbackend.service.PictureService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author hikari39_
@@ -114,6 +117,16 @@ public class PictureController {
         ThrowUtils.throwIf(ObjUtil.isEmpty(pictureEditRequest), ErrorCode.PARAMS_ERROR);
         boolean update = pictureService.editPicture(pictureEditRequest, request);
         return ResponseUtils.success(update);
+    }
+
+    @GetMapping("/tag_category")
+    public BaseResponse<PictureTagCategory> listPictureTagCategory() {
+        PictureTagCategory pictureTagCategory = new PictureTagCategory();
+        List<String> tagList = Arrays.asList("热门", "搞笑", "生活", "高清", "艺术", "校园", "背景", "简历", "创意", "自然", "动物");
+        List<String> categoryList = Arrays.asList("模板", "电商", "表情包", "素材", "海报");
+        pictureTagCategory.setTagList(tagList);
+        pictureTagCategory.setCategoryList(categoryList);
+        return ResponseUtils.success(pictureTagCategory);
     }
 
 
