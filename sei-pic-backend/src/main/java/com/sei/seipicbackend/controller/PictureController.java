@@ -10,6 +10,7 @@ import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import com.sei.seipicbackend.model.dto.picture.PictureEditRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUpdateRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
@@ -102,9 +103,24 @@ public class PictureController {
         Page<PictureVO> pictureVoPage = pictureService.getPictureVoPage(pictureQueryRequest, request);
         return ResponseUtils.success(pictureVoPage);
     }
+
+    /**
+     * 用户 更新图片
+     * @param pictureEditRequest
+     * @return
+     */
+    @PostMapping("/edit")
+    public BaseResponse<Boolean> editPicture(@RequestBody PictureEditRequest pictureEditRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(pictureEditRequest), ErrorCode.PARAMS_ERROR);
+        boolean update = pictureService.editPicture(pictureEditRequest, request);
+        return ResponseUtils.success(update);
+    }
+
+
     // endregion
 
     // region -------------------------- 管理员 --------------------------
+
     /**
      * 管理员 根据id查询图片
      * @param idRequest

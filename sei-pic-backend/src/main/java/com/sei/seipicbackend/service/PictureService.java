@@ -1,6 +1,7 @@
 package com.sei.seipicbackend.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sei.seipicbackend.model.dto.picture.PictureEditRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUpdateRequest;
 import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
@@ -31,4 +32,6 @@ public interface PictureService extends IService<Picture> {
     Page<Picture> getPicturePage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
 
     boolean updatePicture(PictureUpdateRequest pictureUpdateRequest);
+
+    boolean editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request);
 }

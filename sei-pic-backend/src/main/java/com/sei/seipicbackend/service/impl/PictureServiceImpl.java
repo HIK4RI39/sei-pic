@@ -17,10 +17,7 @@ import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.mapper.FileManager;
-import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
-import com.sei.seipicbackend.model.dto.picture.PictureUpdateRequest;
-import com.sei.seipicbackend.model.dto.picture.PictureUploadRequest;
-import com.sei.seipicbackend.model.dto.picture.UploadPictureResult;
+import com.sei.seipicbackend.model.dto.picture.*;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.PictureVO;
@@ -139,7 +136,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         int pageSize = pictureQueryRequest.getPageSize();
         Page<Picture> page = new Page<>(current, pageSize);
         Page<Picture> picturePage = page(page, queryWrapper);
-        return getPictureVoPoage(picturePage);
+        return getPictureVoPage(picturePage);
     }
 
     @Override
@@ -149,6 +146,33 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         int pageSize = pictureQueryRequest.getPageSize();
         Page<Picture> page = new Page<>(current, pageSize);
         return page(page, queryWrapper);
+    }
+
+    @Override
+    public boolean editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request) {
+        Long pictureId = pictureEditRequest.getId();
+        Picture oldPicture = this.getById(pictureId);
+        ThrowUtils.throwIf(oldPicture==null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+
+        UserVO loginUser = userService.getLoginUser(request);
+        isOwnerOrAdmin(oldPicture, loginUser);
+
+        Picture newPicture = new Picture();
+        BeanUtil.copyProperties(pictureEditRequest, newPicture);
+        newPicture.setEditTime(new Date());
+
+        // tags需要转化为 json数组 字符串
+        List<String> tags = pictureEditRequest.getTags();
+        if (CollUtil.isNotEmpty(tags)) {
+            newPicture.setTags(JSONUtil.toJsonStr(tags));
+        }
+
+        // 校验
+        validPicture(newPicture);
+
+        boolean result = updateById(newPicture);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return true;
     }
 
     @Override
@@ -172,12 +196,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return true;
     }
 
+
     /**
      * pojo Page转vo Page
      * @param picturePage
      * @return
      */
-    private Page<PictureVO> getPictureVoPoage(Page<Picture> picturePage) {
+    private Page<PictureVO> getPictureVoPage(Page<Picture> picturePage) {
         List<Picture> pictureList = picturePage.getRecords();
 
         // 利用mp的Page转换工具，自动拷贝分页元数据
