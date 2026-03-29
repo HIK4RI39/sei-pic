@@ -1,6 +1,5 @@
 import { getLoginUserUsingGet } from '@/api/userController'
 import { defineStore } from 'pinia'
-import { message } from 'ant-design-vue'
 import { ref } from 'vue'
 
 const useLoginUserStore = defineStore('loginUser', () => {

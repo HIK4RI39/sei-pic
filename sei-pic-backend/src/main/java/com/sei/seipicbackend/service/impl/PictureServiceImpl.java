@@ -294,8 +294,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         LambdaQueryWrapper<Picture> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ObjUtil.isNotEmpty(id), Picture::getId, id);
-        queryWrapper.eq(StrUtil.isNotBlank(name), Picture::getName, name);
-        queryWrapper.eq(StrUtil.isNotBlank(introduction), Picture::getIntroduction, introduction);
+        queryWrapper.like(StrUtil.isNotBlank(name), Picture::getName, name);
+        queryWrapper.like(StrUtil.isNotBlank(introduction), Picture::getIntroduction, introduction);
         queryWrapper.eq(ObjUtil.isNotEmpty(picSize), Picture::getPicSize, picSize);
         queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), Picture::getPicWidth, picWidth);
         queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), Picture::getPicHeight, picHeight);
@@ -343,6 +343,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @return
      */
     private SFunction<Picture, ?> getOrderColumn(String sortField) {
+        if (sortField==null) {
+            return Picture::getCreateTime;
+        }
+
         return COLUMN_MAP.getOrDefault(sortField, Picture::getCreateTime);
     }
 

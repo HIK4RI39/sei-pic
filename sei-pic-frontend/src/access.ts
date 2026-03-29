@@ -16,6 +16,7 @@ router.beforeEach(async (to, from, next) => {
   // 仅当首次调用时, 从后端获取用户信息
   if (!isLoginUserInitialized) {
     try {
+      // loginUserStore.setLoginUser(undefined)
       await loginUserStore.fetchLoginUser()
     } catch (e: any) {
       message.error('获取登录态失败,' + e.message)
@@ -23,6 +24,8 @@ router.beforeEach(async (to, from, next) => {
     // 意为未登录也需要设置, 防止死循环
     isLoginUserInitialized = true
   }
+
+  // console.log('用户信息: ', loginUserStore.loginUser)
 
   const loginUser = loginUserStore.loginUser
   const isLogin = !!loginUser

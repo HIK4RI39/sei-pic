@@ -91,9 +91,11 @@
             </template>
         </a-table>
 
-        <a-pagination v-model="searchParams.current" :total="total" v-model:page-size="searchParams.pageSize"
-            :pageSizeOptions="['5', '10', '15', '20', '30']" show-size-changer show-quick-jumper
-            @change="handlePageChange" />
+        <div class="table-pagination">
+            <a-pagination v-model="searchParams.current" :total="total" v-model:page-size="searchParams.pageSize"
+                :pageSizeOptions="['5', '10', '15', '20', '30']" show-size-changer show-quick-jumper
+                @change="handlePageChange" />
+        </div>
 
     </div>
 </template>
@@ -157,7 +159,7 @@ const dataList = ref<API.UserVO[]>([])
  */
 const searchParams = ref<API.UserPageRequest>({
     current: 1,
-    pageSize: 3
+    pageSize: 8
 })
 
 const total = ref<Number>(0)
@@ -244,3 +246,10 @@ const doDelete = async (id: number) => {
 }
 
 </script>
+
+<style scoped>
+.table-pagination {
+    margin-top: 16px;
+    text-align: center;
+}
+</style>

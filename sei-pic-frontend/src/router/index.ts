@@ -40,6 +40,13 @@ const router = createRouter({
       component: () => import('@/views/picture/PictureDetailPage.vue'),
       props: true,
     },
+
+    {
+      path: '/admin/pictureManage',
+      name: '图片管理',
+      component: () => import('@/views/picture/PictureAdminPage.vue'),
+    },
+
     {
       path: '/:pathMatch(.*)*',
       name: '404',

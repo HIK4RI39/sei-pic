@@ -3,22 +3,22 @@
         <h2 style="margin-bottom: 16px; align-content: center;">{{ route.query?.id ? '修改图片' : '创建图片' }}</h2>
         <PictureUpload :picture="picture" :onSuccess="onSuccess" />
         <!-- 图片信息 -->
-        <a-form v-if="picture" name="pictureForm" layout="vertical" :model="pictureForm" @finish="handleSubmit">
+        <a-form v-if="picture" name="pictureForm" layout="horizontal" :model="pictureForm" @finish="handleSubmit">
             <!-- name -->
-            <a-form-item lable="名称" name="name">
+            <a-form-item label="名称: " name="name">
                 <a-input v-model:value="pictureForm.name" placeholder="图片名称" />
             </a-form-item>
             <!-- introduction -->
-            <a-form-item lable="简介" name="introduction">
+            <a-form-item label="简介: " name="introduction">
                 <a-textarea v-model:value="pictureForm.introduction" placeholder="图片简介"
                     :autoSize="{ minRows: 2, maxRows: 5 }" />
             </a-form-item>
             <!-- category -->
-            <a-form-item lable="分类" name="category">
+            <a-form-item label="分类: " name="category">
                 <a-select v-model:value="pictureForm.category" placeholder="请选择分类" :options="tagOptions" allow-clear />
             </a-form-item>
             <!-- tags -->
-            <a-form-item label="标签" name="tags">
+            <a-form-item label="标签: " name="tags">
                 <a-form-item>
                     <a-select v-model:value="pictureForm.tags" mode="tags" placeholder="请选择标签"
                         :options="categoryOptions" allow-clear />
@@ -26,7 +26,8 @@
             </a-form-item>
             <!-- submit -->
             <a-form-item>
-                <a-button type="primary" style="width: 100%;" html-type="submit">创建</a-button>
+                <a-button type="primary" style="width: 100%;" html-type="submit">{{ route.query?.id ? '修改' : '创建'
+                    }}</a-button>
             </a-form-item>
         </a-form>
     </div>

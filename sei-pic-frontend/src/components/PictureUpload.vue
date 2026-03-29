@@ -2,7 +2,8 @@
     <div class="pictureUpload">
         <a-upload list-type="picture-card" :show-upload-list="false" :before-upload="beforeUpload"
             :custom-request="handleUpload">
-            <img v-if="imageUrl || picture?.url" :src="imageUrl || picture?.url" alt="picture" />
+            <img v-if="imageUrl || picture?.url" :src="imageUrl || picture?.url" alt="picture"
+                style="max-width: 30%;" />
             <div v-else>
                 <loading-outlined v-if="loading"></loading-outlined>
                 <plus-outlined v-else></plus-outlined>

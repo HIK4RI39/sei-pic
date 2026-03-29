@@ -10,8 +10,9 @@
                 </router-link>
             </a-col>
             <!-- a menu -->
-            <a-menu v-model:selectedKeys="current" mode="horizontal" :items="filterMenuItems" @click="doMenuClick" />
             <a-col flex="auto">
+                <a-menu v-model:selectedKeys="current" mode="horizontal" :items="filterMenuItems"
+                    @click="doMenuClick" />
             </a-col>
             <!-- 用户信息 -->
             <a-col flex="150px">
@@ -20,7 +21,9 @@
                     <a-dropdown>
                         <a-space>
                             <a-avatar :src="loginUserStore?.loginUser?.userAvatar" />
-                            {{ loginUser?.userName?.length > 0 ? loginUser.userName : '无名' }}
+                            {{ (loginUserStore?.loginUser?.userName?.length ?? 0) > 0
+                                ? loginUserStore.loginUser.userName
+                                : '无名' }}
                         </a-space>
                         <template #overlay>
                             <a-menu>
@@ -50,7 +53,6 @@ import { computed } from 'vue';
 
 const router = useRouter();
 const loginUserStore = useLoginUserStore()
-const loginUser = loginUserStore.loginUser
 const current = ref<string[]>(['/']);
 
 const menuItems = [
@@ -68,7 +70,13 @@ const menuItems = [
         key: '/picture/add',
         icon: () => h(PictureOutlined),
         label: '图片上传'
+    },
+    {
+        key: '/admin/pictureManage',
+        label: '图片管理',
+        title: '图片管理',
     }
+
 ]
 
 /**
@@ -78,7 +86,7 @@ const menuItems = [
 const filterMenuItems = computed(() => {
     return menuItems.filter((item) => {
         if (item?.key?.startsWith('/admin')) {
-            return loginUser?.userRole == 'admin'
+            return loginUserStore?.loginUser?.userRole == 'admin'
         }
         return true
     })
