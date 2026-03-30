@@ -65,20 +65,26 @@ const menuItems = [
         label: '主页'
     },
     {
-        key: '/admin/user/manage',
-        icon: () => h(InsertRowAboveOutlined),
-        label: '用户管理'
-    },
-    {
         key: '/picture/add',
         icon: () => h(PictureOutlined),
         label: '图片上传'
     },
     {
+        key: '/admin/user/manage',
+        icon: () => h(InsertRowAboveOutlined),
+        label: '用户管理'
+    },
+    {
         key: '/admin/pictureManage',
         label: '图片管理',
         title: '图片管理',
+    },
+    {
+        key: '/admin/spaceManage',
+        label: '空间管理',
+        title: '空间管理',
     }
+
 
 ]
 

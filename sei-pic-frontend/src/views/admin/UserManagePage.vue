@@ -1,4 +1,5 @@
 <template>
+    <h2>用户管理</h2>
     <div id="userManagepage">
         <!-- 搜索表单 -->
         <a-form :model="searchParams" name="horizontal_login" layout="inline" autocomplete="off" @finish="doSearch">

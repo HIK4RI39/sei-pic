@@ -8,11 +8,7 @@ const router = createRouter({
       name: 'home',
       component: () => import('@/views/HomePage.vue'),
     },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('@/views/AboutePage.vue'),
-    },
+    // 用户
     {
       path: '/user/login',
       name: '用户登录',
@@ -26,7 +22,7 @@ const router = createRouter({
     {
       path: '/admin/user/manage',
       name: '用户管理',
-      component: () => import('@/views/user/UserManagePage.vue'),
+      component: () => import('@/views/admin/UserManagePage.vue'),
     },
     // PICTURE
     {
@@ -47,13 +43,17 @@ const router = createRouter({
       component: () => import('@/views/picture/PictureDetailPage.vue'),
       props: true,
     },
-
     {
       path: '/admin/pictureManage',
       name: '图片管理',
-      component: () => import('@/views/picture/PictureAdminPage.vue'),
+      component: () => import('@/views/admin/PictureManagePage.vue'),
     },
-
+    // 空间
+    {
+      path: '/admin/spaceManage',
+      name: '空间管理',
+      component: () => import('@/views/admin/SpaceManagePage.vue'),
+    },
     {
       path: '/:pathMatch(.*)*',
       name: '404',
