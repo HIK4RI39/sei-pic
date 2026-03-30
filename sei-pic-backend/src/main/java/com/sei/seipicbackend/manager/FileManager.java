@@ -15,7 +15,6 @@ import com.sei.seipicbackend.configuration.CosClientConfig;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
-import com.sei.seipicbackend.manager.CosManager;
 import com.sei.seipicbackend.model.dto.picture.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -99,7 +98,7 @@ public class FileManager {
         // 1. 校验文件大小
         long fileSize = multipartFile.getSize();
         final long ONE_M = 1024 * 1024L;
-        ThrowUtils.throwIf(fileSize > 2 * ONE_M, ErrorCode.PARAMS_ERROR, "文件大小不能超过 2M");
+        ThrowUtils.throwIf(fileSize > 5 * ONE_M, ErrorCode.PARAMS_ERROR, "文件大小不能超过 5M");
         // 2. 校验文件后缀
         String fileSuffix = FileUtil.getSuffix(multipartFile.getOriginalFilename());
         // 允许上传的文件后缀
@@ -207,8 +206,9 @@ public class FileManager {
             if (StrUtil.isNotBlank(contentLengthStr)) {
                 try {
                     long contentLength = Long.parseLong(contentLengthStr);
-                    final long TWO_MB = 2 * 1024 * 1024L; // 限制文件大小为 2MB
-                    ThrowUtils.throwIf(contentLength > TWO_MB, ErrorCode.PARAMS_ERROR, "文件大小不能超过 2M");
+                    // 限制文件大小为 5MB
+                    final long FIVE_MB = 5 * 1024 * 1024L;
+                    ThrowUtils.throwIf(contentLength > FIVE_MB, ErrorCode.PARAMS_ERROR, "文件大小不能超过 5M");
                 } catch (NumberFormatException e) {
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小格式错误");
                 }

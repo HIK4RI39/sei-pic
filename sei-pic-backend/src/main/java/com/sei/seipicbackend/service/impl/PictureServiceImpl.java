@@ -99,6 +99,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             ThrowUtils.throwIf(picture==null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
             // 如果是编辑, 需要鉴权
             isOwnerOrAdmin(picture, loginUser);
+            // 更新图片后, 对原图片进行删除
+            this.clearPictureFile(picture);
         }
 
         // 上传图片
@@ -171,6 +173,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture picture = this.getById(pictureId);
         ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR);
         ThrowUtils.throwIf(!isOwnerOrAdmin(picture, loginUser), ErrorCode.NO_AUTH_ERROR);
+        // 异步删除COS的图片
+        this.clearPictureFile(picture);
 
         boolean result = this.removeById(pictureId);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片删除失败");
@@ -659,13 +663,18 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             return;
         }
 
-        // 清理原图
         String compressedUrl = oldPicture.getUrl();
-        int lastIndexOf = compressedUrl.lastIndexOf(".");
-        String originUrl = compressedUrl.substring(0, lastIndexOf) + oldPicture.getPicFormat();
-        cosManager.deleteObject(originUrl);
 
-        // 清理压缩图 (webp
+        // 清理原图 (如果原图是webp无需清理)
+        if (!"webp".equals(oldPicture.getPicFormat())) {
+            int lastIndexOf = compressedUrl.lastIndexOf(".");
+            // 有个坑, 文件后缀名转小写才能访问正确url
+            String picFormat = oldPicture.getPicFormat().toLowerCase();
+            String originUrl = compressedUrl.substring(0, lastIndexOf+1) + picFormat;
+            cosManager.deleteObject(originUrl);
+        }
+
+        // 清理压缩图 (webp)
         cosManager.deleteObject(compressedUrl);
 
         // 清理缩略图

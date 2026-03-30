@@ -258,6 +258,12 @@ public class PictureController {
         if (CollUtil.isEmpty(idList)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        // 删除COS的图片
+        List<Picture> pictures = pictureService.listByIds(idList);
+        for (Picture picture : pictures) {
+            pictureService.clearPictureFile(picture);
+        }
+        // 删除数据库记录
         boolean result = pictureService.removeBatchByIds(idList);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResponseUtils.success();
