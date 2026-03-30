@@ -74,7 +74,11 @@ const doDelete = async () => {
 }
 
 const doDownload = () => {
-    downloadImage(picture.value.url)
+    // 下载原图, 从format拿到后缀, 自行拼接url
+    let compressedUrl = picture.value.url
+    let lastDotIndex = compressedUrl?.lastIndexOf(".")
+    let url = compressedUrl?.slice(0, lastDotIndex + 1) + picture.value.picFormat
+    downloadImage(url)
 }
 
 </script>
@@ -121,7 +125,7 @@ const doDownload = () => {
                                 <div class="info-value">
                                     <a-space separator="|">
                                         <span>{{ picture.picFormat?.toUpperCase() }}</span>
-                                        <span>{{ formatSize(picture.picSize) }} KB</span>
+                                        <span>{{ formatSize(picture.picSize) }}</span>
                                         <span>{{ picture.picWidth }} x {{ picture.picHeight }}</span>
                                     </a-space>
                                 </div>
