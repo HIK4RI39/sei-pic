@@ -52,10 +52,10 @@ public class SpaceController {
      * @return
      */
     @PostMapping("/create")
-    public BaseResponse<Boolean> createSpace(@RequestBody SpaceAddRequest spaceAddRequest, HttpServletRequest request) {
+    public BaseResponse<Long> createSpace(@RequestBody SpaceAddRequest spaceAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(ObjUtil.isEmpty(spaceAddRequest), ErrorCode.PARAMS_ERROR);
-        boolean result = spaceService.createSpace(spaceAddRequest, request);
-        return ResponseUtils.success(result);
+        Long spaceId = spaceService.createSpace(spaceAddRequest, request);
+        return ResponseUtils.success(spaceId);
     }
 
     /**

@@ -1,6 +1,8 @@
 package com.sei.seipicbackend.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.intern.InternUtil;
+import cn.hutool.core.lang.intern.Interner;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sei.seipicbackend.common.IdRequest;
@@ -24,9 +26,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author hikari39
@@ -42,6 +44,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     @Resource
     private PictureService pictureService;
+
+    // 弱引用, 自动回收
+    private static final Interner<String> USER_LOCK_INTERNER = InternUtil.createWeakInterner();
 
     // region -------------------------- 公共公共方法 --------------------------
 
@@ -161,7 +166,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      * @return
      */
     @Override
-    public boolean createSpace(SpaceAddRequest spaceAddRequest, HttpServletRequest request) {
+    public Long createSpace(SpaceAddRequest spaceAddRequest, HttpServletRequest request) {
         String spaceName = spaceAddRequest.getSpaceName();
         Integer spaceLevel = spaceAddRequest.getSpaceLevel();
         Space space = new Space();
@@ -177,15 +182,21 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         }
         // 填写空间参数
         fillSpaceBySpaceLevel(space);
-        // 不能重复创建空间
-        boolean exists = lambdaQuery().eq(Space::getUserId, loginUser.getId()).exists();
-        ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "最多创建1个空间");
         // 填写userId
-        space.setUserId(loginUser.getId());
+        Long userId = loginUser.getId();
+        space.setUserId(userId);
 
-        boolean result = save(space);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "空间创建失败");
-        return true;
+        // 加锁
+        String lock = USER_LOCK_INTERNER.intern(userId.toString());
+        synchronized (lock) {
+            // 不能重复创建空间
+            boolean exists = lambdaQuery().eq(Space::getUserId, userId).exists();
+            ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "最多创建1个空间");
+            boolean result = save(space);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "空间创建失败");
+        }
+
+        return Optional.ofNullable(space.getId()).orElse(-1L);
     }
 
     /**

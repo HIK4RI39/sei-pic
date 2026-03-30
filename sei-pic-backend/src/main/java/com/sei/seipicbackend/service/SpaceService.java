@@ -19,7 +19,7 @@ public interface SpaceService extends IService<Space> {
 
     void fillSpaceBySpaceLevel(Space space);
 
-    boolean createSpace(SpaceAddRequest spaceAddRequest, HttpServletRequest request);
+    Long createSpace(SpaceAddRequest spaceAddRequest, HttpServletRequest request);
 
     boolean deleteSpace(IdRequest idRequest, HttpServletRequest request);
 
