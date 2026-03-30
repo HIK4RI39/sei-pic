@@ -39,6 +39,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
@@ -80,6 +81,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private TransactionTemplate transactionTemplate;
 
     // region -------------------------- 管理员 --------------------------
 
@@ -464,8 +468,17 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (spaceId!=null) {
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+            // 鉴权
             boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
             ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+            // 校验额度
+            Long maxCount = space.getMaxCount();
+            Long maxSize = space.getMaxSize();
+            Long totalCount = space.getTotalCount();
+            Long totalSize = space.getTotalSize();
+            ThrowUtils.throwIf(totalCount>maxCount, ErrorCode.OPERATION_ERROR, "空间图片数量达到上限");
+            ThrowUtils.throwIf(totalSize>maxSize, ErrorCode.OPERATION_ERROR, "空间图片容量达到上限");
+
             // 如果是更新请求, 需要校验spaceId是否一致
             if (pictureId!=null) {
                 Long oldSpaceId = picture.getSpaceId();
@@ -474,8 +487,22 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             picture.setSpaceId(spaceId);
         }
 
-        boolean result = this.saveOrUpdate(picture);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片上传失败");
+        // 开启事务
+        Long finalSpaceId = spaceId;
+        transactionTemplate.execute(status -> {
+            boolean result = this.saveOrUpdate(picture);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片上传失败");
+            // 更新空间额度
+            if(finalSpaceId!=null) {
+                boolean update = spaceService.lambdaUpdate()
+                        .eq(Space::getId, spaceId)
+                        .setSql("totalCount = totalCount+1")
+                        .setSql("totalSize = totalSize+", picture.getPicSize())
+                        .update();
+                ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "图片额度更新失败");
+            }
+            return getPictureVoWithUser(picture);
+        });
 
         // 封装图片
         return getPictureVoWithUser(picture);
