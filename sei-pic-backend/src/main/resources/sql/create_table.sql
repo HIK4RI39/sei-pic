@@ -53,6 +53,10 @@ ALTER TABLE picture
 ALTER TABLE picture
     ADD COLUMN thumbnailUrl varchar(512) NULL COMMENT '缩略图 url';
 
+-- 弃用了图片表的逻辑删除功能
+ALTER TABLE picture
+    DROP COLUMN isDelete;
+
 
 -- 创建基于 reviewStatus 列的索引
 CREATE INDEX idx_reviewStatus ON picture (reviewStatus);

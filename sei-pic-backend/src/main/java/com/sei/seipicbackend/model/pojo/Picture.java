@@ -96,10 +96,10 @@ public class Picture implements Serializable {
      */
     private Date updateTime;
 
-    /**
-     * 是否删除
-     */
-    private Integer isDelete;
+//    /**
+//     * 是否删除
+//     */
+//    private Integer isDelete;
 
     /**
      * 审核状态：0-待审核; 1-通过; 2-拒绝
