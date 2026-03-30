@@ -1,6 +1,7 @@
 package com.sei.seipicbackend.controller;
 
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import com.sei.seipicbackend.annotation.AuthCheck;
 import com.sei.seipicbackend.common.BaseResponse;
 import com.sei.seipicbackend.common.IdRequest;
@@ -9,6 +10,7 @@ import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
+import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.service.SpaceService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -69,7 +71,20 @@ public class SpaceController {
         boolean result = spaceService.deleteSpace(idRequest, request);
         return ResponseUtils.success(result);
     }
-        // endregion
+
+    @PostMapping("/edit")
+    public BaseResponse<Boolean> editSpace(@RequestBody SpaceEditRequest spaceEditRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(spaceEditRequest), ErrorCode.PARAMS_ERROR);
+        Long id = spaceEditRequest.getId();
+        String spaceName = spaceEditRequest.getSpaceName();
+        ThrowUtils.throwIf(id==null, ErrorCode.PARAMS_ERROR, "空间id不能为空");
+        ThrowUtils.throwIf(id<=0, ErrorCode.PARAMS_ERROR, "非法的空间id");
+        ThrowUtils.throwIf(spaceName==null || StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空");
+        boolean result = spaceService.editSpace(spaceEditRequest, request);
+        return ResponseUtils.success(result);
+    }
+
+    // endregion
 
 
 

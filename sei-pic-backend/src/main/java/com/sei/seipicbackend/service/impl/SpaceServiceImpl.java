@@ -9,6 +9,7 @@ import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
+import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
@@ -58,18 +59,17 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         String spaceName = space.getSpaceName();
         Integer spaceLevel = space.getSpaceLevel();
         SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(spaceLevel);
+
         // 创建
         if (add) {
             ThrowUtils.throwIf(StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空");
             ThrowUtils.throwIf((spaceLevel==null), ErrorCode.PARAMS_ERROR, "空间级别不能为空");
         }
-        // 修改数据时，如果要改空间级别
-        if (spaceLevel != null && spaceLevelEnum == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间级别不存在");
-        }
-        if (StrUtil.isNotBlank(spaceName) && spaceName.length() > 30) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间名称过长");
-        }
+
+        // 更新/编辑
+        ThrowUtils.throwIf(spaceLevel!=null && spaceLevelEnum==null, ErrorCode.PARAMS_ERROR, "空间级别不存在");
+        ThrowUtils.throwIf(spaceName!=null && spaceName.length()>30, ErrorCode.PARAMS_ERROR, "空间名称过长");
+        ThrowUtils.throwIf(spaceName!=null && StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空字符串");
     }
 
     /**
@@ -126,7 +126,6 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         Long maxSize = spaceUpdateRequest.getMaxSize();
         Long maxCount = spaceUpdateRequest.getMaxCount();
 
-        ThrowUtils.throwIf(spaceName!=null && StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空字符串");
         Space space = this.getById(id);
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
 
@@ -149,6 +148,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新空间失败");
         return true;
     }
+
     // endregion
 
     // region -------------------------- 用户 --------------------------
@@ -223,7 +223,29 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         return true;
     }
 
+    /**
+     * 编辑空间
+     * @param spaceEditRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public boolean editSpace(SpaceEditRequest spaceEditRequest, HttpServletRequest request) {
+        Long id = spaceEditRequest.getId();
+        String spaceName = spaceEditRequest.getSpaceName();
+        Space space = this.getById(id);
+        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
 
+        ThrowUtils.throwIf(!isOwnerOrAdmin(space, request), ErrorCode.NO_AUTH_ERROR);
+
+        space.setId(id);
+        space.setSpaceName(spaceName);
+        validSpace(space, false);
+
+        boolean result = updateById(space);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "编辑空间失败");
+        return true;
+    }
     // endregion
 
 
