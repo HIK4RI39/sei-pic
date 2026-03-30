@@ -409,6 +409,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(inputSource==null, ErrorCode.NOT_FOUND_ERROR);
 
+        Long spaceId = pictureUploadRequest.getSpaceId();
+
         // 校验登录, 需要填充上传者id
         UserVO loginUser = userService.getLoginUser(request);
         ThrowUtils.throwIf(ObjUtil.isNull(loginUser), ErrorCode.NOT_LOGIN_ERROR);
@@ -422,6 +424,15 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             isOwnerOrAdmin(picture, loginUser);
             // 更新图片后, 对原图片进行删除
             this.clearPictureFile(picture);
+            if (spaceId!=null) {
+                boolean update = spaceService.lambdaUpdate()
+                        .eq(Space::getId, spaceId)
+                        .setSql("totalCount = totalCount-1")
+                        .setSql("totalSize = totalSize-", picture.getPicSize())
+                        .update();
+                ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "图片额度更新失败");
+            }
+            // 如果是私有空间释放空间额度
         }
 
         // 上传图片
@@ -464,7 +475,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         fillReviewParams(picture, loginUser);
 
         // 上传到非公共图库, 需要鉴权
-        Long spaceId = pictureUploadRequest.getSpaceId();
         if (spaceId!=null) {
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
