@@ -520,11 +520,25 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture picture = this.getById(pictureId);
         ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR);
         ThrowUtils.throwIf(!isOwnerOrAdmin(picture, loginUser), ErrorCode.NO_AUTH_ERROR);
+        Long spaceId = picture.getSpaceId();
         // 异步删除COS的图片
         this.clearPictureFile(picture);
 
-        boolean result = this.removeById(pictureId);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片删除失败");
+        transactionTemplate.execute(status -> {
+            boolean result = this.removeById(pictureId);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片删除失败");
+            // 删除私有空间, 更新空间额度
+            if (spaceId!=null) {
+                boolean update = spaceService.lambdaUpdate()
+                        .eq(Space::getId, spaceId)
+                        .setSql("totalCount = totalCount-1")
+                        .setSql("totalSize = totalSize-", picture.getPicSize())
+                        .update();
+                ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "图片额度更新失败");
+            }
+
+            return true;
+        });
 
         return true;
     }
