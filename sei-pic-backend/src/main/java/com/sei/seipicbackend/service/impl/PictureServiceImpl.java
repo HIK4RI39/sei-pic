@@ -27,14 +27,12 @@ import com.sei.seipicbackend.model.vo.PictureVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.UserService;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -528,7 +526,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取元素失败");
         }
 //        Elements imgElementList = div.select("img.mimg");
-
         Elements imgElementList = div.select(".iusc");  // 修改选择器，获取包含完整数据的元素
 
 
