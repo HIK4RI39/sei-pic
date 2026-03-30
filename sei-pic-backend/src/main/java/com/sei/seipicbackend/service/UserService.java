@@ -1,12 +1,12 @@
 package com.sei.seipicbackend.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.sei.seipicbackend.model.dto.user.UserAddRequest;
 import com.sei.seipicbackend.model.dto.user.UserEditRequest;
 import com.sei.seipicbackend.model.dto.user.UserPageRequest;
 import com.sei.seipicbackend.model.dto.user.UserUpdateRequest;
 import com.sei.seipicbackend.model.pojo.User;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.sei.seipicbackend.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,4 +40,5 @@ public interface UserService extends IService<User> {
     Boolean editUser(UserEditRequest userEditRequest, HttpServletRequest request);
 
     UserVO getUserVO(User user);
+
 }

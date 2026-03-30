@@ -6,9 +6,9 @@ import com.sei.seipicbackend.model.pojo.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.PictureVO;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author hikari39
@@ -40,4 +40,13 @@ public interface PictureService extends IService<Picture> {
      */
     void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
 
+    /**
+     * 批量抓取和创建图片
+     * @param pictureUploadByBatchRequest
+     * @param request
+     * @return 成功创建的图片数
+     */
+    int uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, HttpServletRequest request);
+
+    void reviewPicBatchPass(List<Long> idList, HttpServletRequest request);
 }

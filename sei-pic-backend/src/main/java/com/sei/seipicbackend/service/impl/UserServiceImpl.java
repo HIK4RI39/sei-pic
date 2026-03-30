@@ -19,6 +19,7 @@ import com.sei.seipicbackend.model.enums.UserRoleEnum;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -31,6 +32,7 @@ import java.util.Date;
 * @createDate 2026-03-28 03:18:14
 */
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         implements UserService {
 

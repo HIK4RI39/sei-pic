@@ -1,5 +1,6 @@
 package com.sei.seipicbackend.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.annotation.AuthCheck;
@@ -206,6 +207,56 @@ public class PictureController {
         User user = User.toBean(loginUser);
         pictureService.doPictureReview(pictureReviewRequest, user);
         return ResponseUtils.success();
+    }
+
+    /**
+     * 管理员 批量审核通过
+     * @param picReviewBatchRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/review/batch/pass")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<?> reviewPicBatchPass(@RequestBody PicReviewBatchRequest picReviewBatchRequest, HttpServletRequest request) {
+        if (ObjUtil.isEmpty(picReviewBatchRequest) || CollUtil.isEmpty(picReviewBatchRequest.getIdList())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        List<Long> idList = picReviewBatchRequest.getIdList();
+        pictureService.reviewPicBatchPass(idList, request);
+        return ResponseUtils.success();
+    }
+
+    /**
+     * 管理员 批量删除
+     * @return
+     */
+    @PostMapping("/delete/batch")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<?> deleteByBatch(@RequestBody List<String> idList) {
+        if (CollUtil.isEmpty(idList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        boolean result = pictureService.removeBatchByIds(idList);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResponseUtils.success();
+    }
+
+    /**
+     * 根据关键词, 批量拉取图片
+     * @param pictureUploadByBatchRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/upload/batch")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Integer> uploadPictureByBatch(
+            @RequestBody PictureUploadByBatchRequest pictureUploadByBatchRequest,
+            HttpServletRequest request
+    ) {
+        ThrowUtils.throwIf(pictureUploadByBatchRequest==null, ErrorCode.PARAMS_ERROR);
+        int uploadCount = pictureService.uploadPictureByBatch(pictureUploadByBatchRequest, request);
+        return ResponseUtils.success(uploadCount);
     }
 
 
