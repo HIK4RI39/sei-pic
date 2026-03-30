@@ -84,6 +84,33 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     // region -------------------------- 管理员 --------------------------
 
     /**
+     * 管理员 根据id查询图片
+     * @param pictureId
+     * @return
+     */
+    @Override
+    public Picture getPictureById(long pictureId) {
+        Picture picture = this.getById(pictureId);
+        ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+        return picture;
+    }
+
+    /**
+     * 管理员 分页获取图片
+     * @param pictureQueryRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public Page<Picture> getPicturePage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        LambdaQueryWrapper<Picture> queryWrapper = getQueryWrapper(pictureQueryRequest);
+        int current = pictureQueryRequest.getCurrent();
+        int pageSize = pictureQueryRequest.getPageSize();
+        Page<Picture> page = new Page<>(current, pageSize);
+        return page(page, queryWrapper);
+    }
+
+    /**
      * 管理员 批量审核通过
      * @param idList
      * @param request
@@ -250,6 +277,66 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     // region -------------------------- 用户 --------------------------
 
+    @Override
+    public PictureVO getPictureVoById(long pictureId, HttpServletRequest request) {
+        Picture picture = this.getById(pictureId);
+        ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+        // 私有空间需要鉴权
+        Long spaceId = picture.getSpaceId();
+        if (spaceId!=null) {
+            Space space = spaceService.getById(spaceId);
+            // 一般来说不会不存在吧
+            ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+            boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
+            ThrowUtils.throwIf(hasPermission, ErrorCode.NO_AUTH_ERROR);
+        }
+
+        return getPictureVoWithUser(picture);
+    }
+
+    /**
+     * 用户 分页获取图片
+     * @param pictureQueryRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public Page<PictureVO> getPictureVoPage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        Long spaceId = pictureQueryRequest.getSpaceId();
+
+        if (spaceId==null) {
+            // 主页仅能查询过审数据
+            pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+            pictureQueryRequest.setNullSpaceId(true);
+        } else {
+            // 私有空间鉴权
+            Space space = spaceService.getById(spaceId);
+            ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+            boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
+            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+        }
+
+        LambdaQueryWrapper<Picture> queryWrapper = getQueryWrapper(pictureQueryRequest);
+        int current = pictureQueryRequest.getCurrent();
+        int pageSize = pictureQueryRequest.getPageSize();
+        Page<Picture> page = new Page<>(current, pageSize);
+        Page<Picture> picturePage = page(page, queryWrapper);
+
+        // 仅缓存公共图库的图片
+        if (spaceId==null) {
+            // 缓存到redis
+            String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);
+            String hashKey = DigestUtils.md5DigestAsHex(queryCondition.getBytes());
+            String rediskey = "seipic:getPictureVoPage:" + hashKey;
+            String cachedPage = JSONUtil.toJsonStr(picturePage);
+            // 随机设置5~10分钟过期时间, 防止雪崩
+            int cacheExpireTime = 300 + RandomUtil.randomInt(0, 300);
+            stringRedisTemplate.opsForValue().set(rediskey, cachedPage, cacheExpireTime, TimeUnit.SECONDS);
+        }
+
+        return convertToVoPage(picturePage);
+    }
+
     /**
      * 分页获取vo with cache
      * @param pictureQueryRequest
@@ -276,46 +363,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     }
 
     @Override
-    public PictureVO getPictureVoById(long pictureId) {
-        Picture picture = this.getById(pictureId);
-        ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR, "图片不存在");
-        return getPictureVO(picture);
-    }
-
-
-    @Override
-    public Page<PictureVO> getPictureVoPage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
-        // 主页仅能查询过审数据
-        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
-        LambdaQueryWrapper<Picture> queryWrapper = getQueryWrapper(pictureQueryRequest);
-        int current = pictureQueryRequest.getCurrent();
-        int pageSize = pictureQueryRequest.getPageSize();
-        Page<Picture> page = new Page<>(current, pageSize);
-        Page<Picture> picturePage = page(page, queryWrapper);
-
-        // 缓存到redis
-        String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);
-        String hashKey = DigestUtils.md5DigestAsHex(queryCondition.getBytes());
-        String rediskey = "seipic:getPictureVoPage:" + hashKey;
-        String cachedPage = JSONUtil.toJsonStr(picturePage);
-        // 随机设置5~10分钟过期时间, 防止雪崩
-        int cacheExpireTime = 300 + RandomUtil.randomInt(0, 300);
-        stringRedisTemplate.opsForValue().set(rediskey, cachedPage, cacheExpireTime, TimeUnit.SECONDS);
-
-        return getPictureVoPage(picturePage);
-    }
-
-    @Override
-    public Page<Picture> getPicturePage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
-        LambdaQueryWrapper<Picture> queryWrapper = getQueryWrapper(pictureQueryRequest);
-        int current = pictureQueryRequest.getCurrent();
-        int pageSize = pictureQueryRequest.getPageSize();
-        Page<Picture> page = new Page<>(current, pageSize);
-        return page(page, queryWrapper);
-    }
-
-
-    @Override
     public boolean editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request) {
         Long pictureId = pictureEditRequest.getId();
         Picture oldPicture = this.getById(pictureId);
@@ -323,7 +370,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         // 鉴权
         UserVO loginUser = userService.getLoginUser(request);
-        isOwnerOrAdmin(oldPicture, loginUser);
+        boolean hasPermission = isOwnerOrAdmin(oldPicture, loginUser);
+        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
 
         Picture newPicture = new Picture();
         BeanUtil.copyProperties(pictureEditRequest, newPicture);
@@ -345,12 +393,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return true;
     }
 
-    @Override
-    public Picture getPictureById(long pictureId) {
-        Picture picture = this.getById(pictureId);
-        ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR, "图片不存在");
-        return picture;
-    }
 
     /**
      * 上传图片
@@ -389,7 +431,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, uploadPathPrefix);
 
         // 从上传结果中获取图片信息, 并填充
-        Picture picture = getPicture(loginUser, uploadPictureResult);
+        Picture picture = fillPictureParams(loginUser, uploadPictureResult);
 
         // 如果有category或tags信息, 填充
         String category = pictureUploadRequest.getCategory();
@@ -436,7 +478,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片上传失败");
 
         // 封装图片
-        return getPictureVO(picture);
+        return getPictureVoWithUser(picture);
     }
 
     /**
@@ -477,7 +519,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param picturePage
      * @return
      */
-    private Page<PictureVO> getPictureVoPage(Page<Picture> picturePage) {
+    private Page<PictureVO> convertToVoPage(Page<Picture> picturePage) {
         List<Picture> pictureList = picturePage.getRecords();
 
         // 利用mp的Page转换工具，自动拷贝分页元数据
@@ -506,6 +548,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return pictureVoPage;
     }
 
+
+
     /**
      * 将查询请求体转化为queryWrapper
      * @param pictureQueryRequest
@@ -526,10 +570,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Long userId = pictureQueryRequest.getUserId();
         String sortField = pictureQueryRequest.getSortField();
         String sortOrder = pictureQueryRequest.getSortOrder();
-
         String reviewMessage = pictureQueryRequest.getReviewMessage();
         Integer reviewStatus = pictureQueryRequest.getReviewStatus();
         Long reviewerId = pictureQueryRequest.getReviewerId();
+        Long spaceId = pictureQueryRequest.getSpaceId();
+        Boolean nullSpaceId = pictureQueryRequest.getNullSpaceId();
 
         LambdaQueryWrapper<Picture> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ObjUtil.isNotEmpty(id), Picture::getId, id);
@@ -545,6 +590,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         queryWrapper.eq(ObjUtil.isNotEmpty(userId), Picture::getUserId, userId);
         queryWrapper.eq(ObjUtil.isNotEmpty(reviewerId), Picture::getReviewerId, reviewerId);
         queryWrapper.eq(ObjUtil.isNotEmpty(reviewStatus), Picture::getReviewStatus, reviewStatus);
+        queryWrapper.eq(spaceId!=null, Picture::getSpaceId, spaceId);
+        queryWrapper.isNull(nullSpaceId, Picture::getSpaceId);
 
 
         // 后端代码改进
@@ -576,7 +623,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param uploadPictureResult
      * @return
      */
-    private static Picture getPicture(UserVO loginUser, UploadPictureResult uploadPictureResult) {
+    private static Picture fillPictureParams(UserVO loginUser, UploadPictureResult uploadPictureResult) {
         Picture picture = new Picture();
         picture.setUrl(uploadPictureResult.getUrl());
         picture.setThumbnailUrl(uploadPictureResult.getThumbnailUrl());
@@ -595,7 +642,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param picture
      * @return
      */
-    private PictureVO getPictureVO(Picture picture) {
+    private PictureVO getPictureVoWithUser(Picture picture) {
         PictureVO pictureVO = PictureVO.objToVo(picture);
         // 关联查询脱敏用户信息
         Long userId = picture.getUserId();
@@ -608,7 +655,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     }
 
     /**
-     * 拥有者或管理员 鉴权
+     * 图片鉴权
+     * 图片上传者/空间所有者/管理员 (之后补充空间管理者)
      * @param picture
      * @param loginUserVO
      * @return
@@ -616,7 +664,18 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     private boolean isOwnerOrAdmin(Picture picture, UserVO loginUserVO) {
         Long owner = picture.getUserId();
         Long userId = loginUserVO.getId();
-        return owner.equals(userId) || UserConstant.ADMIN_ROLE.equals(loginUserVO.getUserRole());
+        Long spaceId = picture.getSpaceId();
+
+        boolean isSpaceOwner = true;
+        if (spaceId!=null) {
+            Space space = spaceService.getById(spaceId);
+            Long spaceUserId = space.getUserId();
+            isSpaceOwner = spaceUserId.equals(userId);
+        }
+        boolean isPictureOwner = owner.equals(userId);
+        boolean isAdmin = UserConstant.ADMIN_ROLE.equals(loginUserVO.getUserRole());
+
+        return isSpaceOwner || isPictureOwner || isAdmin;
     }
 
     private static final Map<String, SFunction<Picture, ?>> COLUMN_MAP = new ConcurrentHashMap<>();

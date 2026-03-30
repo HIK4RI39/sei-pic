@@ -23,7 +23,7 @@ public interface PictureService extends IService<Picture> {
 
     Picture getPictureById(long pictureId);
 
-    PictureVO getPictureVoById(long pictureId);
+    PictureVO getPictureVoById(long pictureId, HttpServletRequest request);
 
     Page<PictureVO> getPictureVoPage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
 

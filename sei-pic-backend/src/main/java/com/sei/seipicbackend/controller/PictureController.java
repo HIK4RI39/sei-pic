@@ -96,12 +96,12 @@ public class PictureController {
      * @return
      */
     @PostMapping("/get/vo")
-    public BaseResponse<PictureVO> getPictureVoById(@RequestBody IdRequest idRequest) {
+    public BaseResponse<PictureVO> getPictureVoById(@RequestBody IdRequest idRequest, HttpServletRequest request) {
         if (ObjUtil.isEmpty(idRequest) || idRequest.getId() <=0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         long pictureId = idRequest.getId();
-        PictureVO pictureVO = pictureService.getPictureVoById(pictureId);
+        PictureVO pictureVO = pictureService.getPictureVoById(pictureId, request);
         return ResponseUtils.success(pictureVO);
     }
 
