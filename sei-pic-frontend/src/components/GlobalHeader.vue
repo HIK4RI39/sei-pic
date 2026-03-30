@@ -28,6 +28,10 @@
                             </a-space>
                             <template #overlay>
                                 <a-menu>
+                                    <a-menu-item>
+                                        <picture-outlined />
+                                        <a href="/space/create" style="margin-left: 5px;">创建空间</a>
+                                    </a-menu-item>
                                     <a-menu-item @click="doLogOut" style="color: red;">
                                         <logout-outlined />
                                         <a href="javascript:" style="margin-left: 5px;">退出登录</a>

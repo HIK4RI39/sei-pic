@@ -55,6 +55,11 @@ const router = createRouter({
       component: () => import('@/views/admin/SpaceManagePage.vue'),
     },
     {
+      path: '/space/create',
+      name: '创建空间',
+      component: () => import('@/views/space/SpaceCreatePage.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: '404',
       component: () => import('@/views/404Page.vue'),
