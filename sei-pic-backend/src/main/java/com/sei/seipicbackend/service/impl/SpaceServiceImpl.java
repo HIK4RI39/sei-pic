@@ -9,6 +9,7 @@ import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
+import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
@@ -27,13 +28,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
-* @author hikari39
-* @description 针对表【space(空间)】的数据库操作Service实现
-* @createDate 2026-03-31 01:00:14
-*/
+ * @author hikari39
+ * @description 针对表【space(空间)】的数据库操作Service实现
+ * @createDate 2026-03-31 01:00:14
+ */
 @Service
 public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
-    implements SpaceService{
+        implements SpaceService {
 
     @Resource
     private UserService userService;
@@ -46,6 +47,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     /**
      * 校验空间
      * 校验名称, 级别是否合法/存在
+     *
      * @param space
      * @param add
      */
@@ -58,12 +60,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(spaceLevel);
         // 创建
         if (add) {
-            if (StrUtil.isBlank(spaceName)) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间名称不能为空");
-            }
-            if (spaceLevel == null) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间级别不能为空");
-            }
+            ThrowUtils.throwIf(StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空");
+            ThrowUtils.throwIf((spaceLevel==null), ErrorCode.PARAMS_ERROR, "空间级别不能为空");
         }
         // 修改数据时，如果要改空间级别
         if (spaceLevel != null && spaceLevelEnum == null) {
@@ -76,6 +74,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     /**
      * 创建或更新空间时, 根据空间级别自动填充限额等数据
+     *
      * @param space
      */
     @Override
@@ -96,6 +95,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     /**
      * 鉴权, 所有者或管理员
+     *
      * @param space
      * @param request
      * @return
@@ -112,12 +112,50 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     // region -------------------------- 管理员 --------------------------
 
+    /**
+     * 管理员更新空间
+     *
+     * @param spaceUpdateRequest
+     * @return
+     */
+    @Override
+    public boolean updateSpace(SpaceUpdateRequest spaceUpdateRequest) {
+        Long id = spaceUpdateRequest.getId();
+        String spaceName = spaceUpdateRequest.getSpaceName();
+        Integer spaceLevel = spaceUpdateRequest.getSpaceLevel();
+        Long maxSize = spaceUpdateRequest.getMaxSize();
+        Long maxCount = spaceUpdateRequest.getMaxCount();
+
+        ThrowUtils.throwIf(spaceName!=null && StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空字符串");
+        Space space = this.getById(id);
+        ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
+
+        // 可能存在1个问题: 传入spaceLevel, fillSpaceBySpaceLevel可能会覆盖自定义的count或level
+        // 但是问题不大
+        space.setSpaceName(spaceName);
+        space.setSpaceLevel(spaceLevel);
+        if (spaceLevel!=null) {
+            fillSpaceBySpaceLevel(space);
+        }
+        if (maxCount!=null) {
+            space.setMaxCount(maxCount);
+        }
+        if (maxSize!=null) {
+            space.setMaxSize(maxSize);
+        }
+        validSpace(space, false);
+
+        boolean result = updateById(space);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新空间失败");
+        return true;
+    }
     // endregion
 
     // region -------------------------- 用户 --------------------------
 
     /**
      * 创建空间
+     *
      * @param spaceAddRequest
      * @param request
      * @return
@@ -134,7 +172,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         // 用户仅能创建基础类型空间
         UserVO loginUser = userService.getLoginUser(request);
         String userRole = loginUser.getUserRole();
-        if (UserConstant.DEFAULT_ROLE.equals(userRole) && SpaceLevelEnum.COMMON.getValue()!=spaceLevel) {
+        if (UserConstant.DEFAULT_ROLE.equals(userRole) && SpaceLevelEnum.COMMON.getValue() != spaceLevel) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         // 填写空间参数
@@ -152,6 +190,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     /**
      * 删除空间
+     *
      * @param idRequest
      * @param request
      * @return
@@ -161,7 +200,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         // 空间是否存在
         long spaceId = idRequest.getId();
         Space space = this.getById(spaceId);
-        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+        ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
 
         // 仅限本人或管理员删除
         ThrowUtils.throwIf(!isOwnerOrAdmin(space, request), ErrorCode.NO_AUTH_ERROR);
@@ -184,8 +223,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         return true;
     }
 
-    // endregion
 
+    // endregion
 
 
 }

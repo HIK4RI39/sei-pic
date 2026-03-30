@@ -2,6 +2,7 @@ package com.sei.seipicbackend.service;
 
 import com.sei.seipicbackend.common.IdRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
+import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -20,4 +21,6 @@ public interface SpaceService extends IService<Space> {
     boolean createSpace(SpaceAddRequest spaceAddRequest, HttpServletRequest request);
 
     boolean deleteSpace(IdRequest idRequest, HttpServletRequest request);
+
+    boolean updateSpace(SpaceUpdateRequest spaceUpdateRequest);
 }

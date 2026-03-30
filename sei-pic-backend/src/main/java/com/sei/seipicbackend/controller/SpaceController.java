@@ -1,12 +1,15 @@
 package com.sei.seipicbackend.controller;
 
 import cn.hutool.core.util.ObjUtil;
+import com.sei.seipicbackend.annotation.AuthCheck;
 import com.sei.seipicbackend.common.BaseResponse;
 import com.sei.seipicbackend.common.IdRequest;
 import com.sei.seipicbackend.common.ResponseUtils;
+import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
+import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.service.SpaceService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +30,14 @@ public class SpaceController {
     private SpaceService spaceService;
 
     // region -------------------------- 管理员 --------------------------
+
+    @PostMapping("/update")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> updateSpace(@RequestBody SpaceUpdateRequest spaceUpdateRequest) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(spaceUpdateRequest), ErrorCode.PARAMS_ERROR);
+        boolean result = spaceService.updateSpace(spaceUpdateRequest);
+        return ResponseUtils.success(result);
+    }
 
     // endregion
 
