@@ -51,4 +51,7 @@ public interface PictureService extends IService<Picture> {
     void reviewPicBatchPass(List<Long> idList, HttpServletRequest request);
 
     Page<PictureVO> getPictureVoPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
+
+
+    public void clearPictureFile(Picture oldPicture);
 }

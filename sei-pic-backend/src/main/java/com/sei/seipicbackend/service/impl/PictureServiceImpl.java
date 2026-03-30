@@ -15,6 +15,7 @@ import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import com.sei.seipicbackend.manager.CosManager;
 import com.sei.seipicbackend.manager.upload.FilePictureUpload;
 import com.sei.seipicbackend.manager.upload.PictureUploadTemplate;
 import com.sei.seipicbackend.manager.upload.UrlPictureUpload;
@@ -33,6 +34,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -59,6 +61,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private CosManager cosManager;
 
 //    @Resource
 //    private FileManager fileManager;
@@ -635,6 +640,41 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         return this.getPictureVoPage(pictureQueryRequest, request);
     }
+
+    /**
+     * 异步清理对象存储中不被使用的图片
+     * 当用户更新图片, 或图片被删除后, 清理COS中的图片
+     * @param oldPicture
+     */
+    @Async
+    @Override
+    public void clearPictureFile(Picture oldPicture) {
+        // 判断该图片是否被多条记录使用 (如果是秒传场景, 就有可能多个地址被1个图片使用)
+        String pictureUrl = oldPicture.getUrl();
+        long count = this.lambdaQuery()
+                .eq(Picture::getUrl, pictureUrl)
+                .count();
+        // 有不止一条记录用到了该图片，不清理
+        if (count > 1) {
+            return;
+        }
+
+        // 清理原图
+        String compressedUrl = oldPicture.getUrl();
+        int lastIndexOf = compressedUrl.lastIndexOf(".");
+        String originUrl = compressedUrl.substring(0, lastIndexOf) + oldPicture.getPicFormat();
+        cosManager.deleteObject(originUrl);
+
+        // 清理压缩图 (webp
+        cosManager.deleteObject(compressedUrl);
+
+        // 清理缩略图
+        String thumbnailUrl = oldPicture.getThumbnailUrl();
+        if (StrUtil.isNotBlank(thumbnailUrl)) {
+            cosManager.deleteObject(thumbnailUrl);
+        }
+    }
+
 
 }
 

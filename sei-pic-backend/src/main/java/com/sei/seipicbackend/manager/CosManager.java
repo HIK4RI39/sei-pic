@@ -2,6 +2,7 @@ package com.sei.seipicbackend.manager;
 
 import cn.hutool.core.io.FileUtil;
 import com.qcloud.cos.COSClient;
+import com.qcloud.cos.exception.CosClientException;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.GetObjectRequest;
 import com.qcloud.cos.model.PutObjectRequest;
@@ -36,6 +37,18 @@ public class CosManager {
         PutObjectRequest putObjectRequest = new PutObjectRequest(cosClientConfig.getBucket(), key, file);
         return cosClient.putObject(putObjectRequest);
     }
+
+    /**
+     * 删除对象
+     *
+     * @param url 文件url
+     */
+    public void deleteObject(String url) throws CosClientException {
+        String host = cosClientConfig.getHost();
+        String key = url.replace(host, "");
+        cosClient.deleteObject(cosClientConfig.getBucket(), key);
+    }
+
 
     public PutObjectResult putPictureObject(String key, File file) {
         PutObjectRequest putObjectRequest = new PutObjectRequest(cosClientConfig.getBucket(), key,
