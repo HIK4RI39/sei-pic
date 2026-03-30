@@ -32,7 +32,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import PictureList from '@/components/PictureList.vue' // 定义数据
-import { getPictureVoPageUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController'
+import { getPictureVoPageWithCacheUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController'
 
 // 定义数据
 const dataList = ref<API.PictureVO[]>([])
@@ -75,7 +75,7 @@ const fetchData = async () => {
     console.log("最终发送的参数: ", params.searchText);
 
     try {
-        const res = await getPictureVoPageUsingPost(params)
+        const res = await getPictureVoPageWithCacheUsingPost(params)
         if (res.data.code === 0 && res.data.data) {
             dataList.value = res.data.data.records ?? []
             total.value = res.data.data.total ?? 0
