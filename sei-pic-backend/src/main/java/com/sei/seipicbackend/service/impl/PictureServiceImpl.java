@@ -94,7 +94,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         // 如果存在pictureId, 说明是图片更新
         Long pictureId = pictureUploadRequest.getId();
-        if (ObjUtil.isNotNull(pictureId)) {
+        if (pictureId!=null) {
             Picture picture = lambdaQuery().eq(Picture::getId, pictureId).one();
             ThrowUtils.throwIf(picture==null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
             // 如果是编辑, 需要鉴权
@@ -135,7 +135,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
 
         // 如果是更新, 设置编辑时间和id
-        if (ObjUtil.isNull(picture)) {
+        if (pictureId!=null) {
             picture.setId(pictureId);
             picture.setEditTime(new Date());
         }
