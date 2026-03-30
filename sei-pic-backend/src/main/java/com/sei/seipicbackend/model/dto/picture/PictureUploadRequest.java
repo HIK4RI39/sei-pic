@@ -3,6 +3,7 @@ package com.sei.seipicbackend.model.dto.picture;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @author hikari39_
@@ -24,6 +25,16 @@ public class PictureUploadRequest implements Serializable {
      * 图片名称
      */
     private String picName;
+
+    /**
+     * 图片分类, 用于批量上传设置
+     */
+    private String category;
+
+    /**
+     * 图片标签, 用于批量上传设置
+     */
+    private List<String> tags;
 
 
     private static final long serialVersionUID = 1L;
