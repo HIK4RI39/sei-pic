@@ -122,6 +122,23 @@ public class PictureController {
     }
 
     /**
+     * 用户 分页获取vo缓存
+     * @param pictureQueryRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/page/vo/cache")
+    public BaseResponse<Page<PictureVO>> getPictureVoPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(pictureQueryRequest), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureQueryRequest.getCurrent() <= 0, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureQueryRequest.getPageSize() <= 0, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureQueryRequest.getPageSize() > 20, ErrorCode.PARAMS_ERROR);
+        Page<PictureVO> pictureVoPage = pictureService.getPictureVoPageWithCache(pictureQueryRequest, request);
+        return ResponseUtils.success(pictureVoPage);
+    }
+
+
+    /**
      * 用户 更新图片
      * @param pictureEditRequest
      * @return
@@ -133,6 +150,10 @@ public class PictureController {
         return ResponseUtils.success(update);
     }
 
+    /**
+     * 返回预设的tag,category列表
+     * @return
+     */
     @GetMapping("/tag_category")
     public BaseResponse<PictureTagCategory> listPictureTagCategory() {
         PictureTagCategory pictureTagCategory = new PictureTagCategory();
@@ -258,8 +279,6 @@ public class PictureController {
         int uploadCount = pictureService.uploadPictureByBatch(pictureUploadByBatchRequest, request);
         return ResponseUtils.success(uploadCount);
     }
-
-
     // endregion
 
 }

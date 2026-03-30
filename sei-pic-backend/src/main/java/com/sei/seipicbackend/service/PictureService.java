@@ -49,4 +49,6 @@ public interface PictureService extends IService<Picture> {
     int uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, HttpServletRequest request);
 
     void reviewPicBatchPass(List<Long> idList, HttpServletRequest request);
+
+    Page<PictureVO> getPictureVoPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
 }

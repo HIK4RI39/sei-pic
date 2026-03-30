@@ -3,6 +3,7 @@ package com.sei.seipicbackend.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
@@ -26,12 +27,16 @@ import com.sei.seipicbackend.model.vo.PictureVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.UserService;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -41,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +58,9 @@ import java.util.stream.Collectors;
 @Service
 public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     implements PictureService{
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
 //    @Resource
 //    private FileManager fileManager;
@@ -189,6 +198,16 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         int pageSize = pictureQueryRequest.getPageSize();
         Page<Picture> page = new Page<>(current, pageSize);
         Page<Picture> picturePage = page(page, queryWrapper);
+
+        // 缓存到redis
+        String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);
+        String hashKey = DigestUtils.md5DigestAsHex(queryCondition.getBytes());
+        String rediskey = "seipic:getPictureVoPage:" + hashKey;
+        String cachedPage = JSONUtil.toJsonStr(picturePage);
+        // 随机设置5~10分钟过期时间, 防止雪崩
+        int cacheExpireTime = 300 + RandomUtil.randomInt(0, 300);
+        stringRedisTemplate.opsForValue().set(rediskey, cachedPage, cacheExpireTime, TimeUnit.SECONDS);
+
         return getPictureVoPage(picturePage);
     }
 
@@ -592,6 +611,31 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         boolean result = updateBatchById(pictures);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+    }
+
+    /**
+     * 分页获取vo with cache
+     * @param pictureQueryRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public Page<PictureVO> getPictureVoPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        // 缓存key, 将查询条件作为key一并缓存, 可能会较长
+        String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);
+        // md5压缩key
+        String hashKey = DigestUtils.md5DigestAsHex(queryCondition.getBytes());
+        String rediskey = "seipic:getPictureVoPage:" + hashKey;
+
+        // 从缓存中查询
+        String cachedValue = stringRedisTemplate.opsForValue().get(rediskey);
+        // 如果缓存命中, 直接返回结果
+        if (cachedValue != null) {
+            Page<PictureVO> cachedPage = JSONUtil.toBean(cachedValue, Page.class);
+            return cachedPage;
+        }
+
+        return this.getPictureVoPage(pictureQueryRequest, request);
     }
 
 }
