@@ -12,6 +12,8 @@ import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
+import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
+import com.sei.seipicbackend.model.vo.SpaceLevel;
 import com.sei.seipicbackend.service.SpaceService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author hikari39_
@@ -44,6 +49,23 @@ public class SpaceController {
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    /**
+     * 获取spaceLevel列表
+     * @return
+     */
+    @PostMapping("/list/level")
+    public BaseResponse<List<SpaceLevel>> listSpaceLevel() {
+        List<SpaceLevel> spaceLevelList = Arrays.stream(SpaceLevelEnum.values()).map(spaceLevelEnum ->
+                new SpaceLevel(
+                        spaceLevelEnum.getValue(),
+                        spaceLevelEnum.getText(),
+                        spaceLevelEnum.getMaxCount(),
+                        spaceLevelEnum.getMaxSize()
+                )
+        ).collect(Collectors.toList());
+        return ResponseUtils.success(spaceLevelList);
+    }
 
     /**
      * 创建空间
