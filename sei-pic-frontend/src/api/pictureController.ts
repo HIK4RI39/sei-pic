@@ -17,6 +17,18 @@ export async function deletePictureByIdUsingPost(
   })
 }
 
+/** deleteByBatch POST /api/picture/delete/batch */
+export async function deleteByBatchUsingPost(body: string[], options?: { [key: string]: any }) {
+  return request<API.BaseResponseObject_>('/api/picture/delete/batch', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** editPicture POST /api/picture/edit */
 export async function editPictureUsingPost(
   body: API.PictureEditRequest,
@@ -107,6 +119,21 @@ export async function reviewPictureUsingPost(
   })
 }
 
+/** reviewPicBatchPass POST /api/picture/review/batch/pass */
+export async function reviewPicBatchPassUsingPost(
+  body: API.PicReviewBatchRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseObject_>('/api/picture/review/batch/pass', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** listPictureTagCategory GET /api/picture/tag_category */
 export async function listPictureTagCategoryUsingGet(options?: { [key: string]: any }) {
   return request<API.BaseResponsePictureTagCategory_>('/api/picture/tag_category', {
@@ -167,6 +194,21 @@ export async function uploadPictureUsingPost(
     },
     data: formData,
     requestType: 'form',
+    ...(options || {}),
+  })
+}
+
+/** uploadPictureByBatch POST /api/picture/upload/batch */
+export async function uploadPictureByBatchUsingPost(
+  body: API.PictureUploadByBatchRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseInt_>('/api/picture/upload/batch', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
     ...(options || {}),
   })
 }

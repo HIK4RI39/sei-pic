@@ -32,7 +32,6 @@
                         ]" allow-clear />
                     </a-form-item>
                 </a-col>
-
             </a-row>
 
             <a-row :gutter="16">
@@ -71,7 +70,25 @@
 
         <div style="margin-bottom: 16px"></div>
 
-        <a-table :columns="columns" :data-source="dataList" :pagination="false" :scroll="{ x: 1600 }">
+        <div style="margin-bottom: 16px">
+            <a-space>
+                <a-button type="primary" danger :disabled="!hasSelected" @click="doBatchDelete">
+                    批量删除
+                </a-button>
+                <a-button type="primary" :disabled="!hasSelected" @click="doBatchReview(PIC_REVIEW_STATUS_ENUM.PASS)">
+                    批量通过
+                </a-button>
+            </a-space>
+            <span style="margin-left: 8px">
+                <template v-if="hasSelected">
+                    {{ `已选择 ${selectedRowKeys.length} 项` }}
+                </template>
+            </span>
+        </div>
+
+        <!-- 图片表格 -->
+        <a-table :row-selection="rowSelection" row-key="id" :columns="columns" :data-source="dataList"
+            :pagination="false" :scroll="{ x: 1600 }">
             <!-- 表头 -->
             <template #headerCell="{ column }">
                 {{ column.title }}
@@ -219,13 +236,14 @@
 </template>
 
 <script lang="ts" setup>
-import { deletePictureByIdUsingPost, getPicturePageUsingPost, listPictureTagCategoryUsingGet, reviewPictureUsingPost } from '@/api/pictureController';
+import { deleteByBatchUsingPost, deletePictureByIdUsingPost, getPicturePageUsingPost, listPictureTagCategoryUsingGet, reviewPicBatchPassUsingPost, reviewPictureUsingPost } from '@/api/pictureController';
 import { PIC_REVIEW_STATUS_ENUM, PIC_REVIEW_STATUS_MAP } from '@/constants/picture';
 import { message } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import { computed } from 'vue';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import type { _ } from 'vue-router/dist/router-CWoNjPRp.mjs';
 
 const router = useRouter()
 
@@ -297,6 +315,59 @@ const columns = [
         width: 220,
     },
 ]
+
+// 选中的表格key ilst
+const selectedRowKeys = ref<string[] | number[]>([]);
+// 是否选择了项目
+const hasSelected = computed(() => selectedRowKeys.value.length > 0)
+// 定义勾选配置
+const rowSelection = {
+    onChange: (keys: string[] | number[]) => {
+        selectedRowKeys.value = keys
+    }
+}
+
+// 批量删除
+const doBatchDelete = async () => {
+    if (selectedRowKeys.value.length === 0) return
+
+    const result = confirm(`确认删除选中的 ${selectedRowKeys.value.length} 条数据?`)
+    if (!result) return
+
+    const res = await deleteByBatchUsingPost(selectedRowKeys.value)
+    try {
+        if (res.data.code === 0) {
+            message.success("批量删除成功")
+            fetchData()
+        } else {
+            message.error("批量删除失败," + res.data.message)
+        }
+    } catch (e: any) {
+        message.error("批量删除失败," + e.message);
+    }
+}
+
+
+// 批量审核
+const doBatchReview = async () => {
+    if (selectedRowKeys.value.length === 0) return
+
+    const res = await reviewPicBatchPassUsingPost({
+        idList: selectedRowKeys.value
+    })
+    try {
+        if (res.data.code === 0) {
+            message.success("批量审核通过")
+            fetchData()
+        } else {
+            message.error("批量审核失败," + res.data.message)
+        }
+    } catch (e: any) {
+        message.error("批量审核失败," + e.message);
+    }
+}
+
+
 
 
 const dataList = ref<API.PictureVO[]>([])
