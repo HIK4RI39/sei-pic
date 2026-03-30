@@ -21,6 +21,7 @@ import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.mapper.SpaceMapper;
 import com.sei.seipicbackend.service.UserService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -43,6 +44,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     private UserService userService;
 
     @Resource
+    @Lazy
     private PictureService pictureService;
 
     // 弱引用, 自动回收
@@ -105,7 +107,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      * @param request
      * @return
      */
-    private boolean isOwnerOrAdmin(Space space, HttpServletRequest request) {
+    @Override
+    public boolean isOwnerOrAdmin(Space space, HttpServletRequest request) {
         Long userId = space.getUserId();
         UserVO loginUser = userService.getLoginUser(request);
         String userRole = loginUser.getUserRole();

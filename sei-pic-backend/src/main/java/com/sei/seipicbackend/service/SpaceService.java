@@ -26,4 +26,6 @@ public interface SpaceService extends IService<Space> {
     boolean updateSpace(SpaceUpdateRequest spaceUpdateRequest);
 
     boolean editSpace(SpaceEditRequest spaceEditRequest, HttpServletRequest request);
+
+    boolean isOwnerOrAdmin(Space space, HttpServletRequest request);
 }
