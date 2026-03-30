@@ -1,15 +1,19 @@
 package com.sei.seipicbackend.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sei.seipicbackend.common.IdRequest;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
+import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.vo.UserVO;
+import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.mapper.SpaceMapper;
 import com.sei.seipicbackend.service.UserService;
@@ -17,6 +21,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
 * @author hikari39
@@ -29,6 +37,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private PictureService pictureService;
 
     // region -------------------------- 公共公共方法 --------------------------
 
@@ -83,6 +94,19 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         }
     }
 
+    /**
+     * 鉴权, 所有者或管理员
+     * @param space
+     * @param request
+     * @return
+     */
+    private boolean isOwnerOrAdmin(Space space, HttpServletRequest request) {
+        Long userId = space.getUserId();
+        UserVO loginUser = userService.getLoginUser(request);
+        String userRole = loginUser.getUserRole();
+        return userId.equals(loginUser.getId()) || UserConstant.ADMIN_ROLE.equals(userRole);
+    }
+
     // endregion
 
 
@@ -123,6 +147,40 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
         boolean result = save(space);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "空间创建失败");
+        return true;
+    }
+
+    /**
+     * 删除空间
+     * @param idRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public boolean deleteSpace(IdRequest idRequest, HttpServletRequest request) {
+        // 空间是否存在
+        long spaceId = idRequest.getId();
+        Space space = this.getById(spaceId);
+        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+
+        // 仅限本人或管理员删除
+        ThrowUtils.throwIf(!isOwnerOrAdmin(space, request), ErrorCode.NO_AUTH_ERROR);
+
+        // 关联删除空间内所有图片
+        List<Picture> pictureList = pictureService.lambdaQuery().eq(Picture::getSpaceId, spaceId).list();
+        if (CollUtil.isNotEmpty(pictureList)) {
+            // 删除COS存储图片
+            for (Picture picture : pictureList) {
+                pictureService.clearPictureFile(picture);
+            }
+            // 删除数据库记录
+            Set<Long> pictureIds = pictureList.stream().map(Picture::getId).collect(Collectors.toSet());
+            boolean deletePicture = pictureService.removeBatchByIds(pictureIds);
+            ThrowUtils.throwIf(!deletePicture, ErrorCode.OPERATION_ERROR, "关联删除图片失败");
+        }
+
+        boolean result = removeById(spaceId);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "空间删除失败");
         return true;
     }
 
