@@ -73,7 +73,8 @@ public class CosManager {
             String thumbnailKey = FileUtil.mainName(key) + "_thumbnail." + FileUtil.getSuffix(key);
             thumbnailRule.setFileId(thumbnailKey);
             // 缩放规则 /thumbnail/<Width>x<Height>>（如果大于原图宽高，则不处理）
-            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 128, 128));
+//            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 128, 128));
+            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 256, 256));
             rules.add(thumbnailRule);
         }
 
@@ -82,9 +83,6 @@ public class CosManager {
         putObjectRequest.setPicOperations(picOperations);
         return cosClient.putObject(putObjectRequest);
     }
-
-
-
 
     /**
      * 下载对象

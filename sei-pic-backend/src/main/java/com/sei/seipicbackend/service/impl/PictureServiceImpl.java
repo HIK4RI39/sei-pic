@@ -642,7 +642,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         queryWrapper.eq(ObjUtil.isNotEmpty(reviewerId), Picture::getReviewerId, reviewerId);
         queryWrapper.eq(ObjUtil.isNotEmpty(reviewStatus), Picture::getReviewStatus, reviewStatus);
         queryWrapper.eq(spaceId!=null, Picture::getSpaceId, spaceId);
-        queryWrapper.isNull(nullSpaceId, Picture::getSpaceId);
+        if (nullSpaceId!=null) {
+            queryWrapper.isNull(nullSpaceId, Picture::getSpaceId);
+        }
 
 
         // 后端代码改进

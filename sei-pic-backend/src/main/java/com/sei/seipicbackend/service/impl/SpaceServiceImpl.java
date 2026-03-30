@@ -1,21 +1,31 @@
 package com.sei.seipicbackend.service.impl;
+import java.util.Date;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.intern.InternUtil;
 import cn.hutool.core.lang.intern.Interner;
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sei.seipicbackend.common.IdRequest;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
+import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
+import com.sei.seipicbackend.model.pojo.User;
+import com.sei.seipicbackend.model.vo.PictureVO;
+import com.sei.seipicbackend.model.vo.SpaceVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.SpaceService;
@@ -27,8 +37,10 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +63,57 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     private static final Interner<String> USER_LOCK_INTERNER = InternUtil.createWeakInterner();
 
     // region -------------------------- 公共公共方法 --------------------------
+
+    /**
+     * pojo转vo, 关联查询用户信息
+     * @param space
+     * @return
+     */
+    private SpaceVO getSpaceVoWithUser(Space space) {
+        SpaceVO spaceVO = SpaceVO.objToVo(space);
+        // 关联查询脱敏用户信息
+        Long userId = space.getUserId();
+        if (ObjUtil.isNotEmpty(userId) && userId>0) {
+            User user = userService.getById(userId);
+            UserVO userVO = userService.getUserVO(user);
+            spaceVO.setUser(userVO);
+        }
+        return spaceVO;
+    }
+
+    /**
+     * pojo Page转vo Page
+     * @param spacePage
+     * @return
+     */
+    private Page<SpaceVO> convertToVoPage(Page<Space> spacePage) {
+        List<Space> spaceList = spacePage.getRecords();
+
+        // 利用mp的Page转换工具，自动拷贝分页元数据
+        Page<SpaceVO> spaceVoPage = (Page<SpaceVO>) spacePage.convert(SpaceVO::objToVo);
+
+        // 返回空数据
+        if (CollUtil.isEmpty(spaceList)) {
+            return spaceVoPage;
+        }
+
+        // 获取用户id列表
+        Set<Long> userIdSet = spaceList.stream().map(Space::getUserId).collect(Collectors.toSet());
+
+        // id:user Map
+        Map<Long, UserVO> idUserVoMap = userService.listByIds(userIdSet).stream()
+                .collect(Collectors.toMap(User::getId, userService::getUserVO));
+
+        // 填充user信息
+        spaceVoPage.getRecords().forEach(spaceVO -> {
+            Long userId = spaceVO.getUserId();
+            if (idUserVoMap.containsKey(userId)) {
+                spaceVO.setUser(idUserVoMap.get(userId));
+            }
+        });
+
+        return spaceVoPage;
+    }
 
     /**
      * 校验空间
@@ -119,6 +182,31 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
 
     // region -------------------------- 管理员 --------------------------
+
+    /**
+     * 管理员 分页查询space
+     * @param spaceQueryRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public Page<SpaceVO> getSpacePage(SpaceQueryRequest spaceQueryRequest, HttpServletRequest request) {
+        Long id = spaceQueryRequest.getId();
+        Long userId = spaceQueryRequest.getUserId();
+        String spaceName = spaceQueryRequest.getSpaceName();
+        Integer spaceLevel = spaceQueryRequest.getSpaceLevel();
+        int current = spaceQueryRequest.getCurrent();
+        int pageSize = spaceQueryRequest.getPageSize();
+
+        LambdaQueryWrapper<Space> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(id!=null, Space::getId, id)
+                .eq(userId!=null, Space::getUserId, userId)
+                .like(StrUtil.isNotBlank(spaceName), Space::getSpaceName, spaceLevel);
+
+        Page<Space> page = new Page<>(current, pageSize);
+
+        return convertToVoPage(page(page, queryWrapper));
+    }
 
     /**
      * 管理员更新空间

@@ -1,11 +1,14 @@
 package com.sei.seipicbackend.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.common.IdRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
+import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sei.seipicbackend.model.vo.SpaceVO;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -28,4 +31,6 @@ public interface SpaceService extends IService<Space> {
     boolean editSpace(SpaceEditRequest spaceEditRequest, HttpServletRequest request);
 
     boolean isOwnerOrAdmin(Space space, HttpServletRequest request);
+
+    Page<SpaceVO> getSpacePage(SpaceQueryRequest spaceQueryRequest, HttpServletRequest request);
 }
