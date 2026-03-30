@@ -1,7 +1,17 @@
 <template>
     <div id="pictureAdminPage">
+
+        <h2>图片管理</h2>
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+            <a-space>
+                <a-button type="primary" href="/picture/add" target="_blank">+ 创建图片</a-button>
+                <a-button type="primary" href="/admin/pic_add/batch" target="_blank" ghost>+ 批量创建图片</a-button>
+            </a-space>
+        </div>
         <!-- 搜索表单 -->
         <a-form :model="searchParams" layout="horizontal" @finish="doSearch">
+
             <a-row :gutter="16">
                 <a-col :span="4">
                     <a-form-item label="名称" name="name">

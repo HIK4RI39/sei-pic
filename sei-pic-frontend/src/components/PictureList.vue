@@ -23,6 +23,7 @@
                                 </a-flex>
                             </template>
                         </a-card-meta>
+                        <!-- actions -->
                         <template v-if="showOp" #actions>
                             <ShareAltOutlined @click="(e) => doShare(picture, e)" />
                             <SearchOutlined @click="(e) => doSearch(picture, e)" />
