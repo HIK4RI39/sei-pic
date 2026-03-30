@@ -292,7 +292,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             // 一般来说不会不存在吧
             ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
             boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
-            ThrowUtils.throwIf(hasPermission, ErrorCode.NO_AUTH_ERROR);
+            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
         }
 
         return getPictureVoWithUser(picture);
@@ -428,7 +428,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 boolean update = spaceService.lambdaUpdate()
                         .eq(Space::getId, spaceId)
                         .setSql("totalCount = totalCount-1")
-                        .setSql("totalSize = totalSize-", picture.getPicSize())
+                        .setSql("totalSize = totalSize-" + picture.getPicSize())
                         .update();
                 ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "图片额度更新失败");
             }
@@ -507,7 +507,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 boolean update = spaceService.lambdaUpdate()
                         .eq(Space::getId, spaceId)
                         .setSql("totalCount = totalCount+1")
-                        .setSql("totalSize = totalSize+", picture.getPicSize())
+                        .setSql("totalSize = totalSize+" + picture.getPicSize())
                         .update();
                 ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "图片额度更新失败");
             }
@@ -542,7 +542,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 boolean update = spaceService.lambdaUpdate()
                         .eq(Space::getId, spaceId)
                         .setSql("totalCount = totalCount-1")
-                        .setSql("totalSize = totalSize-", picture.getPicSize())
+                        .setSql("totalSize = totalSize-" + picture.getPicSize())
                         .update();
                 ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "图片额度更新失败");
             }

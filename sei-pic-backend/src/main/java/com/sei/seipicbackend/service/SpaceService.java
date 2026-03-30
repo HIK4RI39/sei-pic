@@ -18,6 +18,9 @@ import javax.servlet.http.HttpServletRequest;
 * @createDate 2026-03-31 01:00:14
 */
 public interface SpaceService extends IService<Space> {
+
+    SpaceVO getSpaceVoWithUser(Space space);
+
     void validSpace(Space space, boolean add);
 
     void fillSpaceBySpaceLevel(Space space);

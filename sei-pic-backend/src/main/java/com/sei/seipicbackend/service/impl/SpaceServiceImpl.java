@@ -69,7 +69,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      * @param space
      * @return
      */
-    private SpaceVO getSpaceVoWithUser(Space space) {
+    @Override
+    public SpaceVO getSpaceVoWithUser(Space space) {
         SpaceVO spaceVO = SpaceVO.objToVo(space);
         // 关联查询脱敏用户信息
         Long userId = space.getUserId();
