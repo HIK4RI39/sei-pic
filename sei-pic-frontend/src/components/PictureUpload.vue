@@ -23,36 +23,36 @@ const loading = ref<boolean>(false);
 
 interface Props {
     picture?: API.PictureVO,
+    spaceId?: number,
     onSuccess?: (newPicture: API.PictureVO) => void;
 }
 
 const imageUrl = ref<string>('');
 const props = defineProps<Props>()
 
-
-
-
 /**
  * 上传前校验
  * @param file 图片
  */
 const beforeUpload = (file: UploadProps['fileList'][number]) => {
-    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
-    if (!isJpgOrPng) {
-        message.error('You can only upload JPG file!');
+    const formatValid = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp';
+    if (!formatValid) {
+        message.error('只能上传 jpeg/png/webp 格式文件');
     }
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-        message.error('Image must smaller than 5MB!');
+        message.error('图片不能超过5MB');
     }
-    return isJpgOrPng && isLt5M;
+    return formatValid && isLt5M;
 };
 
 const handleUpload = async ({ file }: any) => {
+
     loading.value = true
 
     try {
-        const params = props.picture ? { id: props.picture.id } : {}
+        const params: API.PictureUploadRequest = props.picture ? { id: props.picture.id } : {}
+        params.spaceId = props.spaceId
         const res = await uploadPictureUsingPost(params, {}, file)
         if (res.data.code === 0 && res.data.data) {
             message.success("图片上传成功")

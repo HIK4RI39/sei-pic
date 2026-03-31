@@ -1,0 +1,100 @@
+<template>
+    <!-- 空间信息 -->
+    <a-flex justify="space-between">
+        <h2>{{ space.spaceName }}（私有空间）</h2>
+        <a-space size="middle">
+            <a-button type="primary" :href="`/picture/add?spaceId=${space.id}`" target="_blank">
+                + 创建图片
+            </a-button>
+            <a-tooltip :title="`占用空间 ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`">
+                <a-progress type="circle" :percent="((space.totalSize * 100) / space.maxSize).toFixed(1)" :size="42" />
+            </a-tooltip>
+        </a-space>
+    </a-flex>
+
+    <!-- 图片列表 -->
+    <picture-list :dataList="dataList" :loading="loading" />
+    <a-pagination style="text-align: right" v-model:current="searchParams.current"
+        v-model:pageSize="searchParams.pageSize" :total="total" :show-total="() => `图片总数 ${total} / ${space.maxCount}`"
+        @change="onPageChange" />
+</template>
+
+
+<script setup lang="ts">
+import { getPictureVoPageUsingPost } from '@/api/pictureController';
+import { getSpaceVoUsingPost } from '@/api/spaceController';
+import PictureList from '@/components/PictureList.vue';
+import { formatSize } from '@/utils';
+import { message } from 'ant-design-vue';
+import { onMounted, ref } from 'vue';
+import { reactive } from 'vue';
+
+
+interface Props {
+    id: string | number
+}
+const props = defineProps<{ id: string | number }>()
+
+const space = ref<API.SpaceVO>({})
+
+// 获取空间详情
+const fetchSpaceDetail = async () => {
+    try {
+        const res = await getSpaceVoUsingPost()
+        if (res.data.code === 0 && res.data.data) {
+            space.value = res.data.data
+        } else {
+            message.error('获取空间详情失败，' + res.data.message)
+        }
+    } catch (e: any) {
+        message.error('获取空间详情失败：' + e.message)
+    }
+}
+
+onMounted(() => {
+    fetchSpaceDetail()
+})
+
+// 数据
+const dataList = ref([])
+const total = ref(0)
+const loading = ref(true)
+
+// 搜索条件
+const searchParams = reactive<API.PictureQueryRequest>({
+    current: 1,
+    pageSize: 16,
+    sortField: 'createTime',
+    sortOrder: 'descend',
+})
+
+// 分页参数
+const onPageChange = (page, pageSize) => {
+    searchParams.current = page
+    searchParams.pageSize = pageSize
+    fetchData()
+}
+
+// 获取数据
+const fetchData = async () => {
+    loading.value = true
+
+    const res = await getPictureVoPageUsingPost({
+        spaceId: props.id,
+        ...searchParams,
+    })
+    if (res.data.data) {
+        dataList.value = res.data.data.records ?? []
+        total.value = res.data.data.total ?? 0
+    } else {
+        message.error('获取数据失败，' + res.data.message)
+    }
+    loading.value = false
+}
+
+// 页面加载时请求一次
+onMounted(() => {
+    fetchData()
+})
+
+</script>

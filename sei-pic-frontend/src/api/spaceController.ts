@@ -81,3 +81,11 @@ export async function updateSpaceUsingPost(
     ...(options || {}),
   })
 }
+
+/** getSpaceVo POST /api/space/vo */
+export async function getSpaceVoUsingPost(options?: { [key: string]: any }) {
+  return request<API.BaseResponseSpaceVO_>('/api/space/vo', {
+    method: 'POST',
+    ...(options || {}),
+  })
+}

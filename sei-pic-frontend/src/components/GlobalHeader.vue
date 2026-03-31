@@ -29,9 +29,12 @@
                             <template #overlay>
                                 <a-menu>
                                     <a-menu-item>
-                                        <picture-outlined />
-                                        <a href="/space/create" style="margin-left: 5px;">创建空间</a>
+                                        <router-link to="/my_space">
+                                            <user-outlined />
+                                            我的空间
+                                        </router-link>
                                     </a-menu-item>
+
                                     <a-menu-item @click="doLogOut" style="color: red;">
                                         <logout-outlined />
                                         <a href="javascript:" style="margin-left: 5px;">退出登录</a>
@@ -51,7 +54,7 @@
 
 <script lang="ts" setup>
 import { h, ref } from 'vue';
-import { InsertRowAboveOutlined, HomeOutlined, LogoutOutlined, PictureOutlined } from '@ant-design/icons-vue';
+import { InsertRowAboveOutlined, HomeOutlined, LogoutOutlined, PictureOutlined, UserOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { useLoginUserStore } from '@/stores/useLoginStore';

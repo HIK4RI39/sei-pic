@@ -60,6 +60,17 @@ const router = createRouter({
       component: () => import('@/views/space/SpaceCreatePage.vue'),
     },
     {
+      path: '/my_space',
+      name: '我的空间',
+      component: () => import('@/views/space/MySpacePage.vue'),
+    },
+    {
+      path: '/space/:id',
+      name: '空间详情',
+      component: () => import('@/views/space/SpaceDetailPage.vue'),
+      props: true,
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: '404',
       component: () => import('@/views/404Page.vue'),

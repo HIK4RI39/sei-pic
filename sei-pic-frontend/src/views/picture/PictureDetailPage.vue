@@ -62,8 +62,10 @@ const doDelete = async () => {
         try {
             if (res.data.code === 0 && res.data.data) {
                 message.success("删除成功")
-                // 跳转主页
-                router.replace('/')
+                // 跳转回前一个页面
+                if (window.history.state && window.history.state.back) {
+                    router.back();
+                }
             } else {
                 message.error("删除失败," + res.data.message)
             }
