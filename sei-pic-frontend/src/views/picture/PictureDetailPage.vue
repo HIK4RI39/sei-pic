@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { deletePictureByIdUsingPost, editPictureUsingPost, getPictureVoByIdUsingPost } from '@/api/pictureController';
 import { useLoginUserStore } from '@/stores/useLoginStore';
-import { downloadImage, formatSize } from '@/utils';
+import { downloadImage, formatSize, toHexColor } from '@/utils';
 import { DeleteOutlined, DownloadOutlined, EditOutlined, ExclamationCircleFilled } from '@ant-design/icons-vue';
 import { message, Modal } from 'ant-design-vue';
 import { computed, createVNode, h } from 'vue';
@@ -126,6 +126,7 @@ const doDownload = () => {
                                 <div class="info-label">简介</div>
                                 <div class="info-value intro">{{ picture.introduction ?? '暂无简介' }}</div>
                             </a-col>
+
                             <a-col :span="24">
                                 <div class="info-label">参数</div>
                                 <div class="info-value">
@@ -154,7 +155,17 @@ const doDownload = () => {
                                         <span v-else class="info-value">-</span>
                                     </div>
                                 </a-space>
-
+                            </a-col>
+                            <a-col :span="24">
+                                <a-space>
+                                    <div class="info-label">主色调: </div>
+                                    <div v-if="picture.picColor" :style="{
+                                        backgroundColor: toHexColor(picture.picColor),
+                                        width: '16px',
+                                        height: '16px',
+                                    }" />
+                                    {{ picture.picColor?.slice(2) ?? '-' }}
+                                </a-space>
                             </a-col>
                         </a-row>
                     </div>

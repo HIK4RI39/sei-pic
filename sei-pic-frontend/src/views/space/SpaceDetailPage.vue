@@ -10,14 +10,15 @@
     <a-flex justify="space-between">
         <h2>{{ space.spaceName }}（私有空间）</h2>
         <a-space size="middle">
-            <a-button type="primary" @click="openCreateModal">
-                + 创建图片
-            </a-button>
+            <a-button :icon="h(EditOutlined)" @click="doBatchEdit"> 批量编辑</a-button>
+            <a-button type="primary" @click="openCreateModal">+ 创建图片</a-button>
             <a-tooltip :title="`占用空间 ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`">
                 <a-progress type="circle" :percent="((space.totalSize * 100) / space.maxSize).toFixed(1)" :size="42" />
             </a-tooltip>
         </a-space>
     </a-flex>
+
+
 
     <div style="margin-bottom: 16px;" />
 
@@ -43,7 +44,7 @@
 
             <!-- 图片信息表单 -->
             <a-form v-if="currentPicture" name="pictureForm" layout="horizontal" :model="pictureForm"
-                @finish="handleSubmit">
+                @finish="uploadPictureSubmit">
                 <a-form-item label="名称: " name="name">
                     <a-input v-model:value="pictureForm.name" placeholder="图片名称" />
                 </a-form-item>
@@ -70,6 +71,11 @@
         </div>
     </a-modal>
 
+    <!-- 批量编辑弹窗 -->
+    <BatchEditPictureModal ref="batchEditPictureModalRef" :spaceId="id" :pictureList="dataList"
+        :onSuccess="onBatchEditPictureSuccess" />
+
+
 
 </template>
 
@@ -84,12 +90,14 @@ import { editPictureUsingPost, listPictureTagCategoryUsingGet } from '@/api/pict
 import PictureUpload from '@/components/PictureUpload.vue';
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue';
 import { message } from 'ant-design-vue';
-import { onMounted, ref, reactive } from 'vue';
+import { onMounted, ref, reactive, h } from 'vue';
 
 import { ColorPicker } from 'vue3-colorpicker'
 import 'vue3-colorpicker/style.css'
+import { EditOutlined } from '@ant-design/icons-vue';
+import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue';
 
-
+// #region 空间
 interface Props {
     id: string | number
 }
@@ -104,44 +112,13 @@ const searchParams = ref<API.PictureQueryRequest>({
     sortField: 'createTime',
     sortOrder: 'descend',
 })
-
-// 分页参数
-const onPageChange = (page, pageSize) => {
-    searchParams.value.current = page
-    searchParams.value.pageSize = pageSize
-    fetchData()
-}
-
-// 弹窗控制
-const isModalOpen = ref(false);
 const uploadType = ref<'file' | 'url'>('file');
 const currentPicture = ref<API.PictureVO>();
-
 // 表单数据
 const pictureForm = reactive<API.PictureEditRequest>({});
-
 // 标签和分类选项
 const tagOptions = ref<any[]>([]);
 const categoryOptions = ref<any[]>([]);
-
-/**
- * 颜色搜索
- * @param color 
- */
-const onColorChange = async (color: string) => {
-    const res = await searchPictureByColorUsingPost({
-        picColor: color,
-        spaceId: props.id,
-    })
-    if (res.data.code === 0 && res.data.data) {
-        const data = res.data.data ?? [];
-        dataList.value = data;
-        total.value = data.length;
-    } else {
-        message.error('获取数据失败，' + res.data.message)
-    }
-}
-
 
 /**
  * 获取空间详情
@@ -199,60 +176,6 @@ onMounted(() => {
 })
 
 /**
- * 打开创建图片弹窗
- */
-const openCreateModal = () => {
-    isModalOpen.value = true;
-    // 重置表单
-    Object.assign(pictureForm, {});
-    currentPicture.value = undefined;
-};
-
-/**
- * 关闭弹窗
- */
-const handleCancel = () => {
-    isModalOpen.value = false;
-};
-
-/**
- * 上传成功回调
- */
-const onSuccess = (newPicture: API.PictureVO) => {
-    currentPicture.value = newPicture;
-    pictureForm.name = newPicture.name;
-    pictureForm.introduction = newPicture.introduction;
-    pictureForm.category = newPicture.category;
-    pictureForm.tags = newPicture.tags;
-};
-
-/**
- * 提交表单
- */
-const handleSubmit = async (values: any) => {
-    // 如果是创建模式，currentPicture.value 应该由上传组件填充
-    if (!currentPicture.value) {
-        message.error("请先上传图片");
-        return;
-    }
-
-    const res = await editPictureUsingPost({
-        id: currentPicture.value.id,
-        spaceId: props.id,
-        ...values,
-        ...pictureForm
-    });
-
-    if (res.data.code === 0 && res.data.data) {
-        message.success("操作成功");
-        handleCancel();
-        fetchData(); // 刷新列表
-    } else {
-        message.error("操作失败，" + res.data.data.message);
-    }
-};
-
-/**
  * 获取标签和分类选项
  */
 const getTagCategoryOptions = async () => {
@@ -276,6 +199,101 @@ onMounted(() => {
     getTagCategoryOptions();
 });
 
+// 分页参数
+const onPageChange = (page, pageSize) => {
+    searchParams.value.current = page
+    searchParams.value.pageSize = pageSize
+    fetchData()
+}
 
+// #endregion
+
+// #region 图片创建弹窗
+// 弹窗控制
+const isModalOpen = ref(false);
+
+/**
+ * 打开创建图片弹窗
+ */
+const openCreateModal = () => {
+    isModalOpen.value = true;
+    // 重置表单
+    Object.assign(pictureForm, {});
+    currentPicture.value = undefined;
+};
+
+/**
+ * 关闭图片创建弹窗
+ */
+const handleCancel = () => {
+    isModalOpen.value = false;
+};
+
+/**
+ * 提交创建图片表单
+ */
+const uploadPictureSubmit = async (values: any) => {
+    // 如果是创建模式，currentPicture.value 应该由上传组件填充
+    if (!currentPicture.value) {
+        message.error("请先上传图片");
+        return;
+    }
+
+    const res = await editPictureUsingPost({
+        id: currentPicture.value.id,
+        spaceId: props.id,
+        ...values,
+        ...pictureForm
+    });
+
+    if (res.data.code === 0 && res.data.data) {
+        message.success("操作成功");
+        handleCancel();
+        fetchData(); // 刷新列表
+    } else {
+        message.error("操作失败，" + res.data.data.message);
+    }
+};
+// #endregion
+
+// #region 批量编辑弹窗
+// 分享弹窗引用
+const batchEditPictureModalRef = ref()
+// 批量编辑成功后，刷新数据
+const onBatchEditPictureSuccess = () => {
+    fetchData()
+}
+
+// 打开批量编辑弹窗
+const doBatchEdit = () => {
+    if (batchEditPictureModalRef.value) {
+        batchEditPictureModalRef.value.openModal()
+    }
+}
+
+// #endregion
+
+// #region 颜色搜索
+
+/**
+ * 颜色搜索
+ * @param color 
+ */
+const onColorChange = async (color: string) => {
+    const res = await searchPictureByColorUsingPost({
+        picColor: color,
+        spaceId: props.id,
+    })
+    if (res.data.code === 0 && res.data.data) {
+        const data = res.data.data ?? [];
+        dataList.value = data;
+        total.value = data.length;
+    } else {
+        message.error('获取数据失败，' + res.data.message)
+    }
+}
+
+
+// #endregion
 
 </script>

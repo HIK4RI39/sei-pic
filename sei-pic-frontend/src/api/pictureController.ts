@@ -44,6 +44,21 @@ export async function editPictureUsingPost(
   })
 }
 
+/** editPictureByBatch POST /api/picture/edit/batch */
+export async function editPictureByBatchUsingPost(
+  body: API.PictureEditByBatchRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseObject_>('/api/picture/edit/batch', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** getPictureById POST /api/picture/get */
 export async function getPictureByIdUsingPost(
   body: API.IdRequest,
