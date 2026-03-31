@@ -5,6 +5,10 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.json.JSONUtil;
+import com.qcloud.cos.model.COSObject;
+import com.qcloud.cos.model.COSObjectInputStream;
+import com.qcloud.cos.model.GetObjectRequest;
 import com.qcloud.cos.model.PutObjectResult;
 import com.qcloud.cos.model.ciModel.persistence.CIObject;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
@@ -17,7 +21,9 @@ import com.sei.seipicbackend.model.dto.picture.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -60,6 +66,12 @@ public abstract class PictureUploadTemplate {
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
             ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
             List<CIObject> objectList = processResults.getObjectList();
+
+            // 如果拿到的颜色值不是8位, 重新获取1次
+            String ave = imageInfo.getAve();
+            if (ave.length() != 8) {
+                imageInfo.setAve(getImageAve(uploadPath));
+            }
 
             // 缩略成功, 返回缩略结果
             if (CollUtil.isNotEmpty(objectList)) {
@@ -139,6 +151,38 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailObject.getKey());
         return uploadPictureResult;
     }
+
+    /**
+     * 获取图片主色调的方法
+     * @param key 图片对象在COS存储桶中的键值
+     * @return 返回图片主色调的RGB值字符串
+     */
+    public String getImageAve(String key) {
+        // 创建获取COS对象的请求，指定存储桶和对象键
+        GetObjectRequest getObj = new GetObjectRequest(cosClientConfig.getBucket(), key);
+        // 设置自定义查询参数，用于指定获取图片主色调的操作
+        String rule = "imageAve";
+        getObj.putCustomQueryParameter(rule, null);
+        // 执行获取COS对象的操作
+        COSObject object = cosManager.getObject(getObj);
+
+        // 使用try-with-resources语句流式处理对象内容，确保资源自动关闭
+        try (COSObjectInputStream objectContent = object.getObjectContent();
+                ByteArrayOutputStream result = new ByteArrayOutputStream()) {
+            // 创建缓冲区用于读取流数据
+            byte [] buffer = new byte[1024];
+            int length;
+            while((length = objectContent.read(buffer)) != -1) {
+                result.write(buffer, 0, length);
+            }
+            String aveColor = result.toString("UTF-8");
+            return JSONUtil.parseObj(aveColor).getStr("RGB");
+        } catch (IOException e) {
+            log.error("获取图片主色调失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取图片主色调失败");
+        }
+    }
+
 
 
     /**

@@ -9,6 +9,7 @@ import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.PutObjectResult;
 import com.qcloud.cos.model.ciModel.persistence.PicOperations;
 import com.sei.seipicbackend.configuration.CosClientConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -20,6 +21,7 @@ import java.util.List;
  * @author hikari39_
  * @since 2026-03-29
  */
+@Slf4j
 @Component
 public class CosManager {
     @Resource
@@ -93,4 +95,9 @@ public class CosManager {
         GetObjectRequest getObjectRequest = new GetObjectRequest(cosClientConfig.getBucket(), key);
         return cosClient.getObject(getObjectRequest);
     }
+
+    public COSObject getObject(GetObjectRequest getObjectRequest) {
+        return cosClient.getObject(getObjectRequest);
+    }
+
 }
