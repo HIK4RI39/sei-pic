@@ -48,6 +48,11 @@ const router = createRouter({
       name: '图片管理',
       component: () => import('@/views/admin/PictureManagePage.vue'),
     },
+    {
+      path: '/search_picture',
+      name: '图片搜索',
+      component: () => import('@/views/picture/SearchPicturePage.vue'),
+    },
     // 空间
     {
       path: '/admin/spaceManage',
