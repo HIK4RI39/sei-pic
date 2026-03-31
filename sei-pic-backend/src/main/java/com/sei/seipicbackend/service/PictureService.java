@@ -40,6 +40,9 @@ public interface PictureService extends IService<Picture> {
 
     // region 用户
 
+    // 批量编辑图片
+    void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request);
+
     // 上传图片
     PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, HttpServletRequest request);
 

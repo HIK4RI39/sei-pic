@@ -47,6 +47,19 @@ public class PictureController {
     // region -------------------------- 用户 --------------------------
 
     /**
+     * 批量编辑图片 (tag,category)
+     * @param pictureEditByBatchRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/edit/batch")
+    public BaseResponse<?> editPictureByBatch(@RequestBody PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(pictureEditByBatchRequest), ErrorCode.PARAMS_ERROR);
+        pictureService.editPictureByBatch(pictureEditByBatchRequest, request);
+        return ResponseUtils.success();
+    }
+
+    /**
      * 颜色搜图
      * @param searchPictureByColorRequest
      * @param request

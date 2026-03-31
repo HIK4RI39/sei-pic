@@ -40,6 +40,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.DigestUtils;
 
@@ -139,6 +140,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
     }
 
+    /**
+     * 审核图片
+     * @param pictureReviewRequest
+     * @param loginUser
+     */
     @Override
     public void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser) {
         Long id = pictureReviewRequest.getId();
@@ -280,6 +286,48 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    /**
+     * 批量编辑图片
+     * @param pictureEditByBatchRequest
+     * @param request
+     */
+    @Override
+    @Transactional // 真有用吗?
+    public void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request) {
+        List<Long> pictureIdList = pictureEditByBatchRequest.getPictureIdList();
+        Long spaceId = pictureEditByBatchRequest.getSpaceId();
+        String category = pictureEditByBatchRequest.getCategory();
+        List<String> tags = pictureEditByBatchRequest.getTags();
+        // 参数校验
+        ThrowUtils.throwIf(CollUtil.isEmpty(pictureIdList), ErrorCode.PARAMS_ERROR, "请选择图片");
+        ThrowUtils.throwIf(spaceId==null || spaceId<=0, ErrorCode.PARAMS_ERROR, "非法的spaceId");
+        // 空间鉴权
+        Space space = spaceService.getById(spaceId);
+        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+        boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
+        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+        // 查询图片 (仅返回id和spaceId)
+        List<Picture> pictureList = this.lambdaQuery().eq(Picture::getSpaceId, spaceId)
+                .select(Picture::getId, Picture::getSpaceId)
+                .in(Picture::getId, pictureIdList).list();
+        // 更新
+        for (Picture picture : pictureList) {
+            if (StrUtil.isNotBlank(category)) {
+                picture.setCategory(category);
+            }
+            if (CollUtil.isNotEmpty(tags)) {
+                picture.setTags(JSONUtil.toJsonStr(tags));
+            }
+        }
+        // 找不到
+        if (CollUtil.isEmpty(pictureList)) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "没有找到对应图片!");
+        }
+        // 批量更新
+        boolean result = this.updateBatchById(pictureList);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "批量编辑失败!");
+    }
 
     @Override
     public PictureVO getPictureVoById(long pictureId, HttpServletRequest request) {
