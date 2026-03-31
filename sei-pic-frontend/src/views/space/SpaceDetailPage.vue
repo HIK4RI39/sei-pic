@@ -1,6 +1,11 @@
 <template>
     <!-- 搜索表单 -->
     <picture-search-form :onSearch="onSearch" />
+    <!-- 按颜色搜索 -->
+    <a-form-item label="按颜色搜索" style="margin-top: 16px">
+        <color-picker format="hex" @pureColorChange="onColorChange" />
+    </a-form-item>
+
     <!-- 空间信息 -->
     <a-flex justify="space-between">
         <h2>{{ space.spaceName }}（私有空间）</h2>
@@ -70,7 +75,7 @@
 
 
 <script setup lang="ts">
-import { getPictureVoPageUsingPost } from '@/api/pictureController';
+import { getPictureVoPageUsingPost, searchPictureByColorUsingPost } from '@/api/pictureController';
 import PictureList from '@/components/PictureList.vue';
 import { getSpaceVoUsingPost } from '@/api/spaceController';
 import PictureSearchForm from '@/components/PictureSearchForm.vue';
@@ -80,6 +85,9 @@ import PictureUpload from '@/components/PictureUpload.vue';
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue';
 import { message } from 'ant-design-vue';
 import { onMounted, ref, reactive } from 'vue';
+
+import { ColorPicker } from 'vue3-colorpicker'
+import 'vue3-colorpicker/style.css'
 
 
 interface Props {
@@ -116,6 +124,23 @@ const pictureForm = reactive<API.PictureEditRequest>({});
 const tagOptions = ref<any[]>([]);
 const categoryOptions = ref<any[]>([]);
 
+/**
+ * 颜色搜索
+ * @param color 
+ */
+const onColorChange = async (color: string) => {
+    const res = await searchPictureByColorUsingPost({
+        picColor: color,
+        spaceId: props.id,
+    })
+    if (res.data.code === 0 && res.data.data) {
+        const data = res.data.data ?? [];
+        dataList.value = data;
+        total.value = data.length;
+    } else {
+        message.error('获取数据失败，' + res.data.message)
+    }
+}
 
 
 /**

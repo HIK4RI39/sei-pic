@@ -157,7 +157,7 @@ onMounted(() => {
 <style scoped>
 /* 表单项边距 */
 .picture-search-form {
-    margin-bottom: 48px;
+    margin-bottom: 16px;
 }
 
 .picture-search-form .ant-form-item {

@@ -183,8 +183,6 @@ public abstract class PictureUploadTemplate {
         }
     }
 
-
-
     /**
      * 删除临时文件
      */

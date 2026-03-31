@@ -72,7 +72,7 @@ const fetchData = async () => {
     }
 
     // 现在这里就能正常打印了
-    console.log("最终发送的参数: ", params.searchText);
+    // console.log("最终发送的参数: ", params.searchText);
 
     try {
         const res = await getPictureVoPageWithCacheUsingPost(params)
