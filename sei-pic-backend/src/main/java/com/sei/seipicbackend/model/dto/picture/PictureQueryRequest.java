@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -19,6 +20,17 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
      * 状态：0-待审核; 1-通过; 2-拒绝
      */
     private Integer reviewStatus;
+
+    /**
+     * 编辑时间 (起始)
+     */
+    private Date startEditTime;
+
+    /**
+     * 编辑时间 (结束)
+     */
+    private Date endEditTime;
+
 
     /**
      * 审核信息

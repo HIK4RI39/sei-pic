@@ -424,6 +424,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             isOwnerOrAdmin(picture, loginUser);
             // 更新图片后, 对原图片进行删除
             this.clearPictureFile(picture);
+            // 如果是私有空间释放空间额度
             if (spaceId!=null) {
                 boolean update = spaceService.lambdaUpdate()
                         .eq(Space::getId, spaceId)
@@ -432,7 +433,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                         .update();
                 ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "图片额度更新失败");
             }
-            // 如果是私有空间释放空间额度
         }
 
         // 上传图片
@@ -472,7 +472,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
 
         // 填写审核参数
-        fillReviewParams(picture, loginUser);
+        // 如果是私人空间, 没必要审核
+        if (spaceId==null) {
+            fillReviewParams(picture, loginUser);
+        }
 
         // 上传到非公共图库, 需要鉴权
         if (spaceId!=null) {
@@ -626,6 +629,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Long reviewerId = pictureQueryRequest.getReviewerId();
         Long spaceId = pictureQueryRequest.getSpaceId();
         Boolean nullSpaceId = pictureQueryRequest.getNullSpaceId();
+        Date startEditTime = pictureQueryRequest.getStartEditTime();
+        Date endEditTime = pictureQueryRequest.getEndEditTime();
 
         LambdaQueryWrapper<Picture> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ObjUtil.isNotEmpty(id), Picture::getId, id);
@@ -641,6 +646,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         queryWrapper.eq(ObjUtil.isNotEmpty(userId), Picture::getUserId, userId);
         queryWrapper.eq(ObjUtil.isNotEmpty(reviewerId), Picture::getReviewerId, reviewerId);
         queryWrapper.eq(ObjUtil.isNotEmpty(reviewStatus), Picture::getReviewStatus, reviewStatus);
+        queryWrapper.ge(startEditTime!=null, Picture::getEditTime, startEditTime);
+        queryWrapper.lt(endEditTime!=null, Picture::getEditTime, endEditTime);
         queryWrapper.eq(spaceId!=null, Picture::getSpaceId, spaceId);
         if (nullSpaceId!=null) {
             queryWrapper.isNull(nullSpaceId, Picture::getSpaceId);
