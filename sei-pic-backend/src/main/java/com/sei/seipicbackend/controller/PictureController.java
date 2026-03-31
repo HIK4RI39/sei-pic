@@ -47,7 +47,7 @@ public class PictureController {
     // region -------------------------- 用户 --------------------------
 
     /**
-     * 批量编辑图片 (tag,category)
+     * 批量编辑图片 (tag,category,name)
      * @param pictureEditByBatchRequest
      * @param request
      * @return

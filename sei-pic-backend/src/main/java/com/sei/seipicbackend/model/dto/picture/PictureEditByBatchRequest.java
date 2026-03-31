@@ -13,6 +13,11 @@ import java.util.List;
 public class PictureEditByBatchRequest implements Serializable {
 
     /**
+     * 命名规则
+     */
+    private String nameRule;
+
+    /**
      * 图片 id 列表
      */
     private List<Long> pictureIdList;

@@ -299,6 +299,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Long spaceId = pictureEditByBatchRequest.getSpaceId();
         String category = pictureEditByBatchRequest.getCategory();
         List<String> tags = pictureEditByBatchRequest.getTags();
+        String nameRule = pictureEditByBatchRequest.getNameRule();
         // 参数校验
         ThrowUtils.throwIf(CollUtil.isEmpty(pictureIdList), ErrorCode.PARAMS_ERROR, "请选择图片");
         ThrowUtils.throwIf(spaceId==null || spaceId<=0, ErrorCode.PARAMS_ERROR, "非法的spaceId");
@@ -324,6 +325,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (CollUtil.isEmpty(pictureList)) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "没有找到对应图片!");
         }
+        // 批量重命名
+        fillPictureWithNameRule(pictureList, nameRule);
         // 批量更新
         boolean result = this.updateBatchById(pictureList);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "批量编辑失败!");
@@ -646,6 +649,28 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     // endregion
 
     // region -------------------------- 公共方法 --------------------------
+
+    /**
+     * nameRule 格式：图片{序号}
+     * @param pictureList
+     * @param nameRule
+     */
+    private void fillPictureWithNameRule(List<Picture> pictureList, String nameRule) {
+        if (CollUtil.isEmpty(pictureList) || StrUtil.isBlank(nameRule)) {
+            return;
+        }
+        long count = 1;
+        try {
+            for (Picture picture : pictureList) {
+                String pictureName = nameRule.replaceAll("\\{序号}", String.valueOf(count++));
+                picture.setName(pictureName);
+            }
+        } catch (Exception e) {
+            log.error("名称解析错误", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "名称解析错误");
+        }
+    }
+
 
     /**
      * 管理员鉴权
