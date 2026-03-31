@@ -43,12 +43,13 @@ import { useRouter } from 'vue-router'
 import {
     DeleteOutlined,
     EditOutlined,
+    ExclamationCircleFilled,
     SearchOutlined,
     ShareAltOutlined,
 } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import ShareModal from '@/components/ShareModal.vue'
-import { ref } from 'vue'
+import { createVNode, ref } from 'vue'
 import { deletePictureByIdUsingPost } from '@/api/pictureController'
 
 interface Props {
@@ -90,7 +91,7 @@ const doEdit = (picture, e) => {
     e.stopPropagation()
     // 跳转时一定要携带 spaceId
     router.push({
-        path: '/add_picture',
+        path: '/picture/add',
         query: {
             id: picture.id,
             spaceId: picture.spaceId,
@@ -102,17 +103,29 @@ const doEdit = (picture, e) => {
 const doDelete = async (picture, e) => {
     // 阻止冒泡
     e.stopPropagation()
-    const id = picture.id
-    if (!id) {
-        return
-    }
-    const res = await deletePictureByIdUsingPost({ id })
-    if (res.data.code === 0) {
-        message.success('删除成功')
-        props.onReload?.()
-    } else {
-        message.error('删除失败')
-    }
+
+    Modal.confirm({
+        title: '确认删除该图片吗？',
+        icon: createVNode(ExclamationCircleFilled),
+        content: '删除后无法恢复，请谨慎操作。',
+        okText: '确认删除',
+        okType: 'danger', // 按钮颜色变为红色，提醒这是危险操作
+        cancelText: '取消',
+        // 点击确认后的回调
+        async onOk() {
+            const id = picture.id
+            if (!id) {
+                return
+            }
+            const res = await deletePictureByIdUsingPost({ id })
+            if (res.data.code === 0) {
+                message.success('删除成功')
+                props.onReload?.()
+            } else {
+                message.error('删除失败')
+            }
+        }, onCancel() { }
+    })
 }
 
 // ----- 分享操作 ----

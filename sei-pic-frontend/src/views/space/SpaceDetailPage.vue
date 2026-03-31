@@ -12,8 +12,11 @@
         </a-space>
     </a-flex>
 
+    <div style="margin-bottom: 16px;" />
+
     <!-- 图片列表 -->
-    <picture-list :dataList="dataList" :loading="loading" />
+    <picture-list :dataList="dataList" :loading="loading" :showOp="true" :canEdit="true" :canDelete="true"
+        :onReload="fetchData" />
     <a-pagination style="text-align: right" v-model:current="searchParams.current"
         v-model:pageSize="searchParams.pageSize" :total="total" :show-total="() => `图片总数 ${total} / ${space.maxCount}`"
         @change="onPageChange" />

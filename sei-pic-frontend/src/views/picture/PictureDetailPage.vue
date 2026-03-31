@@ -2,9 +2,9 @@
 import { deletePictureByIdUsingPost, editPictureUsingPost, getPictureVoByIdUsingPost } from '@/api/pictureController';
 import { useLoginUserStore } from '@/stores/useLoginStore';
 import { downloadImage, formatSize } from '@/utils';
-import { DeleteOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons-vue';
-import { message } from 'ant-design-vue';
-import { computed, h } from 'vue';
+import { DeleteOutlined, DownloadOutlined, EditOutlined, ExclamationCircleFilled } from '@ant-design/icons-vue';
+import { message, Modal } from 'ant-design-vue';
+import { computed, createVNode, h } from 'vue';
 import { ref } from 'vue';
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -50,29 +50,33 @@ const doEdit = () => {
 }
 
 const doDelete = async () => {
-    if (canEdit) {
-        const confirmDelete = confirm("确认删除?")
-        if (!confirmDelete) {
-            return
-        }
-
-        const res = await deletePictureByIdUsingPost({
-            id: picture.value.id
-        })
-        try {
-            if (res.data.code === 0 && res.data.data) {
-                message.success("删除成功")
-                // 跳转回前一个页面
-                if (window.history.state && window.history.state.back) {
-                    router.back();
+    Modal.confirm({
+        title: '确认删除该图片吗？',
+        icon: createVNode(ExclamationCircleFilled),
+        content: '删除后无法恢复，请谨慎操作。',
+        okText: '确认删除',
+        okType: 'danger', // 按钮颜色变为红色，提醒这是危险操作
+        cancelText: '取消',
+        // 点击确认后的回调
+        async onOk() {
+            const res = await deletePictureByIdUsingPost({
+                id: picture.value.id
+            })
+            try {
+                if (res.data.code === 0 && res.data.data) {
+                    message.success("删除成功")
+                    // 跳转回前一个页面
+                    if (window.history.state && window.history.state.back) {
+                        router.back();
+                    }
+                } else {
+                    message.error("删除失败," + res.data.message)
                 }
-            } else {
-                message.error("删除失败," + res.data.message)
+            } catch (e: any) {
+                message.error("删除失败," + e.message);
             }
-        } catch (e: any) {
-            message.error("删除失败," + e.message);
-        }
-    }
+        }, onCancel() { }
+    })
 }
 
 const doDownload = () => {

@@ -248,9 +248,10 @@
 <script lang="ts" setup>
 import { deleteByBatchUsingPost, deletePictureByIdUsingPost, getPicturePageUsingPost, listPictureTagCategoryUsingGet, reviewPicBatchPassUsingPost, reviewPictureUsingPost } from '@/api/pictureController';
 import { PIC_REVIEW_STATUS_ENUM, PIC_REVIEW_STATUS_MAP } from '@/constants/picture';
-import { message } from 'ant-design-vue';
+import { ExclamationCircleFilled } from '@ant-design/icons-vue';
+import { message, Modal } from 'ant-design-vue';
 import dayjs from 'dayjs';
-import { computed } from 'vue';
+import { computed, createVNode } from 'vue';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { _ } from 'vue-router/dist/router-CWoNjPRp.mjs';
@@ -341,20 +342,31 @@ const rowSelection = {
 const doBatchDelete = async () => {
     if (selectedRowKeys.value.length === 0) return
 
-    const result = confirm(`确认删除选中的 ${selectedRowKeys.value.length} 条数据?`)
-    if (!result) return
+    Modal.confirm({
+        title: `确认删除选中的 ${selectedRowKeys.value.length} 条数据?`,
+        icon: createVNode(ExclamationCircleFilled),
+        content: '删除后无法恢复，请谨慎操作。',
+        okText: '确认删除',
+        okType: 'danger', // 按钮颜色变为红色，提醒这是危险操作
+        cancelText: '取消',
+        // 点击确认后的回调
+        async onOk() {
+            const result = confirm()
+            if (!result) return
 
-    const res = await deleteByBatchUsingPost(selectedRowKeys.value)
-    try {
-        if (res.data.code === 0) {
-            message.success("批量删除成功")
-            fetchData()
-        } else {
-            message.error("批量删除失败," + res.data.message)
-        }
-    } catch (e: any) {
-        message.error("批量删除失败," + e.message);
-    }
+            const res = await deleteByBatchUsingPost(selectedRowKeys.value)
+            try {
+                if (res.data.code === 0) {
+                    message.success("批量删除成功")
+                    fetchData()
+                } else {
+                    message.error("批量删除失败," + res.data.message)
+                }
+            } catch (e: any) {
+                message.error("批量删除失败," + e.message);
+            }
+        }, onCancel() { }
+    })
 }
 
 
@@ -448,23 +460,32 @@ const doUpdate = (id: number) => {
 
 
 const doDelete = async (id: number) => {
-    const result = confirm("确认删除?")
-    if (!result) {
-        return
-    }
+    Modal.confirm({
+        title: '确认删除?',
+        icon: createVNode(ExclamationCircleFilled),
+        content: '删除后无法恢复，请谨慎操作。',
+        okText: '确认删除',
+        okType: 'danger', // 按钮颜色变为红色，提醒这是危险操作
+        cancelText: '取消',
+        // 点击确认后的回调
+        async onOk() {
+            const res = await deletePictureByIdUsingPost({ id })
+            try {
+                if (res.data.code === 0 && res.data.data) {
+                    message.success("删除成功")
+                    // 重新拉取数据
+                    doSearch()
+                } else {
+                    message.error("删除失败," + res.data.message)
+                }
+            } catch (e: any) {
+                message.error("删除失败," + e.message);
+            }
+        }, onCancel() { }
+    })
 
-    const res = await deletePictureByIdUsingPost({ id })
-    try {
-        if (res.data.code === 0 && res.data.data) {
-            message.success("删除成功")
-            // 重新拉取数据
-            doSearch()
-        } else {
-            message.error("删除失败," + res.data.message)
-        }
-    } catch (e: any) {
-        message.error("删除失败," + e.message);
-    }
+
+
 }
 
 const reviewPass = async (id: number) => {
