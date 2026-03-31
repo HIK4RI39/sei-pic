@@ -114,6 +114,7 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicFormat(imageInfo.getFormat());
         uploadPictureResult.setPicSize(FileUtil.size(file));
         uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + uploadPath);
+        uploadPictureResult.setPicColor(imageInfo.getAve());
         return uploadPictureResult;
     }
 
@@ -130,6 +131,7 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicScale(picScale);
         uploadPictureResult.setPicFormat(imageInfo.getFormat());
         uploadPictureResult.setPicSize(FileUtil.size(file));
+        uploadPictureResult.setPicColor(imageInfo.getAve());
 
         // 设置图片为压缩后的地址
         uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());

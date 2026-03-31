@@ -14,6 +14,13 @@ public class UploadPictureResult {
      */
     private String url;
 
+
+    /**
+     * 主色调
+     */
+    private String picColor;
+
+
     /**
      * 图片缩略图 url
      */

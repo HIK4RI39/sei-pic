@@ -107,6 +107,11 @@ public class Picture implements Serializable {
     private Integer reviewStatus;
 
     /**
+     * 主色调
+     */
+    private String picColor;
+
+    /**
      * 审核信息
      */
     private String reviewMessage;
