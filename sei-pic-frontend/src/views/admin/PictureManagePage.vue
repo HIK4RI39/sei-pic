@@ -56,7 +56,7 @@
                     </a-form-item>
                 </a-col>
                 <a-col :span="4">
-                    <a-form-item label="排序字段" name="sortOrder">
+                    <a-form-item label="排序字段" name="sortField">
                         <a-select v-model:value="searchParams.sortField" :options="sortOptions" allow-clear />
                     </a-form-item>
                 </a-col>
@@ -68,6 +68,7 @@
                         </a-select>
                     </a-form-item>
                 </a-col>
+
                 <a-col :span="6" style="text-align: right">
                     <a-space>
                         <a-button type="primary" html-type="submit">搜索</a-button>
@@ -80,7 +81,10 @@
 
         <div style="margin-bottom: 16px"></div>
 
-        <div style="margin-bottom: 16px">
+
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 16px;">
+
             <a-space>
                 <a-button type="primary" danger :disabled="!hasSelected" @click="doBatchDelete">
                     批量删除
@@ -90,6 +94,10 @@
                 </a-button>
             </a-space>
             <span style="margin-left: 8px">
+                <div style="margin-left: auto; display: flex; align-items: center">
+                    <span style="margin-right: 8px">仅查询公共空间</span>
+                    <a-switch v-model:checked="searchParams.nullSpaceId" @change="doSearch" />
+                </div>
                 <template v-if="hasSelected">
                     {{ `已选择 ${selectedRowKeys.length} 项` }}
                 </template>
@@ -399,7 +407,9 @@ const dataList = ref<API.PictureVO[]>([])
 const searchParams = ref<API.PictureQueryRequest>({
     current: 1,
     pageSize: 8,
-    sortOrder: 'descend'
+    sortOrder: 'descend',
+    sortField: 'createTime',
+    nullSpaceId: true
 })
 
 const total = ref<Number>(0)
@@ -580,6 +590,28 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.toolbar {
+    width: 100%;
+    display: flex;
+    /* a-space 默认也是 flex */
+}
+
+.filler {
+    flex: 1;
+}
+
+/* 修正 form-item 在工具栏里的默认间距 */
+.right-item {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* 深度选择器，确保 label 和 switch 在一行 */
+:deep(.ant-form-item-row) {
+    flex-direction: row;
+}
+
 /* 1. 极简单元格间距 */
 :deep(.ant-table-tbody > tr > td),
 :deep(.ant-table-thead > tr > th) {

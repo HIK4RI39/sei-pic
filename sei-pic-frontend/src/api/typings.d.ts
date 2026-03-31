@@ -172,6 +172,7 @@ declare namespace API {
   type PictureQueryRequest = {
     category?: string
     current?: number
+    endEditTime?: string
     id?: number
     introduction?: string
     name?: string
@@ -189,6 +190,7 @@ declare namespace API {
     sortField?: string
     sortOrder?: string
     spaceId?: number
+    startEditTime?: string
     tags?: string[]
     userId?: number
   }

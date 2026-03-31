@@ -103,7 +103,7 @@ const handleSubmit = async () => {
         if (res.data.code === 0) {
             message.success('创建成功');
             // TODO 跳转个人空间页面
-            router.push('/space_manage');
+            router.push('/my_space');
         } else {
             message.error('创建失败: ' + res.data.message);
         }
