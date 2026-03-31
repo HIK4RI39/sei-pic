@@ -30,6 +30,7 @@ import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.service.UserService;
+import com.sei.seipicbackend.utils.ColorSimilarUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -44,11 +45,10 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.awt.*;
 import java.io.IOException;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -397,6 +397,46 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return true;
     }
 
+    /**
+     * 根据主色调搜索图库中的图片
+     * @param spaceId
+     * @param picColor
+     * @param request
+     * @return
+     */
+    @Override
+    public List<PictureVO> searchPictureByColor(Long spaceId, String picColor, HttpServletRequest request) {
+        // 参数校验
+        ThrowUtils.throwIf(spaceId==null, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(StrUtil.isBlank(picColor), ErrorCode.PARAMS_ERROR);
+        // 空间鉴权
+        UserVO loginUser = userService.getLoginUser(request);
+        Space space = spaceService.getById(spaceId);
+        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+        boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
+        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+        // 获取空间所有带有主色调的图片
+        List<Picture> pictureList = this.lambdaQuery().eq(Picture::getSpaceId, spaceId)
+                .isNotNull(Picture::getPicColor).list();
+        if (pictureList==null) {
+            return Collections.emptyList();
+        }
+        // 计算主色调相似度并排序 (top 12)
+        Color targetColor = Color.decode(picColor);
+        List<Picture> sortedPictures = pictureList.stream().sorted(Comparator.comparingDouble(picture -> {
+            if (StrUtil.isBlank(picture.getPicColor())) {
+                return Double.MAX_VALUE;
+            }
+            Color pictureColor = Color.decode(picture.getPicColor());
+            // utils返回的数字越大, 说明越相似
+            // comparator数字越小名次越高, 所以对相似度取负
+            return -ColorSimilarUtils.calculateSimilarity(targetColor, pictureColor);
+        })).limit(12).collect(Collectors.toList());
+
+        // 以图搜图仅能在个人空间使用, 无需关联用户信息
+        return BeanUtil.copyToList(sortedPictures, PictureVO.class);
+    }
+
 
     /**
      * 上传图片
@@ -602,6 +642,33 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return pictureVoPage;
     }
 
+    /**
+     * 将Picture实体列表转换为PictureVO视图对象列表，并填充用户信息
+     * @param pictureList Picture实体列表
+     * @return 包含用户信息的PictureVO视图对象列表
+     */
+    private List<PictureVO> convertToVoList(List<Picture> pictureList) {
+    // 如果输入列表为空，返回空列表
+        if (CollUtil.isEmpty(pictureList)) {
+            return Collections.emptyList();
+        }
+
+        // 获取用户id列表
+        Set<Long> userIdSet = pictureList.stream().map(Picture::getUserId).collect(Collectors.toSet());
+        // id:user Map
+        Map<Long, UserVO> idUserVoMap = userService.listByIds(userIdSet).stream()
+                .collect(Collectors.toMap(User::getId, userService::getUserVO));
+        // 填充user信息
+        List<PictureVO> pictureVOList = BeanUtil.copyToList(pictureList, PictureVO.class);
+        for (PictureVO pictureVO : pictureVOList) {
+            Long id = pictureVO.getId();
+            if (idUserVoMap.containsKey(id)) {
+                pictureVO.setUser(idUserVoMap.get(id));
+            }
+        }
+
+        return pictureVOList;
+    }
 
 
     /**

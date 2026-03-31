@@ -47,6 +47,24 @@ public class PictureController {
     // region -------------------------- 用户 --------------------------
 
     /**
+     * 颜色搜图
+     * @param searchPictureByColorRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/search/color")
+    public BaseResponse<List<PictureVO>> searchPictureByColor(@RequestBody SearchPictureByColorRequest searchPictureByColorRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(searchPictureByColorRequest == null, ErrorCode.PARAMS_ERROR);
+        String picColor = searchPictureByColorRequest.getPicColor();
+        ThrowUtils.throwIf(ObjUtil.isEmpty(picColor), ErrorCode.PARAMS_ERROR);
+        Long spaceId = searchPictureByColorRequest.getSpaceId();
+        ThrowUtils.throwIf(spaceId == null || spaceId < 0, ErrorCode.PARAMS_ERROR);
+
+        List<PictureVO> pictureVOList = pictureService.searchPictureByColor(spaceId, picColor, request);
+        return ResponseUtils.success(pictureVOList);
+    }
+
+        /**
      * 以图搜图功能接口
      * 搜索互联网中与图库类似的图片
      * @param searchPictureByPictureRequest
