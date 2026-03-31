@@ -4,6 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.annotation.AuthCheck;
+import com.sei.seipicbackend.api.imagesearch.ImageSearchApiFacade;
+import com.sei.seipicbackend.api.imagesearch.ImageSearchResult;
 import com.sei.seipicbackend.common.BaseResponse;
 import com.sei.seipicbackend.common.IdRequest;
 import com.sei.seipicbackend.common.ResponseUtils;
@@ -43,6 +45,23 @@ public class PictureController {
     private UserService userService;
 
     // region -------------------------- 用户 --------------------------
+
+    /**
+     * 以图搜图功能接口
+     * 搜索互联网中与图库类似的图片
+     * @param searchPictureByPictureRequest
+     * @return
+     */
+    @PostMapping("/search/picture")
+    public BaseResponse<List<ImageSearchResult>> searchPictureByPicture(@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest) {
+        ThrowUtils.throwIf(searchPictureByPictureRequest==null, ErrorCode.PARAMS_ERROR);
+        Long pictureId = searchPictureByPictureRequest.getPictureId();
+        ThrowUtils.throwIf(pictureId==null || pictureId<=0, ErrorCode.PARAMS_ERROR);
+        Picture sourcePicture = pictureService.getPictureById(pictureId);
+        ThrowUtils.throwIf(sourcePicture==null, ErrorCode.NOT_FOUND_ERROR);
+        List<ImageSearchResult> imageSearchResults = ImageSearchApiFacade.searchImage(sourcePicture.getUrl());
+        return ResponseUtils.success(imageSearchResults);
+    }
 
     /**
      * 根据文件上传图片
