@@ -11,6 +11,13 @@
                 <UrlPictureUpload :picture="picture" :spaceId="spaceId" :onSuccess="onSuccess" />
             </a-tab-pane>
         </a-tabs>
+        <!-- 编辑 -->
+        <div v-if="picture" class="edit-bar">
+            <a-button :icon="h(EditOutlined)" @click="doEditPicture">编辑图片</a-button>
+            <ImageCropper ref="imageCropperRef" :imageUrl="picture?.url" :picture="picture" :spaceId="spaceId"
+                :onSuccess="onCropSuccess" />
+        </div>
+
 
         <!-- 图片信息 -->
         <a-form v-if="picture" name="pictureForm" layout="horizontal" :model="pictureForm" @finish="handleSubmit">
@@ -38,7 +45,7 @@
             <!-- submit -->
             <a-form-item>
                 <a-button type="primary" style="width: 100%;" html-type="submit">{{ route.query?.id ? '修改' : '创建'
-                }}</a-button>
+                    }}</a-button>
             </a-form-item>
         </a-form>
     </div>
@@ -46,10 +53,12 @@
 
 <script setup lang="ts">
 import { editPictureUsingPost, getPictureVoByIdUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController';
+import ImageCropper from '@/components/ImageCropper.vue';
 import PictureUpload from '@/components/PictureUpload.vue';
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue';
+import { EditOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
-import { onMounted, reactive } from 'vue';
+import { h, onMounted, reactive } from 'vue';
 import { computed } from 'vue';
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -152,6 +161,25 @@ onMounted(() => {
     getOldPicture();
 })
 
+// #region 图片编辑弹窗
+
+// 图片编辑弹窗引用
+const imageCropperRef = ref()
+
+// 编辑图片
+const doEditPicture = () => {
+    if (imageCropperRef.value) {
+        imageCropperRef.value.openModal()
+    }
+}
+
+// 编辑成功事件
+const onCropSuccess = (newPicture: API.PictureVO) => {
+    picture.value = newPicture
+}
+
+// #endregion
+
 
 
 </script>
@@ -160,5 +188,10 @@ onMounted(() => {
 #addPicturePage {
     max-width: 720px;
     margin: 0 auto;
+}
+
+#addPicturePage .edit-bar {
+    text-align: center;
+    margin: 16px 0;
 }
 </style>
