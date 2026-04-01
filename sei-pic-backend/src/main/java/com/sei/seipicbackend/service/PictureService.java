@@ -2,6 +2,7 @@ package com.sei.seipicbackend.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
+import com.sei.seipicbackend.api.aliyunai.model.GetOutPaintingTaskResponse;
 import com.sei.seipicbackend.model.dto.picture.*;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -40,6 +41,9 @@ public interface PictureService extends IService<Picture> {
     // endregion
 
     // region 用户
+
+    // 查询扩图任务
+    GetOutPaintingTaskResponse getOutPaintingTask(String taskId);
 
     // 创建扩图任务
     CreateOutPaintingTaskResponse createOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, HttpServletRequest request);

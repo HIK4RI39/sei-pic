@@ -2,9 +2,11 @@ package com.sei.seipicbackend.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.annotation.AuthCheck;
 import com.sei.seipicbackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
+import com.sei.seipicbackend.api.aliyunai.model.GetOutPaintingTaskResponse;
 import com.sei.seipicbackend.api.imagesearch.ImageSearchApiFacade;
 import com.sei.seipicbackend.api.imagesearch.ImageSearchResult;
 import com.sei.seipicbackend.common.BaseResponse;
@@ -48,7 +50,19 @@ public class PictureController {
     // region -------------------------- 用户 --------------------------
 
     /**
-     * 获得扩图任务创建结果
+     * 查询AI扩图任务结果
+     * @param taskId
+     * @return
+     */
+    @GetMapping("/out_painting/get_task")
+    public BaseResponse<GetOutPaintingTaskResponse> getOutPaintingTask(String taskId) {
+        ThrowUtils.throwIf(StrUtil.isBlank(taskId), ErrorCode.PARAMS_ERROR, "非法的任务ID");
+        GetOutPaintingTaskResponse getOutPaintingTaskResponse = pictureService.getOutPaintingTask(taskId);
+        return ResponseUtils.success(getOutPaintingTaskResponse);
+    }
+
+    /**
+     * 创建AI扩图任务, 返回创建结果
      * @param createPictureOutPaintingTaskRequest
      * @param request
      * @return

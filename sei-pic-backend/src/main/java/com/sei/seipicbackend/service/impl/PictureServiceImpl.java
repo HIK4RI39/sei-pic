@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sei.seipicbackend.api.aliyunai.AliYunAiApi;
 import com.sei.seipicbackend.api.aliyunai.model.CreateOutPaintingTaskRequest;
 import com.sei.seipicbackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
+import com.sei.seipicbackend.api.aliyunai.model.GetOutPaintingTaskResponse;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
@@ -303,6 +304,16 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    /**
+     * 查询AI扩图任务
+     * @param taskId
+     */
+    @Override
+    public GetOutPaintingTaskResponse getOutPaintingTask(String taskId) {
+        return aliYunAiApi.getOutPaintingTask(taskId);
+    }
+
 
     /**
      * 获取AI扩图任务创建响应
