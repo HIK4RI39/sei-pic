@@ -571,7 +571,24 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             ThrowUtils.throwIf(picture==null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
             // 如果是编辑, 需要鉴权
             isOwnerOrAdmin(picture, loginUser);
+        }
+
+
+
+        // 上传图片
+        String uploadPathPrefix = String.format("public/%s", loginUser.getId());
+
+        // 根据inputSource决定上传方式
+        PictureUploadTemplate pictureUploadTemplate = filePictureUpload;
+        if (inputSource instanceof String) {
+            pictureUploadTemplate = urlPictureUpload;
+        }
+        UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, uploadPathPrefix);
+
+        // 如果是更新, 删除原图片 (待新图片上传成功后执行)
+        if (pictureId!=null) {
             // 更新图片后, 对原图片进行删除
+            Picture picture = lambdaQuery().eq(Picture::getId, pictureId).one();
             this.clearPictureFile(picture);
             // 如果是私有空间释放空间额度
             if (spaceId!=null) {
@@ -583,16 +600,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "图片额度更新失败");
             }
         }
-
-        // 上传图片
-        String uploadPathPrefix = String.format("public/%s", loginUser.getId());
-
-        // 根据inputSource决定上传方式
-        PictureUploadTemplate pictureUploadTemplate = filePictureUpload;
-        if (inputSource instanceof String) {
-            pictureUploadTemplate = urlPictureUpload;
-        }
-        UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, uploadPathPrefix);
 
         // 从上传结果中获取图片信息, 并填充
         Picture picture = fillPictureParams(loginUser, uploadPictureResult);
@@ -638,8 +645,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             Long maxSize = space.getMaxSize();
             Long totalCount = space.getTotalCount();
             Long totalSize = space.getTotalSize();
-            ThrowUtils.throwIf(totalCount>maxCount, ErrorCode.OPERATION_ERROR, "空间图片数量达到上限");
-            ThrowUtils.throwIf(totalSize>maxSize, ErrorCode.OPERATION_ERROR, "空间图片容量达到上限");
+            ThrowUtils.throwIf(totalCount>=maxCount, ErrorCode.OPERATION_ERROR, "空间图片数量达到上限");
+            ThrowUtils.throwIf(totalSize>=maxSize, ErrorCode.OPERATION_ERROR, "空间图片容量达到上限");
 
             // 如果是更新请求, 需要校验spaceId是否一致
             if (pictureId!=null) {

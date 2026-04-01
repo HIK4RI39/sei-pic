@@ -133,9 +133,16 @@ public class FileManager {
         // 图片上传地址
         String uuid = RandomUtil.randomString(16);
         // String originFilename = multipartFile.getOriginalFilename();
-        String originFilename = FileUtil.mainName(fileUrl);
-        String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid,
-                FileUtil.getSuffix(originFilename));
+
+        // query参数可能导致上传失败, 为保证健壮性先截断再获取文件名
+        String cleanUrl = fileUrl;
+        if (fileUrl.contains("?")) {
+            cleanUrl = fileUrl.substring(0, fileUrl.indexOf("?"));
+        }
+
+        String originFilename = FileUtil.mainName(cleanUrl);
+        String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid, FileUtil.getSuffix(originFilename));
+
         String uploadPath = String.format("/%s/%s", uploadPathPrefix, uploadFilename);
         File file = null;
         try {

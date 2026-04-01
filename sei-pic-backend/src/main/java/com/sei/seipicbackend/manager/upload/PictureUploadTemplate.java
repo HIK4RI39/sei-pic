@@ -67,7 +67,7 @@ public abstract class PictureUploadTemplate {
             ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
             List<CIObject> objectList = processResults.getObjectList();
 
-            // 如果拿到的颜色值不是8位, 重新获取1次
+            // 如果拿到的颜色值不是标准的8位, 重新获取1次
             String ave = imageInfo.getAve();
             if (ave.length() != 8) {
                 imageInfo.setAve(getImageAve(uploadPath));
