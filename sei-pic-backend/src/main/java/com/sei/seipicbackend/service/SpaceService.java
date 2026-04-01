@@ -6,14 +6,17 @@ import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sei.seipicbackend.model.vo.SpaceCategoryAnalyzeResponse;
 import com.sei.seipicbackend.model.vo.SpaceUsageAnalyzeResponse;
 import com.sei.seipicbackend.model.vo.SpaceVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author hikari39
@@ -33,6 +36,9 @@ public interface SpaceService extends IService<Space> {
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    // 分类分析
+    List<SpaceCategoryAnalyzeResponse> getCategoryAnalyzeResponse(SpaceCategoryAnalyzeRequest categoryAnalyzeRequest, HttpServletRequest request);
 
     // 空间用量分析
     SpaceUsageAnalyzeResponse getSpaceUsageAnalyze(SpaceUsageAnalyzeRequest analyzeRequest, HttpServletRequest request);

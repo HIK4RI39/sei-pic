@@ -23,15 +23,13 @@ import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceAnalyzeRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.User;
-import com.sei.seipicbackend.model.vo.PictureVO;
-import com.sei.seipicbackend.model.vo.SpaceUsageAnalyzeResponse;
-import com.sei.seipicbackend.model.vo.SpaceVO;
-import com.sei.seipicbackend.model.vo.UserVO;
+import com.sei.seipicbackend.model.vo.*;
 import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.mapper.SpaceMapper;
@@ -91,20 +89,20 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      * @param spaceAnalyzeRequest
      * @param queryWrapper
      */
-    private static void fillAnalyzeQueryWrapper(SpaceAnalyzeRequest spaceAnalyzeRequest, LambdaQueryWrapper<Picture> queryWrapper) {
+    private static void fillAnalyzeQueryWrapper(SpaceAnalyzeRequest spaceAnalyzeRequest, QueryWrapper<Picture> queryWrapper) {
         // 全图库, 无需填写查询条件
         if (spaceAnalyzeRequest.isQueryAll()) {
             return;
         }
         // 公共图库, spaceId为null
         if (spaceAnalyzeRequest.isQueryPublic()) {
-            queryWrapper.isNull(Picture::getSpaceId);
+            queryWrapper.isNull("spaceId");
             return;
         }
         // 个人图库, 设置spaceId
         Long spaceId = spaceAnalyzeRequest.getSpaceId();
         if (spaceId != null) {
-            queryWrapper.eq(Picture::getSpaceId, spaceId);
+            queryWrapper.eq("spaceId", spaceId);
             return;
         }
         // 查询条件为空
@@ -306,7 +304,42 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     // region -------------------------- 用户 --------------------------
 
     /**
-     * 空间用量分析
+     * 图库分类分析
+     * @param categoryAnalyzeRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public List<SpaceCategoryAnalyzeResponse> getCategoryAnalyzeResponse(SpaceCategoryAnalyzeRequest categoryAnalyzeRequest, HttpServletRequest request) {
+        Long spaceId = categoryAnalyzeRequest.getSpaceId();
+
+        // 校验查询参数
+        UserVO loginUser = userService.getLoginUser(request);
+        checkSpaceAnalyzeAuth(categoryAnalyzeRequest, loginUser);
+
+        // 填写查询条件
+        QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
+        fillAnalyzeQueryWrapper(categoryAnalyzeRequest,queryWrapper);
+        // 按category分组, 返回count和size
+        queryWrapper.select(
+                "category AS category",
+                "COUNT(*) AS count",
+                "SUM(picSize) AS totalSize"
+        ).groupBy("category");
+
+        // 查询用量
+        // 使用selectMap转化为response
+        return pictureService.getBaseMapper().selectMaps(queryWrapper).stream()
+                .map(obj -> {
+                    String category = obj.get("category") != null ? obj.get("category").toString() : "未分类";
+                    Long count = ((Number) obj.get("count")).longValue();
+                    Long totalSize = ((Number) obj.get("totalSize")).longValue();
+                    return new SpaceCategoryAnalyzeResponse(category, count, totalSize);
+                }).collect(Collectors.toList());
+    }
+
+    /**
+     * 图库用量分析
      * @param analyzeRequest
      * @param request
      * @return
@@ -322,10 +355,10 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
 
         // 填写查询条件
-        LambdaQueryWrapper<Picture> queryWrapper = new LambdaQueryWrapper<>();
+        QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
         fillAnalyzeQueryWrapper(analyzeRequest,queryWrapper);
         // 只需查询此列
-        queryWrapper.select(Picture::getPicSize);
+        queryWrapper.select("picSize");
 
         // 查询用量
         // 使用baseMapper不用封装为Picture对象, 提高性能节约空间
