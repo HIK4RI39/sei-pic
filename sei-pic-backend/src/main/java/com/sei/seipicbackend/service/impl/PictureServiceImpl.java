@@ -555,7 +555,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @return
      */
     @Override
-    public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, HttpServletRequest request) {
+    public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, HttpServletRequest request) throws IOException {
         ThrowUtils.throwIf(inputSource==null, ErrorCode.NOT_FOUND_ERROR);
 
         Long spaceId = pictureUploadRequest.getSpaceId();

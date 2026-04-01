@@ -88,7 +88,6 @@ public class CosManager {
 
     /**
      * 下载对象
-     *
      * @param key 唯一键
      */
     public COSObject getObject(String key) {

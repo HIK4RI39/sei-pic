@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.COSObjectInputStream;
@@ -43,33 +44,46 @@ public abstract class PictureUploadTemplate {
     /**
      * 模板方法，定义上传流程
      */
-    public final UploadPictureResult uploadPicture(Object inputSource, String uploadPathPrefix) {
+    public final UploadPictureResult uploadPicture(Object inputSource, String uploadPathPrefix) throws IOException {
         // 1. 校验图片
         validPicture(inputSource);
 
         // 2. 图片上传地址
         String uuid = RandomUtil.randomString(16);
-        String originFilename = getOriginFilename(inputSource);
-        String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid,
-                FileUtil.getSuffix(originFilename));
-        String uploadPath = String.format("/%s/%s", uploadPathPrefix, uploadFilename);
+        // 后续再拼接上正确的suffix
+        String mainName = FileUtil.mainName(getOriginFilename(inputSource));
+        if (StrUtil.isBlank(mainName)) {
+            mainName = "default_image";
+        }
 
-        File file = null;
+        // String originFilename = getOriginFilename(inputSource);
+
+        // 从url取到的suffix不可信, 需要通过下载获得realSuffix
+        // String suffix = FileUtil.getSuffix(originFilename);
+
+        // 2026-04-02_XS5mcw6Brvq9dG8I
+        String tempFileName = String.format("%s_%s", DateUtil.formatDate(new Date()), uuid);
+        String tempUploadPath = String.format("/%s/%s", uploadPathPrefix, tempFileName);
+        File tempFile = null;
+
         try {
-            // 创建临时文件
-            file = File.createTempFile(uploadPath, null);
-            // 处理文件来源（本地或 URL）
-            processFile(inputSource, file);
+            // 通过临时文件拿到正确的suffix
+            tempFile = File.createTempFile(tempUploadPath, null);
+            String realSuffix = processFile(inputSource, tempFile);
+            // 添加真正的后缀名
+            String originFilename = mainName + "." + realSuffix;
+            // 通过正确的suffix构造文件名
+            String uploadPath = String.format("%s.%s", tempUploadPath, realSuffix);
 
             // 上传图片到对象存储
-            PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
+            PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, tempFile);
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
             ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
             List<CIObject> objectList = processResults.getObjectList();
 
             // 如果拿到的颜色值不是标准的8位, 重新获取1次
             String ave = imageInfo.getAve();
-            if (ave.length() != 8) {
+            if (StrUtil.length(ave) != 8) {
                 imageInfo.setAve(getImageAve(uploadPath));
             }
 
@@ -82,17 +96,17 @@ public abstract class PictureUploadTemplate {
                     thumbnailObject = objectList.get(1);
                 }
                 // 封装压缩图返回结果
-                return buildResult(originFilename, compressedCiObject, thumbnailObject, file, imageInfo);
+                return buildResult(originFilename, compressedCiObject, thumbnailObject, tempFile, imageInfo);
             }
 
             // 封装原图返回结果
-            return buildResult(originFilename, file, uploadPath, imageInfo);
+            return buildResult(originFilename, tempFile, uploadPath, imageInfo);
         } catch (Exception e) {
             log.error("图片上传到对象存储失败", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
         } finally {
             // 6. 清理临时文件
-            deleteTempFile(file);
+            deleteTempFile(tempFile);
         }
     }
 
@@ -109,7 +123,8 @@ public abstract class PictureUploadTemplate {
     /**
      * 处理输入源并生成本地临时文件
      */
-    protected abstract void processFile(Object inputSource, File file) throws Exception;
+    protected abstract String processFile(Object inputSource, File file) throws Exception;
+
 
     /**
      * 封装返回结果

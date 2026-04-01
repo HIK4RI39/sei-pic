@@ -10,6 +10,7 @@ import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.PictureVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -52,7 +53,7 @@ public interface PictureService extends IService<Picture> {
     void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request);
 
     // 上传图片
-    PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, HttpServletRequest request);
+    PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, HttpServletRequest request) throws IOException;
 
     // 删除图片
     boolean deletePictureById(long pictureId, HttpServletRequest request);

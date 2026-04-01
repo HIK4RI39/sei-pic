@@ -9,6 +9,7 @@ import cn.hutool.http.Method;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -21,6 +22,7 @@ import java.util.List;
  * @author hikari39_
  * @since 2026-03-29
  */
+@Slf4j
 @Service
 public class UrlPictureUpload extends PictureUploadTemplate {
     @Override
@@ -88,10 +90,16 @@ public class UrlPictureUpload extends PictureUploadTemplate {
 
     }
 
+    /**
+     * 返回真实的文件类型
+     * @param inputSource
+     * @param file
+     * @return
+     */
     @Override
-    protected void processFile(Object inputSource, File file) {
+    protected String processFile(Object inputSource, File file) {
         String fileUrl = (String) inputSource;
-        // 下载文件到临时目录
         HttpUtil.downloadFile(fileUrl, file);
+        return FileUtil.getType(file);
     }
 }

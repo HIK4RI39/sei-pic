@@ -30,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -138,7 +139,7 @@ public class PictureController {
         @RequestPart MultipartFile multipartFile,
         PictureUploadRequest pictureUploadRequest, // 可以为空, 首次上传没有图片id
         HttpServletRequest request
-    ) {
+    ) throws IOException {
         PictureVO pictureVO = pictureService.uploadPicture(multipartFile, pictureUploadRequest, request);
         return ResponseUtils.success(pictureVO);
     }
@@ -149,7 +150,7 @@ public class PictureController {
     @PostMapping("/upload/url")
     public BaseResponse<PictureVO> uploadPictureByUrl(
             @RequestBody PictureUploadRequest pictureUploadRequest,
-            HttpServletRequest request) {
+            HttpServletRequest request) throws IOException {
         String fileUrl = pictureUploadRequest.getFileUrl();
         PictureVO pictureVO = pictureService.uploadPicture(fileUrl, pictureUploadRequest, request);
         return ResponseUtils.success(pictureVO);

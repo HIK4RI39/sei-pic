@@ -39,8 +39,9 @@ public class FilePictureUpload extends PictureUploadTemplate {
     }
 
     @Override
-    protected void processFile(Object inputSource, File file) throws Exception {
+    protected String processFile(Object inputSource, File file) throws Exception {
         MultipartFile multipartFile = (MultipartFile) inputSource;
         multipartFile.transferTo(file);
+        return FileUtil.getType(file);
     }
 }
