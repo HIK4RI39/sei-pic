@@ -6,9 +6,12 @@ import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sei.seipicbackend.model.vo.SpaceUsageAnalyzeResponse;
 import com.sei.seipicbackend.model.vo.SpaceVO;
+import com.sei.seipicbackend.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,21 +22,54 @@ import javax.servlet.http.HttpServletRequest;
 */
 public interface SpaceService extends IService<Space> {
 
-    SpaceVO getSpaceVoWithUser(Space space);
+    // region -------------------------- 管理员 --------------------------
 
-    void validSpace(Space space, boolean add);
-
-    void fillSpaceBySpaceLevel(Space space);
-
-    Long createSpace(SpaceAddRequest spaceAddRequest, HttpServletRequest request);
-
-    boolean deleteSpace(IdRequest idRequest, HttpServletRequest request);
-
+    // 更新空间
     boolean updateSpace(SpaceUpdateRequest spaceUpdateRequest);
 
+    // 分页获取空间信息
+    Page<SpaceVO> getSpacePage(SpaceQueryRequest spaceQueryRequest, HttpServletRequest request);
+
+    // endregion
+
+    // region -------------------------- 用户 --------------------------
+
+    // 空间用量分析
+    SpaceUsageAnalyzeResponse getSpaceUsageAnalyze(SpaceUsageAnalyzeRequest analyzeRequest, HttpServletRequest request);
+
+    // 查询spaceVO with UserInfo
+    SpaceVO getSpaceVoWithUser(Space space);
+
+    // 创建空间
+    Long createSpace(SpaceAddRequest spaceAddRequest, HttpServletRequest request);
+
+    // 删除空间
+    boolean deleteSpace(IdRequest idRequest, HttpServletRequest request);
+
+    // 编辑空间信息
     boolean editSpace(SpaceEditRequest spaceEditRequest, HttpServletRequest request);
 
-    boolean isOwnerOrAdmin(Space space, HttpServletRequest request);
+    // endregion
 
-    Page<SpaceVO> getSpacePage(SpaceQueryRequest spaceQueryRequest, HttpServletRequest request);
+    // region -------------------------- 通用 --------------------------
+
+    // 校验空间权限
+    void checkSpaceAuth(Long spaceId, UserVO loginUser);
+
+    // 根据level填充空间信息
+    void fillSpaceBySpaceLevel(Space space);
+
+    // 检验空间信息
+    void validSpace(Space space, boolean add);
+
+    // endregion
+
+
+
+
+
+
+
+
+
 }

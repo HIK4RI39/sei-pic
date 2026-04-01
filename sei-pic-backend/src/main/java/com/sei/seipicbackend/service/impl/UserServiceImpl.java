@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sei.seipicbackend.configuration.UserConfig;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
@@ -20,9 +21,11 @@ import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 
@@ -31,13 +34,29 @@ import java.util.Date;
 * @description 针对表【user(用户)】的数据库操作Service实现
 * @createDate 2026-03-28 03:18:14
 */
-@Service
 @Slf4j
+@Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         implements UserService {
 
-    private static final String SALT = "sei";
-    private static final String DEFAULT_PWD = "12345678";
+    // 定义加密盐值和默认密码常量
+    @Resource
+    UserConfig userConfig;
+
+    // region -------------------------- 通用 --------------------------
+
+    /**
+     * 校验管理员权限
+     * @param userVO
+     */
+    @Override
+    public void checkAdmin(UserVO userVO) {
+        String userRole = userVO.getUserRole();
+        boolean isAdmin = UserConstant.ADMIN_ROLE.equals(userRole);
+        ThrowUtils.throwIf(!isAdmin, ErrorCode.NO_AUTH_ERROR);
+    }
+
+    // endregion
 
     // region -------------------------- 用户 --------------------------
 
@@ -61,7 +80,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         boolean exists = lambdaQuery().eq(User::getUserAccount, userAccount).exists();
         ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "账号已存在");
         // 加密
-        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
+        String encryptPassword = DigestUtils.md5DigestAsHex((userConfig.getSalt() + password).getBytes());
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
@@ -83,7 +102,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, password), ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(userAccount.length()<4, ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(password.length()<8, ErrorCode.PARAMS_ERROR);
-        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
+        String encryptPassword = DigestUtils.md5DigestAsHex((userConfig.getSalt() + password).getBytes());
 
         User user = lambdaQuery().eq(User::getUserAccount, userAccount).eq(User::getUserPassword, encryptPassword).one();
         ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.OPERATION_ERROR);
@@ -155,7 +174,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public Long addUser(UserAddRequest userAddRequest) {
         String userAccount = userAddRequest.getUserAccount();
-        return this.userRegister(userAccount, DEFAULT_PWD, DEFAULT_PWD);
+        return this.userRegister(userAccount, userConfig.getDefaultPwd(), userConfig.getDefaultPwd());
     }
 
     /**
@@ -228,7 +247,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     // endregion
 
     public String getEncryptPassword(String password) {
-        return DigestUtils.md5DigestAsHex((SALT + password).getBytes());
+        return DigestUtils.md5DigestAsHex((userConfig.getSalt() + password).getBytes());
     }
 
 }

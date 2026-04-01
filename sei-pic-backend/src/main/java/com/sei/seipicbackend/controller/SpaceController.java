@@ -14,9 +14,11 @@ import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.vo.SpaceLevel;
+import com.sei.seipicbackend.model.vo.SpaceUsageAnalyzeResponse;
 import com.sei.seipicbackend.model.vo.SpaceVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.SpaceService;
@@ -74,6 +76,23 @@ public class SpaceController {
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    /**
+     * 空间用量分析
+     * @param analyzeRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/analyze/usage")
+    public BaseResponse<SpaceUsageAnalyzeResponse> getSpaceUsageAnalyze(
+            @RequestBody SpaceUsageAnalyzeRequest analyzeRequest,
+            HttpServletRequest request
+    ) {
+        SpaceUsageAnalyzeResponse analyzeResponse = spaceService.getSpaceUsageAnalyze(analyzeRequest, request);
+        return ResponseUtils.success(analyzeResponse);
+    }
+
+
 
     /**
      * 获取当前用户的vo

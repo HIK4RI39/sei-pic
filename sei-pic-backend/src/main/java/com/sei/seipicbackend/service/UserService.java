@@ -17,28 +17,54 @@ import javax.servlet.http.HttpServletRequest;
 * @createDate 2026-03-28 03:18:14
 */
 public interface UserService extends IService<User> {
-    long userRegister(String userAccount, String password, String checkPassword);
 
-    UserVO login(String userAccount, String password, HttpServletRequest request);
+    // region -------------------------- 通用 --------------------------
 
-    UserVO getLoginUser(HttpServletRequest request);
-
-    Boolean logout(HttpServletRequest request);
-
-    Long addUser(UserAddRequest userAddRequest);
-
-    UserVO getUserVoById(Long id);
-
-    User getUserById(Long id);
-
-    Boolean deleteUserById(long id);
-
-    Page<UserVO>  listUserVoByPage(UserPageRequest userPageRequest);
-
-    Boolean updateUser(UserUpdateRequest userUpdateRequest);
-
-    Boolean editUser(UserEditRequest userEditRequest, HttpServletRequest request);
-
+    // 转化为UserVO
     UserVO getUserVO(User user);
 
+    // 管理员鉴权
+    void checkAdmin(UserVO userVO);
+
+    // endregion
+
+    // region -------------------------- 管理员 --------------------------
+
+    // 创建用户
+    Long addUser(UserAddRequest userAddRequest);
+
+    // 根据ID查询用户
+    User getUserById(Long id);
+
+    // 分页获取用户
+    Page<UserVO>  listUserVoByPage(UserPageRequest userPageRequest);
+
+    // 更新用户
+    Boolean updateUser(UserUpdateRequest userUpdateRequest);
+    // endregion
+
+
+    // region -------------------------- 用户 --------------------------
+    // 注册
+    long userRegister(String userAccount, String password, String checkPassword);
+
+    // 登录
+    UserVO login(String userAccount, String password, HttpServletRequest request);
+
+    // 获取登录用户
+    UserVO getLoginUser(HttpServletRequest request);
+
+    // 登出
+    Boolean logout(HttpServletRequest request);
+
+    // 获得UserVO
+    UserVO getUserVoById(Long id);
+
+    // 删除用户
+    Boolean deleteUserById(long id);
+
+    // 编辑用户信息
+    Boolean editUser(UserEditRequest userEditRequest, HttpServletRequest request);
+
+    // endregion
 }

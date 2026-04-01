@@ -362,10 +362,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(CollUtil.isEmpty(pictureIdList), ErrorCode.PARAMS_ERROR, "请选择图片");
         ThrowUtils.throwIf(spaceId==null || spaceId<=0, ErrorCode.PARAMS_ERROR, "非法的spaceId");
         // 空间鉴权
-        Space space = spaceService.getById(spaceId);
-        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-        boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
-        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+        UserVO loginUser = userService.getLoginUser(request);
+        spaceService.checkSpaceAuth(spaceId, loginUser);
         // 查询图片 (仅返回id和spaceId)
         List<Picture> pictureList = this.lambdaQuery().eq(Picture::getSpaceId, spaceId)
                 .select(Picture::getId, Picture::getSpaceId)
@@ -397,11 +395,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 私有空间需要鉴权
         Long spaceId = picture.getSpaceId();
         if (spaceId!=null) {
-            Space space = spaceService.getById(spaceId);
             // 一般来说不会不存在吧
-            ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-            boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
-            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+            UserVO loginUser = userService.getLoginUser(request);
+            spaceService.checkSpaceAuth(spaceId, loginUser);
         }
 
         return getPictureVoWithUser(picture);
@@ -423,10 +419,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             pictureQueryRequest.setNullSpaceId(true);
         } else {
             // 私有空间鉴权
-            Space space = spaceService.getById(spaceId);
-            ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-            boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
-            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+            UserVO loginUser = userService.getLoginUser(request);
+            spaceService.checkSpaceAuth(spaceId, loginUser);
         }
 
         LambdaQueryWrapper<Picture> queryWrapper = getQueryWrapper(pictureQueryRequest);
@@ -520,10 +514,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(StrUtil.isBlank(picColor), ErrorCode.PARAMS_ERROR);
         // 空间鉴权
         UserVO loginUser = userService.getLoginUser(request);
-        Space space = spaceService.getById(spaceId);
-        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-        boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
-        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+        spaceService.checkSpaceAuth(spaceId, loginUser);
+
         // 获取空间所有带有主色调的图片
         List<Picture> pictureList = this.lambdaQuery().eq(Picture::getSpaceId, spaceId)
                 .isNotNull(Picture::getPicColor).list();
@@ -635,12 +627,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         // 上传到非公共图库, 需要鉴权
         if (spaceId!=null) {
-            Space space = spaceService.getById(spaceId);
-            ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
             // 鉴权
-            boolean hasPermission = spaceService.isOwnerOrAdmin(space, request);
-            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+            spaceService.checkSpaceAuth(spaceId, loginUser);
+
             // 校验额度
+            Space space = spaceService.getById(spaceId);
             Long maxCount = space.getMaxCount();
             Long maxSize = space.getMaxSize();
             Long totalCount = space.getTotalCount();

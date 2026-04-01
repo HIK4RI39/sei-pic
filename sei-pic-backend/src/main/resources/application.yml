@@ -56,3 +56,7 @@ cos:
 # 阿里云百炼
 aliYunAi:
   apiKey: ${my.ali.apiKey}
+# 其他配置
+user:
+  salt: ${my.user.salt}
+  defaultPwd: ${my.user.defaultPwd}

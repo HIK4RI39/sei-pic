@@ -4,9 +4,11 @@ import java.util.Date;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.intern.InternUtil;
 import cn.hutool.core.lang.intern.Interner;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -20,11 +22,14 @@ import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.SpaceAnalyzeRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.PictureVO;
+import com.sei.seipicbackend.model.vo.SpaceUsageAnalyzeResponse;
 import com.sei.seipicbackend.model.vo.SpaceVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.PictureService;
@@ -62,7 +67,72 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     // 弱引用, 自动回收
     private static final Interner<String> USER_LOCK_INTERNER = InternUtil.createWeakInterner();
 
-    // region -------------------------- 公共公共方法 --------------------------
+    // region -------------------------- 通用 --------------------------
+
+    /**
+     * 校验空间权限
+     * @param spaceId
+     * @param loginUser
+     */
+    @Override
+    public void checkSpaceAuth(Long spaceId, UserVO loginUser) {
+        ThrowUtils.throwIf(spaceId==null || spaceId<=0, ErrorCode.PARAMS_ERROR, "非法的空间ID");
+        Space space = this.getById(spaceId);
+        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+        Long userId = space.getUserId();
+        String userRole = loginUser.getUserRole();
+        if (!userId.equals(loginUser.getId()) && !UserConstant.ADMIN_ROLE.equals(userRole)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有访问该空间的权限");
+        }
+    }
+
+    /**
+     * 填写分析条件
+     * @param spaceAnalyzeRequest
+     * @param queryWrapper
+     */
+    private static void fillAnalyzeQueryWrapper(SpaceAnalyzeRequest spaceAnalyzeRequest, LambdaQueryWrapper<Picture> queryWrapper) {
+        // 全图库, 无需填写查询条件
+        if (spaceAnalyzeRequest.isQueryAll()) {
+            return;
+        }
+        // 公共图库, spaceId为null
+        if (spaceAnalyzeRequest.isQueryPublic()) {
+            queryWrapper.isNull(Picture::getSpaceId);
+            return;
+        }
+        // 个人图库, 设置spaceId
+        Long spaceId = spaceAnalyzeRequest.getSpaceId();
+        if (spaceId != null) {
+            queryWrapper.eq(Picture::getSpaceId, spaceId);
+            return;
+        }
+        // 查询条件为空
+        throw new BusinessException(ErrorCode.PARAMS_ERROR, "未指定查询范围");
+    }
+
+
+    /**
+     * 校验空间分析权限
+     * @param spaceAnalyzeRequest
+     * @param loginUser
+     */
+    private void checkSpaceAnalyzeAuth(SpaceAnalyzeRequest spaceAnalyzeRequest, UserVO loginUser) {
+        Long spaceId = spaceAnalyzeRequest.getSpaceId();
+        boolean queryAll = spaceAnalyzeRequest.isQueryAll();
+        boolean queryPublic = spaceAnalyzeRequest.isQueryPublic();
+        ThrowUtils.throwIf(queryAll&&queryPublic, ErrorCode.PARAMS_ERROR, "分析范围冲突");
+
+        // 查个人空间, 仅有本人或管理员
+        if (spaceId!=null) {
+            checkSpaceAuth(spaceId, loginUser);
+        }
+
+        // 查公共图库/全部图库, 仅有管理员
+        if (queryAll || queryPublic) {
+            userService.checkAdmin(loginUser);
+        }
+    }
 
     /**
      * pojo转vo, 关联查询用户信息
@@ -164,21 +234,6 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         }
     }
 
-    /**
-     * 鉴权, 所有者或管理员
-     *
-     * @param space
-     * @param request
-     * @return
-     */
-    @Override
-    public boolean isOwnerOrAdmin(Space space, HttpServletRequest request) {
-        Long userId = space.getUserId();
-        UserVO loginUser = userService.getLoginUser(request);
-        String userRole = loginUser.getUserRole();
-        return userId.equals(loginUser.getId()) || UserConstant.ADMIN_ROLE.equals(userRole);
-    }
-
     // endregion
 
 
@@ -251,6 +306,65 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     // region -------------------------- 用户 --------------------------
 
     /**
+     * 空间用量分析
+     * @param analyzeRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public SpaceUsageAnalyzeResponse getSpaceUsageAnalyze(SpaceUsageAnalyzeRequest analyzeRequest, HttpServletRequest request) {
+        Long spaceId = analyzeRequest.getSpaceId();
+        boolean isQueryPublic = analyzeRequest.isQueryPublic();
+        boolean isQueryAll = analyzeRequest.isQueryAll();
+
+        // 校验查询参数
+        UserVO loginUser = userService.getLoginUser(request);
+        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
+
+        // 填写查询条件
+        LambdaQueryWrapper<Picture> queryWrapper = new LambdaQueryWrapper<>();
+        fillAnalyzeQueryWrapper(analyzeRequest,queryWrapper);
+        // 只需查询此列
+        queryWrapper.select(Picture::getPicSize);
+
+        // 查询用量
+        // 使用baseMapper不用封装为Picture对象, 提高性能节约空间
+        List<Object> pictureObject = pictureService.getBaseMapper().selectObjs(queryWrapper);
+        long usedSize = pictureObject.stream().mapToLong(pic -> pic instanceof Long ? (Long) pic : 0).sum();
+        long usedCount = pictureObject.size();
+
+        SpaceUsageAnalyzeResponse response = new SpaceUsageAnalyzeResponse();
+
+        // 公共空间 或 全空间
+        if (isQueryAll || isQueryPublic) {
+            response.setUsedSize(usedSize);
+            response.setMaxSize(null);
+            response.setSizeUsageRatio(null);
+            response.setUsedCount(usedCount);
+            response.setMaxCount(null);
+            response.setCountUsageRatio(null);
+        // 个人空间
+        } else {
+            Space space = this.getById(spaceId);
+            Long maxSize = space.getMaxSize();
+            Long maxCount = space.getMaxCount();
+            Long totalSize = space.getTotalSize();
+            Long totalCount = space.getTotalCount();
+            double sizeUsageRatio = NumberUtil.round((totalSize * 100.0 / maxSize), 2).doubleValue();
+            double countUsageRatio = NumberUtil.round((totalCount * 100.0 / maxCount), 2).doubleValue();
+            response.setUsedSize(totalSize);
+            response.setMaxSize(maxSize);
+            response.setSizeUsageRatio(sizeUsageRatio);
+            response.setUsedCount(totalCount);
+            response.setMaxCount(maxCount);
+            response.setCountUsageRatio(countUsageRatio);
+        }
+
+        return response;
+    }
+
+
+    /**
      * 创建空间
      *
      * @param spaceAddRequest
@@ -300,13 +414,10 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      */
     @Override
     public boolean deleteSpace(IdRequest idRequest, HttpServletRequest request) {
-        // 空间是否存在
+        // 鉴权
         long spaceId = idRequest.getId();
-        Space space = this.getById(spaceId);
-        ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-
-        // 仅限本人或管理员删除
-        ThrowUtils.throwIf(!isOwnerOrAdmin(space, request), ErrorCode.NO_AUTH_ERROR);
+        UserVO loginUser = userService.getLoginUser(request);
+        checkSpaceAuth(spaceId, loginUser);
 
         // 关联删除空间内所有图片
         List<Picture> pictureList = pictureService.lambdaQuery().eq(Picture::getSpaceId, spaceId).list();
@@ -334,14 +445,17 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      */
     @Override
     public boolean editSpace(SpaceEditRequest spaceEditRequest, HttpServletRequest request) {
-        Long id = spaceEditRequest.getId();
         String spaceName = spaceEditRequest.getSpaceName();
-        Space space = this.getById(id);
-        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+        ThrowUtils.throwIf(StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空");
 
-        ThrowUtils.throwIf(!isOwnerOrAdmin(space, request), ErrorCode.NO_AUTH_ERROR);
+        // 鉴权
+        Long spaceId = spaceEditRequest.getId();
+        UserVO loginUser = userService.getLoginUser(request);
+        checkSpaceAuth(spaceId, loginUser);
 
-        space.setId(id);
+        // 编辑
+        Space space = this.getById(spaceId);
+        space.setId(spaceId);
         space.setSpaceName(spaceName);
         validSpace(space, false);
 
