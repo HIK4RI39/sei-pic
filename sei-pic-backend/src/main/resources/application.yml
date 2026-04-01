@@ -53,3 +53,6 @@ cos:
     secretKey: ${my.cos.secretKey}
     region: ${my.cos.region}
     bucket: ${my.cos.bucket}
+# 阿里云百炼
+aliYunAi:
+  apiKey: ${my.ali.apiKey}

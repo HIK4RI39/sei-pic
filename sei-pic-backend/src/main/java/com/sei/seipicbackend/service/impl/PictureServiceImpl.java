@@ -11,6 +11,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sei.seipicbackend.api.aliyunai.AliYunAiApi;
+import com.sei.seipicbackend.api.aliyunai.model.CreateOutPaintingTaskRequest;
+import com.sei.seipicbackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
@@ -85,6 +88,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private TransactionTemplate transactionTemplate;
+
+    @Resource
+    private AliYunAiApi aliYunAiApi;
 
     // region -------------------------- 管理员 --------------------------
 
@@ -175,7 +181,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
     }
 
-
+    /**
+     * 管理员 更新图片
+     * @param pictureUpdateRequest
+     * @param request
+     * @return
+     */
     @Override
     public boolean updatePicture(PictureUpdateRequest pictureUpdateRequest, HttpServletRequest request) {
         Long pictureId = pictureUpdateRequest.getId();
@@ -199,6 +210,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return true;
     }
 
+    /**
+     * 管理员 批量拉取图片
+     * @param pictureUploadByBatchRequest
+     * @param request
+     * @return
+     */
     @Override
     public int uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, HttpServletRequest request) {
         String searchText = pictureUploadByBatchRequest.getSearchText();
@@ -286,6 +303,36 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    /**
+     * 获取AI扩图任务创建响应
+     * @param createPictureOutPaintingTaskRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public CreateOutPaintingTaskResponse createOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, HttpServletRequest request) {
+        // 获取图片信息
+        Long pictureId = createPictureOutPaintingTaskRequest.getPictureId();
+        Picture picture = this.getById(pictureId);
+        ThrowUtils.throwIf(picture==null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+
+        // 鉴权
+        UserVO loginUser = userService.getLoginUser(request);
+        boolean hasPermission = this.isOwnerOrAdmin(picture, loginUser);
+        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+
+        // 构造请求参数
+        CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
+        CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();
+        input.setImageUrl(picture.getUrl());
+        taskRequest.setInput(input);
+        // 拷贝参数
+        BeanUtil.copyProperties(createPictureOutPaintingTaskRequest, taskRequest);
+
+        // 创建任务
+        return aliYunAiApi.createOutPaintingTask(taskRequest);
+    }
 
     /**
      * 批量编辑图片

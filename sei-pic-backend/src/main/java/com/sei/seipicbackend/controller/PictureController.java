@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.annotation.AuthCheck;
+import com.sei.seipicbackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.sei.seipicbackend.api.imagesearch.ImageSearchApiFacade;
 import com.sei.seipicbackend.api.imagesearch.ImageSearchResult;
 import com.sei.seipicbackend.common.BaseResponse;
@@ -45,6 +46,23 @@ public class PictureController {
     private UserService userService;
 
     // region -------------------------- 用户 --------------------------
+
+    /**
+     * 获得扩图任务创建结果
+     * @param createPictureOutPaintingTaskRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/out_painting/create_task")
+    public BaseResponse<CreateOutPaintingTaskResponse> createPictureOutPaintingTask(
+            @RequestBody CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest,
+            HttpServletRequest request
+    ) {
+        ThrowUtils.throwIf(ObjUtil.isEmpty(createPictureOutPaintingTaskRequest), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(createPictureOutPaintingTaskRequest.getPictureId()==null, ErrorCode.PARAMS_ERROR);
+        CreateOutPaintingTaskResponse outPaintingTask = pictureService.createOutPaintingTask(createPictureOutPaintingTaskRequest, request);
+        return ResponseUtils.success(outPaintingTask);
+    }
 
     /**
      * 批量编辑图片 (tag,category,name)
