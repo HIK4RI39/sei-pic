@@ -7,12 +7,14 @@ import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.SpaceTagAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.sei.seipicbackend.model.vo.SpaceCategoryAnalyzeResponse;
-import com.sei.seipicbackend.model.vo.SpaceUsageAnalyzeResponse;
-import com.sei.seipicbackend.model.vo.SpaceVO;
+import com.sei.seipicbackend.model.vo.space.SpaceCategoryAnalyzeResponse;
+import com.sei.seipicbackend.model.vo.space.SpaceTagAnalyzeResponse;
+import com.sei.seipicbackend.model.vo.space.SpaceUsageAnalyzeResponse;
+import com.sei.seipicbackend.model.vo.space.SpaceVO;
 import com.sei.seipicbackend.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +38,9 @@ public interface SpaceService extends IService<Space> {
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    // 标签分析
+    List<SpaceTagAnalyzeResponse> getSpaceTagAnalyze(SpaceTagAnalyzeRequest analyzeRequest, HttpServletRequest request);
 
     // 分类分析
     List<SpaceCategoryAnalyzeResponse> getCategoryAnalyzeResponse(SpaceCategoryAnalyzeRequest categoryAnalyzeRequest, HttpServletRequest request);
@@ -67,6 +72,7 @@ public interface SpaceService extends IService<Space> {
 
     // 检验空间信息
     void validSpace(Space space, boolean add);
+
 
     // endregion
 

@@ -1,4 +1,4 @@
-package com.sei.seipicbackend.model.vo;
+package com.sei.seipicbackend.model.vo.space;
 
 import lombok.Data;
 

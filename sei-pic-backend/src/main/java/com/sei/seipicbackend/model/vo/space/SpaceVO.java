@@ -1,6 +1,7 @@
-package com.sei.seipicbackend.model.vo;
+package com.sei.seipicbackend.model.vo.space;
 
 import com.sei.seipicbackend.model.pojo.Space;
+import com.sei.seipicbackend.model.vo.UserVO;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 

@@ -1,5 +1,4 @@
 package com.sei.seipicbackend.service.impl;
-import java.util.Date;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.intern.InternUtil;
@@ -7,9 +6,9 @@ import cn.hutool.core.lang.intern.Interner;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sei.seipicbackend.common.IdRequest;
@@ -17,19 +16,23 @@ import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
-import com.sei.seipicbackend.model.dto.picture.PictureQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.SpaceTagAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.*;
+import com.sei.seipicbackend.model.vo.space.SpaceCategoryAnalyzeResponse;
+import com.sei.seipicbackend.model.vo.space.SpaceTagAnalyzeResponse;
+import com.sei.seipicbackend.model.vo.space.SpaceUsageAnalyzeResponse;
+import com.sei.seipicbackend.model.vo.space.SpaceVO;
 import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.mapper.SpaceMapper;
@@ -43,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -304,6 +306,48 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     // region -------------------------- 用户 --------------------------
 
     /**
+     * 标签分析
+     * @param analyzeRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public List<SpaceTagAnalyzeResponse> getSpaceTagAnalyze(SpaceTagAnalyzeRequest analyzeRequest, HttpServletRequest request) {
+        Long spaceId = analyzeRequest.getSpaceId();
+
+        // 校验权限和查询参数
+        UserVO loginUser = userService.getLoginUser(request);
+        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
+
+        // 填写查询条件
+        QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
+        fillAnalyzeQueryWrapper(analyzeRequest,queryWrapper);
+        // 按category分组, 返回count和size
+        queryWrapper.select("tags");
+
+        // 类似 [ "["TAG1","TAG2"]", ["TAG1"] ]
+        List<String> tagJsonList = pictureService.getBaseMapper().selectObjs(queryWrapper).stream()
+                .filter(ObjUtil::isNotNull)
+                .map(ObjUtil::toString)
+                .collect(Collectors.toList());
+
+        // 统计每个标签的图片数量
+        // 使用flatMap扁平化为list
+        Map<String, Long> tagCountMap = tagJsonList.stream()
+                // 工具类转化为List后, 使用stream转化为单个元素(单个tag)
+                .flatMap(jsonStrTags -> JSONUtil.toList(jsonStrTags, String.class).stream())
+                // 以标签名作为key进行分组, 并统计每个分组中的元素数量, 使用map存储
+                .collect(Collectors.groupingBy(tag -> tag, Collectors.counting()));
+        // 使用次数降序排序
+        return tagCountMap.entrySet().stream()
+                // 降序排列
+                .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
+                .map(entry -> new SpaceTagAnalyzeResponse(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+
+    /**
      * 图库分类分析
      * @param categoryAnalyzeRequest
      * @param request
@@ -313,7 +357,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     public List<SpaceCategoryAnalyzeResponse> getCategoryAnalyzeResponse(SpaceCategoryAnalyzeRequest categoryAnalyzeRequest, HttpServletRequest request) {
         Long spaceId = categoryAnalyzeRequest.getSpaceId();
 
-        // 校验查询参数
+        // 校验权限和查询参数
         UserVO loginUser = userService.getLoginUser(request);
         checkSpaceAnalyzeAuth(categoryAnalyzeRequest, loginUser);
 
