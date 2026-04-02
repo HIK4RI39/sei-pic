@@ -8,6 +8,7 @@ import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserAddRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserQueryRequest;
 import com.sei.seipicbackend.model.pojo.SpaceUser;
+import com.sei.seipicbackend.model.vo.space.SpaceUserVO;
 import com.sei.seipicbackend.service.SpaceUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author hikari39_
@@ -73,6 +75,18 @@ public class SpaceUserController {
         ThrowUtils.throwIf(spaceUserQueryRequest==null, ErrorCode.PARAMS_ERROR);
         SpaceUser spaceUser = spaceUserService.getSpaceUser(spaceUserQueryRequest);
         return ResponseUtils.success(spaceUser);
+    }
+
+    /**
+     * 查询团队空间 成员信息列表
+     * @param spaceUserQueryRequest
+     * @return
+     */
+    @PostMapping("/list")
+    public BaseResponse<List<SpaceUserVO>> listSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(spaceUserQueryRequest==null, ErrorCode.PARAMS_ERROR);
+        List<SpaceUserVO> spaceUserList = spaceUserService.listSpaceUser(spaceUserQueryRequest);
+        return ResponseUtils.success(spaceUserList);
     }
 
 
