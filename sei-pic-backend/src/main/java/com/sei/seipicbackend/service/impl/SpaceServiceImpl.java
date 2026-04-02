@@ -24,15 +24,18 @@ import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.*;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
+import com.sei.seipicbackend.model.enums.SpaceRoleEnum;
 import com.sei.seipicbackend.model.enums.SpaceTypeEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
+import com.sei.seipicbackend.model.pojo.SpaceUser;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.*;
 import com.sei.seipicbackend.model.vo.space.*;
 import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.mapper.SpaceMapper;
+import com.sei.seipicbackend.service.SpaceUserService;
 import com.sei.seipicbackend.service.UserService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -58,6 +61,10 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     @Resource
     @Lazy
     private PictureService pictureService;
+
+    @Resource
+    @Lazy
+    private SpaceUserService spaceUserService;
 
     // 弱引用, 自动回收
     private static final Interner<String> USER_LOCK_INTERNER = InternUtil.createWeakInterner();
@@ -646,6 +653,17 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
             ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "每个用户每类空间仅能创建一个");
             boolean result = save(space);
             ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "空间创建失败");
+
+            // 如果是团队空间空间, 关联增加1条团队空间的管理员记录
+            if (SpaceTypeEnum.TEAM.getValue() == spaceAddRequest.getSpaceType()) {
+                SpaceUser spaceUser = new SpaceUser();
+                spaceUser.setSpaceId(space.getId());
+                spaceUser.setUserId(userId);
+                spaceUser.setSpaceRole(SpaceRoleEnum.ADMIN.getValue());
+                boolean save = spaceUserService.save(spaceUser);
+                ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR, "创建团队成员记录失败");
+            }
+
         }
 
         return Optional.ofNullable(space.getId()).orElse(-1L);
