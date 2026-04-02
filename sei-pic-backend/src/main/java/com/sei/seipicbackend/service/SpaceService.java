@@ -69,6 +69,9 @@ public interface SpaceService extends IService<Space> {
 
     // region -------------------------- 通用 --------------------------
 
+    // 获取封装类
+    SpaceVO getSpaceVO(Space space, HttpServletRequest request);
+
     // 校验空间权限
     void checkSpaceAuth(Long spaceId, UserVO loginUser);
 

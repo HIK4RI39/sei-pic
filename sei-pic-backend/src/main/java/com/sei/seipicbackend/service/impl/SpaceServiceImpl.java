@@ -64,6 +64,23 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     // region -------------------------- 通用 --------------------------
 
+    /**
+     * 获取封装类
+     * @param space
+     * @param request
+     * @return
+     */
+    @Override
+    public SpaceVO getSpaceVO(Space space, HttpServletRequest request) {
+        // 对象转封装类
+        SpaceVO spaceVO = SpaceVO.objToVo(space);
+        // 获取用户信息
+        UserVO loginUser = userService.getLoginUser(request);
+        spaceVO.setUser(loginUser);
+        return spaceVO;
+    }
+
+
     private static final Map<String, SFunction<Space, ?>> COLUMN_MAP = new ConcurrentHashMap<>();
     static {
         COLUMN_MAP.put("editTime", Space::getEditTime);
