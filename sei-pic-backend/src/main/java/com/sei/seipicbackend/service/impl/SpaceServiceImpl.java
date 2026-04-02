@@ -296,6 +296,52 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     // region -------------------------- 用户 --------------------------
 
+    /**
+     * 用户上传行为, 时间趋势分析
+     * @param analyzeRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public List<SpaceUserAnalyzeResponse> getSpaceUserAnalyze(SpaceUserAnalyzeRequest analyzeRequest, HttpServletRequest request) {
+        Long spaceId = analyzeRequest.getSpaceId();
+
+        // 校验权限和查询参数
+        UserVO loginUser = userService.getLoginUser(request);
+        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
+
+        // 填写查询条件
+        QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
+        fillAnalyzeQueryWrapper(analyzeRequest,queryWrapper);
+
+        Long userId = analyzeRequest.getUserId();
+        queryWrapper.eq(userId!=null, "userId", userId);
+        String timeDimension = analyzeRequest.getTimeDimension();
+
+        switch (timeDimension) {
+            case "day":
+                queryWrapper.select("DATE_FORMAT(createTime, '%Y-%m-%d') AS period", "COUNT(*) AS count");
+                break;
+            case "week":
+                queryWrapper.select("YEARWEEK(createTime) AS period", "COUNT(*) AS count");
+                break;
+            case "month":
+                queryWrapper.select("DATE_FORMAT(createTime, '%Y-%m') AS period", "COUNT(*) AS count");
+                break;
+            default:
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的时间维度");
+        }
+
+        // 按时间维度分组, 并升序排序
+        queryWrapper.groupBy("period").orderByAsc("period");
+
+        return pictureService.getBaseMapper().selectMaps(queryWrapper).stream()
+                .map(obj -> new SpaceUserAnalyzeResponse(
+                        obj.get("period").toString(),
+                        ((Number) obj.get("count")).longValue()
+                )).collect(Collectors.toList());
+    }
+
 
     /**
      * 图片大小分段分析

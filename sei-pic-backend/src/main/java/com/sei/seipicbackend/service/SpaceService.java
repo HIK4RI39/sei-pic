@@ -6,10 +6,7 @@ import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceSizeAnalyzeRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceTagAnalyzeRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.*;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sei.seipicbackend.model.vo.space.*;
@@ -36,6 +33,9 @@ public interface SpaceService extends IService<Space> {
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    // 用户上传行为, 时间趋势分析
+    List<SpaceUserAnalyzeResponse> getSpaceUserAnalyze(SpaceUserAnalyzeRequest analyzeRequest, HttpServletRequest request);
 
     // 图片大小分段分析
     List<SpaceSizeAnalyzeResponse> getSpaceSizeAnalyze(SpaceSizeAnalyzeRequest analyzeRequest, HttpServletRequest request);
@@ -73,7 +73,6 @@ public interface SpaceService extends IService<Space> {
 
     // 检验空间信息
     void validSpace(Space space, boolean add);
-
 
 
     // endregion

@@ -14,10 +14,7 @@ import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceSizeAnalyzeRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceTagAnalyzeRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.*;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.vo.*;
@@ -77,6 +74,18 @@ public class SpaceController {
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    /**
+     * 用户上传行为, 时间趋势分析
+     * @param analyzeRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/analyze/user")
+    public BaseResponse<List<SpaceUserAnalyzeResponse>> getSpaceUserAnalyze(@RequestBody SpaceUserAnalyzeRequest analyzeRequest, HttpServletRequest request) {
+        List<SpaceUserAnalyzeResponse> responseList = spaceService.getSpaceUserAnalyze(analyzeRequest, request);
+        return ResponseUtils.success(responseList);
+    }
 
     /**
      * 根据图片大小对图库进行分段分析
