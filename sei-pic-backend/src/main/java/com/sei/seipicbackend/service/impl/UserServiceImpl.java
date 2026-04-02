@@ -11,6 +11,7 @@ import com.sei.seipicbackend.configuration.UserConfig;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import com.sei.seipicbackend.manager.auth.StpKit;
 import com.sei.seipicbackend.mapper.UserMapper;
 import com.sei.seipicbackend.model.dto.user.UserAddRequest;
 import com.sei.seipicbackend.model.dto.user.UserEditRequest;
@@ -54,6 +55,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String userRole = userVO.getUserRole();
         boolean isAdmin = UserConstant.ADMIN_ROLE.equals(userRole);
         ThrowUtils.throwIf(!isAdmin, ErrorCode.NO_AUTH_ERROR);
+    }
+
+    @Override
+    public boolean isAdmin(User user) {
+        return UserConstant.ADMIN_ROLE.equals(user.getUserRole());
     }
 
     // endregion
@@ -106,7 +112,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         User user = lambdaQuery().eq(User::getUserAccount, userAccount).eq(User::getUserPassword, encryptPassword).one();
         ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.OPERATION_ERROR);
+        // 记录登录态到session
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
+        // 记录登录态到sa-token
+        StpKit.SPACE.login(user.getId());
+        StpKit.SPACE.getSession().set(UserConstant.USER_LOGIN_STATE, user);
 
         return user.beanToVo();
     }

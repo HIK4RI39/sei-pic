@@ -26,6 +26,9 @@ public interface UserService extends IService<User> {
     // 管理员鉴权
     void checkAdmin(UserVO userVO);
 
+    // 是否是管理员
+    boolean isAdmin(User user);
+
     // endregion
 
     // region -------------------------- 管理员 --------------------------

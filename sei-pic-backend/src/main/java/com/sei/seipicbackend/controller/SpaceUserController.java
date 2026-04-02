@@ -5,6 +5,8 @@ import com.sei.seipicbackend.common.IdRequest;
 import com.sei.seipicbackend.common.ResponseUtils;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import com.sei.seipicbackend.manager.auth.annotation.SaSpaceCheckPermission;
+import com.sei.seipicbackend.manager.auth.model.SpaceUserPermissionConstant;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserAddRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserEditRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserQueryRequest;
@@ -41,6 +43,7 @@ public class SpaceUserController {
      * @return
      */
     @PostMapping("/add")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<Long> addSpaceUser(@RequestBody SpaceUserAddRequest spaceUserAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(spaceUserAddRequest==null, ErrorCode.PARAMS_ERROR);
         Long spaceUserId = spaceUserService.addSpaceUser(spaceUserAddRequest);
@@ -53,6 +56,7 @@ public class SpaceUserController {
      * @return
      */
     @PostMapping("/delete")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<Boolean> deleteSpaceUser(@RequestBody IdRequest idRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(idRequest==null, ErrorCode.PARAMS_ERROR);
         long id = idRequest.getId();
@@ -72,6 +76,7 @@ public class SpaceUserController {
      * @return
      */
     @PostMapping("/get")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<SpaceUser> deleteSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(spaceUserQueryRequest==null, ErrorCode.PARAMS_ERROR);
         SpaceUser spaceUser = spaceUserService.getSpaceUser(spaceUserQueryRequest);
@@ -84,6 +89,7 @@ public class SpaceUserController {
      * @return
      */
     @PostMapping("/list")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<List<SpaceUserVO>> listSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(spaceUserQueryRequest==null, ErrorCode.PARAMS_ERROR);
         List<SpaceUserVO> spaceUserList = spaceUserService.listSpaceUser(spaceUserQueryRequest);
@@ -96,6 +102,7 @@ public class SpaceUserController {
      * @return
      */
     @PostMapping("/edit")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<Boolean> editSpaceUser(@RequestBody SpaceUserEditRequest spaceUserEditRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(spaceUserEditRequest==null, ErrorCode.PARAMS_ERROR);
         boolean result = spaceUserService.editSpaceUser(spaceUserEditRequest);

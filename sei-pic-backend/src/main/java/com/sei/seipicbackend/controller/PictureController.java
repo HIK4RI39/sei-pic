@@ -16,6 +16,9 @@ import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import com.sei.seipicbackend.manager.auth.SpaceUserAuthManager;
+import com.sei.seipicbackend.manager.auth.annotation.SaSpaceCheckPermission;
+import com.sei.seipicbackend.manager.auth.model.SpaceUserPermissionConstant;
 import com.sei.seipicbackend.model.dto.picture.*;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.User;
@@ -56,6 +59,7 @@ public class PictureController {
      * @return
      */
     @GetMapping("/out_painting/get_task")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.PICTURE_EDIT)
     public BaseResponse<GetOutPaintingTaskResponse> getOutPaintingTask(String taskId) {
         ThrowUtils.throwIf(StrUtil.isBlank(taskId), ErrorCode.PARAMS_ERROR, "非法的任务ID");
         GetOutPaintingTaskResponse getOutPaintingTaskResponse = pictureService.getOutPaintingTask(taskId);
@@ -86,6 +90,7 @@ public class PictureController {
      * @return
      */
     @PostMapping("/edit/batch")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.PICTURE_EDIT)
     public BaseResponse<?> editPictureByBatch(@RequestBody PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(ObjUtil.isEmpty(pictureEditByBatchRequest), ErrorCode.PARAMS_ERROR);
         pictureService.editPictureByBatch(pictureEditByBatchRequest, request);
@@ -99,6 +104,7 @@ public class PictureController {
      * @return
      */
     @PostMapping("/search/color")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.PICTURE_VIEW)
     public BaseResponse<List<PictureVO>> searchPictureByColor(@RequestBody SearchPictureByColorRequest searchPictureByColorRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(searchPictureByColorRequest == null, ErrorCode.PARAMS_ERROR);
         String picColor = searchPictureByColorRequest.getPicColor();
@@ -110,7 +116,7 @@ public class PictureController {
         return ResponseUtils.success(pictureVOList);
     }
 
-        /**
+    /**
      * 以图搜图功能接口
      * 搜索互联网中与图库类似的图片
      * @param searchPictureByPictureRequest
@@ -135,6 +141,7 @@ public class PictureController {
      * @return
      */
     @PostMapping("/upload")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.PICTURE_UPLOAD)
     public BaseResponse<PictureVO> uploadPicture(
         @RequestPart MultipartFile multipartFile,
         PictureUploadRequest pictureUploadRequest, // 可以为空, 首次上传没有图片id
@@ -148,6 +155,7 @@ public class PictureController {
      * 通过 URL 上传图片（可重新上传）
      */
     @PostMapping("/upload/url")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.PICTURE_UPLOAD)
     public BaseResponse<PictureVO> uploadPictureByUrl(
             @RequestBody PictureUploadRequest pictureUploadRequest,
             HttpServletRequest request) throws IOException {
@@ -164,6 +172,7 @@ public class PictureController {
      * @return
      */
     @PostMapping("/delete")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.PICTURE_DELETE)
     public BaseResponse<Boolean> deletePictureById(@RequestBody IdRequest idRequest, HttpServletRequest request) {
         if (ObjUtil.isEmpty(idRequest) || idRequest.getId() <=0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -227,6 +236,7 @@ public class PictureController {
      * @return
      */
     @PostMapping("/edit")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.PICTURE_EDIT)
     public BaseResponse<Boolean> editPicture(@RequestBody PictureEditRequest pictureEditRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(ObjUtil.isEmpty(pictureEditRequest), ErrorCode.PARAMS_ERROR);
         boolean update = pictureService.editPicture(pictureEditRequest, request);

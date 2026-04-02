@@ -10,6 +10,7 @@ import com.sei.seipicbackend.common.ResponseUtils;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import com.sei.seipicbackend.manager.auth.SpaceUserAuthManager;
 import com.sei.seipicbackend.model.dto.picture.SpaceRankAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
@@ -17,6 +18,7 @@ import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.*;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
+import com.sei.seipicbackend.model.enums.SpaceTypeEnum;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.vo.*;
 import com.sei.seipicbackend.model.vo.space.*;
@@ -45,6 +47,9 @@ public class SpaceController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
 
     // region -------------------------- 管理员 --------------------------
 
@@ -160,10 +165,13 @@ public class SpaceController {
         UserVO loginUser = userService.getLoginUser(request);
         Long userId = loginUser.getId();
         SpaceVO spaceVO = null;
-        Space space = spaceService.lambdaQuery().eq(Space::getUserId, userId).one();
-        if (space!=null) {
-            spaceVO = spaceService.getSpaceVoWithUser(space);
-        }
+        Space space = spaceService.lambdaQuery()
+                .eq(Space::getUserId, userId).eq(Space::getSpaceType, SpaceTypeEnum.PRIVATE.getValue()).one();
+        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR);
+        spaceVO = spaceService.getSpaceVoWithUser(space);
+        // 补充权限列表信息
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, userService.getUserById(userId));
+        spaceVO.setPermissionList(permissionList);
         return ResponseUtils.success(spaceVO);
     }
 

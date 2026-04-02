@@ -20,6 +20,9 @@ import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.manager.CosManager;
+import com.sei.seipicbackend.manager.auth.SpaceUserAuthManager;
+import com.sei.seipicbackend.manager.auth.StpKit;
+import com.sei.seipicbackend.manager.auth.model.SpaceUserPermissionConstant;
 import com.sei.seipicbackend.manager.upload.FilePictureUpload;
 import com.sei.seipicbackend.manager.upload.PictureUploadTemplate;
 import com.sei.seipicbackend.manager.upload.UrlPictureUpload;
@@ -92,6 +95,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private AliYunAiApi aliYunAiApi;
+
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
+
 
     // region -------------------------- 管理员 --------------------------
 
@@ -330,8 +337,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         // 鉴权
         UserVO loginUser = userService.getLoginUser(request);
-        boolean hasPermission = this.isOwnerOrAdmin(picture, loginUser);
-        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+//        boolean hasPermission = this.isOwnerOrAdmin(picture, loginUser);
+//        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
 
         // 构造请求参数
         CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
@@ -394,13 +401,25 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR, "图片不存在");
         // 私有空间需要鉴权
         Long spaceId = picture.getSpaceId();
+        Space space = null;
         if (spaceId!=null) {
             // 一般来说不会不存在吧
-            UserVO loginUser = userService.getLoginUser(request);
-            spaceService.checkSpaceAuth(spaceId, loginUser);
+//            UserVO loginUser = userService.getLoginUser(request);
+//            spaceService.checkSpaceAuth(spaceId, loginUser);
+            boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+            space = spaceService.getById(spaceId);
+            ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR);
         }
 
-        return getPictureVoWithUser(picture);
+        // 补充权限列表
+        UserVO loginUser = userService.getLoginUser(request);
+        User user = loginUser.voToBean();
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, user);
+        PictureVO pictureVoWithUser = getPictureVoWithUser(picture);
+        pictureVoWithUser.setPermissionList(permissionList);
+
+        return pictureVoWithUser;
     }
 
     /**
@@ -417,10 +436,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             // 主页仅能查询过审数据
             pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
             pictureQueryRequest.setNullSpaceId(true);
-        } else {
-            // 私有空间鉴权
-            UserVO loginUser = userService.getLoginUser(request);
-            spaceService.checkSpaceAuth(spaceId, loginUser);
+        }
+        else {
+//             私有空间鉴权
+//            UserVO loginUser = userService.getLoginUser(request);
+//            spaceService.checkSpaceAuth(spaceId, loginUser);
+            boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
         }
 
         LambdaQueryWrapper<Picture> queryWrapper = getQueryWrapper(pictureQueryRequest);
@@ -452,6 +474,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      */
     @Override
     public Page<PictureVO> getPictureVoPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        // 鉴权
+        boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+
         // 缓存key, 将查询条件作为key一并缓存, 可能会较长
         String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);
         // md5压缩key
@@ -477,8 +503,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         // 鉴权
         UserVO loginUser = userService.getLoginUser(request);
-        boolean hasPermission = isOwnerOrAdmin(oldPicture, loginUser);
-        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+//        boolean hasPermission = isOwnerOrAdmin(oldPicture, loginUser);
+//        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
 
         Picture newPicture = new Picture();
         BeanUtil.copyProperties(pictureEditRequest, newPicture);
@@ -562,7 +588,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             Picture picture = lambdaQuery().eq(Picture::getId, pictureId).one();
             ThrowUtils.throwIf(picture==null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
             // 如果是编辑, 需要鉴权
-            isOwnerOrAdmin(picture, loginUser);
+//            isOwnerOrAdmin(picture, loginUser);
         }
 
 
@@ -679,7 +705,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         UserVO loginUser = userService.getLoginUser(request);
         Picture picture = this.getById(pictureId);
         ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR);
-        ThrowUtils.throwIf(!isOwnerOrAdmin(picture, loginUser), ErrorCode.NO_AUTH_ERROR);
+//        ThrowUtils.throwIf(!isOwnerOrAdmin(picture, loginUser), ErrorCode.NO_AUTH_ERROR);
         Long spaceId = picture.getSpaceId();
         // 异步删除COS的图片
         this.clearPictureFile(picture);
@@ -918,6 +944,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param loginUserVO
      * @return
      */
+    @Deprecated
     private boolean isOwnerOrAdmin(Picture picture, UserVO loginUserVO) {
         Long owner = picture.getUserId();
         Long userId = loginUserVO.getId();
