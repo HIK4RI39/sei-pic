@@ -9,6 +9,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sei.seipicbackend.common.IdRequest;
@@ -23,6 +24,7 @@ import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.*;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
+import com.sei.seipicbackend.model.enums.SpaceTypeEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.User;
@@ -38,6 +40,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -60,6 +63,55 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     private static final Interner<String> USER_LOCK_INTERNER = InternUtil.createWeakInterner();
 
     // region -------------------------- 通用 --------------------------
+
+    private static final Map<String, SFunction<Space, ?>> COLUMN_MAP = new ConcurrentHashMap<>();
+    static {
+        COLUMN_MAP.put("editTime", Space::getEditTime);
+        COLUMN_MAP.put("totalSize", Space::getTotalSize);
+        COLUMN_MAP.put("totalCount", Space::getTotalCount);
+        COLUMN_MAP.put("createTime", Space::getCreateTime);
+        COLUMN_MAP.put("updateTime", Space::getUpdateTime);
+    }
+
+    /**
+     * 返回排序字段的方法引用
+     * @param sortField
+     * @return
+     */
+    private SFunction<Space, ?> getOrderColumn(String sortField) {
+        if (sortField==null) {
+            return Space::getCreateTime;
+        }
+
+        return COLUMN_MAP.getOrDefault(sortField, Space::getCreateTime);
+    }
+
+    /**
+     * 构建queryWrapper条件
+     * @param spaceQueryRequest
+     * @return
+     */
+    private LambdaQueryWrapper<Space> getQueryWrapper(SpaceQueryRequest spaceQueryRequest) {
+        Integer spaceType = spaceQueryRequest.getSpaceType();
+        Long id = spaceQueryRequest.getId();
+        Long userId = spaceQueryRequest.getUserId();
+        String spaceName = spaceQueryRequest.getSpaceName();
+        Integer spaceLevel = spaceQueryRequest.getSpaceLevel();
+        int current = spaceQueryRequest.getCurrent();
+        int pageSize = spaceQueryRequest.getPageSize();
+        String sortField = spaceQueryRequest.getSortField();
+        String sortOrder = spaceQueryRequest.getSortOrder();
+
+        LambdaQueryWrapper<Space> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(spaceType!=null, Space::getSpaceType, spaceType);
+        queryWrapper.eq(id!=null, Space::getId, id);
+        queryWrapper.eq(userId!=null, Space::getUserId, userId);
+        queryWrapper.like(StrUtil.isNotBlank(spaceName), Space::getSpaceName, spaceName);
+        queryWrapper.eq(spaceLevel!=null, Space::getSpaceLevel, spaceLevel);
+        queryWrapper.orderBy("ascend".equals(sortOrder), StrUtil.isNotBlank(sortField), getOrderColumn(sortField));
+
+        return queryWrapper;
+    }
 
     /**
      * 校验空间权限
@@ -192,11 +244,14 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         String spaceName = space.getSpaceName();
         Integer spaceLevel = space.getSpaceLevel();
         SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(spaceLevel);
+        Integer spaceType = space.getSpaceType();
 
         // 创建
         if (add) {
             ThrowUtils.throwIf(StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空");
             ThrowUtils.throwIf((spaceLevel==null), ErrorCode.PARAMS_ERROR, "空间级别不能为空");
+            SpaceTypeEnum enumByValue = SpaceTypeEnum.getEnumByValue(spaceType);
+            ThrowUtils.throwIf(enumByValue==null, ErrorCode.PARAMS_ERROR, "空间类型不存在");
         }
 
         // 更新/编辑
@@ -214,6 +269,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     public void fillSpaceBySpaceLevel(Space space) {
         // 根据空间级别，自动填充限额
         SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(space.getSpaceLevel());
+
         if (spaceLevelEnum != null) {
             long maxSize = spaceLevelEnum.getMaxSize();
             if (space.getMaxSize() == null) {
@@ -224,6 +280,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                 space.setMaxCount(maxCount);
             }
         }
+
     }
 
     // endregion
@@ -254,18 +311,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      */
     @Override
     public Page<SpaceVO> getSpacePage(SpaceQueryRequest spaceQueryRequest, HttpServletRequest request) {
-        Long id = spaceQueryRequest.getId();
-        Long userId = spaceQueryRequest.getUserId();
-        String spaceName = spaceQueryRequest.getSpaceName();
-        Integer spaceLevel = spaceQueryRequest.getSpaceLevel();
         int current = spaceQueryRequest.getCurrent();
         int pageSize = spaceQueryRequest.getPageSize();
-
-        LambdaQueryWrapper<Space> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(id!=null, Space::getId, id)
-                .eq(userId!=null, Space::getUserId, userId)
-                .like(StrUtil.isNotBlank(spaceName), Space::getSpaceName, spaceLevel);
-
+        LambdaQueryWrapper<Space> queryWrapper = getQueryWrapper(spaceQueryRequest);
         Page<Space> page = new Page<>(current, pageSize);
 
         return convertToVoPage(page(page, queryWrapper));
@@ -541,19 +589,33 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     public Long createSpace(SpaceAddRequest spaceAddRequest, HttpServletRequest request) {
         String spaceName = spaceAddRequest.getSpaceName();
         Integer spaceLevel = spaceAddRequest.getSpaceLevel();
+        Integer spaceType = spaceAddRequest.getSpaceType();
+
+        if (StrUtil.isBlank(spaceName)) {
+            spaceAddRequest.setSpaceName("默认空间");
+        }
+
+        if (spaceType==null) {
+            spaceAddRequest.setSpaceType(SpaceTypeEnum.PRIVATE.getValue());
+        }
+
         Space space = new Space();
         space.setSpaceName(spaceName);
         space.setSpaceLevel(spaceLevel);
+        space.setSpaceType(spaceType);
+
         // 校验空间
-        validSpace(space, true);
+        this.validSpace(space, true);
+
         // 用户仅能创建基础类型空间
         UserVO loginUser = userService.getLoginUser(request);
         String userRole = loginUser.getUserRole();
         if (UserConstant.DEFAULT_ROLE.equals(userRole) && SpaceLevelEnum.COMMON.getValue() != spaceLevel) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
+
         // 填写空间参数
-        fillSpaceBySpaceLevel(space);
+        this.fillSpaceBySpaceLevel(space);
         // 填写userId
         Long userId = loginUser.getId();
         space.setUserId(userId);
@@ -562,8 +624,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         String lock = USER_LOCK_INTERNER.intern(userId.toString());
         synchronized (lock) {
             // 不能重复创建空间
-            boolean exists = lambdaQuery().eq(Space::getUserId, userId).exists();
-            ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "最多创建1个空间");
+            boolean exists = lambdaQuery().eq(Space::getUserId, userId)
+                    .eq(Space::getSpaceType, spaceAddRequest.getSpaceType()).exists();
+            ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "每个用户每类空间仅能创建一个");
             boolean result = save(space);
             ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "空间创建失败");
         }
