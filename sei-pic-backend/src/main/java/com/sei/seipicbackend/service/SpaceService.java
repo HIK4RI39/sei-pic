@@ -2,6 +2,7 @@ package com.sei.seipicbackend.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.common.IdRequest;
+import com.sei.seipicbackend.model.dto.picture.SpaceRankAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
@@ -23,6 +24,9 @@ import java.util.List;
 public interface SpaceService extends IService<Space> {
 
     // region -------------------------- 管理员 --------------------------
+
+    // 获得用量topN空间
+    List<Space> getSpaceRankAnalyze(SpaceRankAnalyzeRequest analyzeRequest);
 
     // 更新空间
     boolean updateSpace(SpaceUpdateRequest spaceUpdateRequest);
@@ -73,6 +77,7 @@ public interface SpaceService extends IService<Space> {
 
     // 检验空间信息
     void validSpace(Space space, boolean add);
+
 
 
     // endregion

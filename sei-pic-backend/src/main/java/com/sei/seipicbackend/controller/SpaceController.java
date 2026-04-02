@@ -10,6 +10,7 @@ import com.sei.seipicbackend.common.ResponseUtils;
 import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import com.sei.seipicbackend.model.dto.picture.SpaceRankAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
@@ -46,6 +47,20 @@ public class SpaceController {
     private UserService userService;
 
     // region -------------------------- 管理员 --------------------------
+
+    /**
+     * 返回用量topN的空间
+     * @param analyzeRequest
+     * @return
+     */
+    @PostMapping("/analyze/rank")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<List<Space>> getSpaceRankAnalyze(SpaceRankAnalyzeRequest analyzeRequest) {
+        Integer topN = analyzeRequest.getTopN();
+        ThrowUtils.throwIf(topN==null || topN<=0, ErrorCode.PARAMS_ERROR);
+        List<Space> spaceList = spaceService.getSpaceRankAnalyze(analyzeRequest);
+        return ResponseUtils.success(spaceList);
+    }
 
     /**
      * 管理员 分页获取空间

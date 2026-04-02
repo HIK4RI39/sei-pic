@@ -16,6 +16,7 @@ import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
+import com.sei.seipicbackend.model.dto.picture.SpaceRankAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
@@ -229,6 +230,21 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
 
     // region -------------------------- 管理员 --------------------------
+
+    /**
+     * 获得用量topN空间
+     * @param analyzeRequest
+     * @return
+     */
+    @Override
+    public List<Space> getSpaceRankAnalyze(SpaceRankAnalyzeRequest analyzeRequest) {
+        Integer topN = analyzeRequest.getTopN();
+
+        // 按照spaceId分组, 按使用量降序排序, 返回topN
+        return this.lambdaQuery().select(Space::getId, Space::getTotalSize)
+                .orderByDesc(Space::getTotalSize)
+                .last("LIMIT " + topN).list();
+    }
 
     /**
      * 管理员 分页查询space
