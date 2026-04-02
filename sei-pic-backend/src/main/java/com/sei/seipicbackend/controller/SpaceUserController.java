@@ -6,6 +6,7 @@ import com.sei.seipicbackend.common.ResponseUtils;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserAddRequest;
+import com.sei.seipicbackend.model.dto.space.user.SpaceUserEditRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserQueryRequest;
 import com.sei.seipicbackend.model.pojo.SpaceUser;
 import com.sei.seipicbackend.model.vo.space.SpaceUserVO;
@@ -87,6 +88,18 @@ public class SpaceUserController {
         ThrowUtils.throwIf(spaceUserQueryRequest==null, ErrorCode.PARAMS_ERROR);
         List<SpaceUserVO> spaceUserList = spaceUserService.listSpaceUser(spaceUserQueryRequest);
         return ResponseUtils.success(spaceUserList);
+    }
+
+    /**
+     * 编辑成员信息 (设置权限)
+     * @param spaceUserEditRequest
+     * @return
+     */
+    @PostMapping("/edit")
+    public BaseResponse<Boolean> editSpaceUser(@RequestBody SpaceUserEditRequest spaceUserEditRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(spaceUserEditRequest==null, ErrorCode.PARAMS_ERROR);
+        boolean result = spaceUserService.editSpaceUser(spaceUserEditRequest);
+        return ResponseUtils.success(result);
     }
 
 
