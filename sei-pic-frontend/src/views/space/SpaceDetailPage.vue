@@ -10,8 +10,11 @@
     <a-flex justify="space-between">
         <h2>{{ space.spaceName }}（私有空间）</h2>
         <a-space size="middle">
-            <a-button :icon="h(EditOutlined)" @click="doBatchEdit"> 批量编辑</a-button>
+            <a-button type="primary" ghost :icon="h(BarChartOutlined)" :href="`/space_analyze?spaceId=${id}`"
+                target="_blank">空间分析</a-button>
             <a-button type="primary" @click="openCreateModal">+ 创建图片</a-button>
+            <a-button :icon="h(EditOutlined)" @click="doBatchEdit"> 批量编辑</a-button>
+
             <a-tooltip :title="`占用空间 ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`">
                 <a-progress type="circle" :percent="((space.totalSize * 100) / space.maxSize).toFixed(1)" :size="42" />
             </a-tooltip>
@@ -35,10 +38,10 @@
             <!-- 选择上传方式 -->
             <a-tabs v-model:activeKey="uploadType">
                 <a-tab-pane key="file" tab="文件上传">
-                    <PictureUpload :picture="currentPicture" :spaceId="props.id" :onSuccess="onSuccess" />
+                    <PictureUpload :picture="currentPicture" :spaceId="props.id" :onSuccess="onPictureAddSuccess" />
                 </a-tab-pane>
                 <a-tab-pane key="url" tab="URL 上传" force-render>
-                    <UrlPictureUpload :picture="currentPicture" :spaceId="props.id" :onSuccess="onSuccess" />
+                    <UrlPictureUpload :picture="currentPicture" :spaceId="props.id" :onSuccess="onPictureAddSuccess" />
                 </a-tab-pane>
             </a-tabs>
 
@@ -94,7 +97,7 @@ import { onMounted, ref, reactive, h } from 'vue';
 
 import { ColorPicker } from 'vue3-colorpicker'
 import 'vue3-colorpicker/style.css'
-import { EditOutlined } from '@ant-design/icons-vue';
+import { BarChartOutlined, EditOutlined } from '@ant-design/icons-vue';
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue';
 
 // #region 空间
@@ -114,8 +117,7 @@ const searchParams = ref<API.PictureQueryRequest>({
 })
 const uploadType = ref<'file' | 'url'>('file');
 const currentPicture = ref<API.PictureVO>();
-// 表单数据
-const pictureForm = reactive<API.PictureEditRequest>({});
+
 // 标签和分类选项
 const tagOptions = ref<any[]>([]);
 const categoryOptions = ref<any[]>([]);
@@ -209,6 +211,9 @@ const onPageChange = (page, pageSize) => {
 // #endregion
 
 // #region 图片创建弹窗
+// 表单数据
+const pictureForm = reactive<API.PictureEditRequest>({});
+
 // 弹窗控制
 const isModalOpen = ref(false);
 
@@ -254,6 +259,17 @@ const uploadPictureSubmit = async (values: any) => {
         message.error("操作失败，" + res.data.data.message);
     }
 };
+
+const onPictureAddSuccess = (newPicture: API.PictureVO) => {
+    currentPicture.value = newPicture
+    if (newPicture) {
+        pictureForm.name = newPicture.name
+        pictureForm.introduction = newPicture.introduction
+        pictureForm.category = newPicture.category
+        pictureForm.tags = newPicture.tags
+    }
+}
+
 // #endregion
 
 // #region 批量编辑弹窗

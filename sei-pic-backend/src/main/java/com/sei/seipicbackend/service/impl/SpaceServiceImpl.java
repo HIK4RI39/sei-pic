@@ -241,7 +241,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         Integer topN = analyzeRequest.getTopN();
 
         // 按照spaceId分组, 按使用量降序排序, 返回topN
-        return this.lambdaQuery().select(Space::getId, Space::getTotalSize)
+        return this.lambdaQuery().select(Space::getSpaceName, Space::getId, Space::getTotalSize)
                 .orderByDesc(Space::getTotalSize)
                 .last("LIMIT " + topN).list();
     }
@@ -339,7 +339,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                 queryWrapper.select("DATE_FORMAT(createTime, '%Y-%m-%d') AS period", "COUNT(*) AS count");
                 break;
             case "week":
-                queryWrapper.select("YEARWEEK(createTime) AS period", "COUNT(*) AS count");
+                queryWrapper.select("DATE_FORMAT(createTime, '%x年第%v周') AS period", "COUNT(*) AS count");
                 break;
             case "month":
                 queryWrapper.select("DATE_FORMAT(createTime, '%Y-%m') AS period", "COUNT(*) AS count");

@@ -11,13 +11,15 @@
                 <UrlPictureUpload :picture="picture" :spaceId="spaceId" :onSuccess="onSuccess" />
             </a-tab-pane>
         </a-tabs>
-        <!-- 编辑 -->
-        <div v-if="picture" class="edit-bar">
+        <!-- 编辑图片 -->
+        <a-space size="middle" class="edit-bar" v-if="picture">
             <a-button :icon="h(EditOutlined)" @click="doEditPicture">编辑图片</a-button>
-            <ImageCropper ref="imageCropperRef" :imageUrl="picture?.url" :picture="picture" :spaceId="spaceId"
-                :onSuccess="onCropSuccess" />
-        </div>
-
+            <a-button type="primary" ghost :icon="h(FullscreenOutlined)" @click="doImagePainting">AI 扩图</a-button>
+        </a-space>
+        <ImageCropper ref="imageCropperRef" :imageUrl="picture?.url" :picture="picture" :spaceId="spaceId"
+            :onSuccess="onCropSuccess" />
+        <ImageOutPainting ref="imageOutPaintingRef" :picture="picture" :spaceId="spaceId"
+            :onSuccess="onImageOutPaintingSuccess" />
 
         <!-- 图片信息 -->
         <a-form v-if="picture" name="pictureForm" layout="horizontal" :model="pictureForm" @finish="handleSubmit">
@@ -54,9 +56,10 @@
 <script setup lang="ts">
 import { editPictureUsingPost, getPictureVoByIdUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController';
 import ImageCropper from '@/components/ImageCropper.vue';
+import ImageOutPainting from '@/components/ImageOutPainting.vue';
 import PictureUpload from '@/components/PictureUpload.vue';
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue';
-import { EditOutlined } from '@ant-design/icons-vue';
+import { EditOutlined, FullscreenOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
 import { h, onMounted, reactive } from 'vue';
 import { computed } from 'vue';
@@ -162,10 +165,8 @@ onMounted(() => {
 })
 
 // #region 图片编辑弹窗
-
 // 图片编辑弹窗引用
 const imageCropperRef = ref()
-
 // 编辑图片
 const doEditPicture = () => {
     if (imageCropperRef.value) {
@@ -177,6 +178,25 @@ const doEditPicture = () => {
 const onCropSuccess = (newPicture: API.PictureVO) => {
     picture.value = newPicture
 }
+
+// #endregion
+
+// #region AI扩图
+// AI 扩图弹窗引用
+const imageOutPaintingRef = ref()
+// AI 扩图
+const doImagePainting = () => {
+    if (imageOutPaintingRef.value) {
+        imageOutPaintingRef.value.openModal()
+    }
+}
+
+// 编辑成功事件
+const onImageOutPaintingSuccess = (newPicture: API.PictureVO) => {
+    picture.value = { ...newPicture }
+    // picture.value = newPicture
+}
+
 
 // #endregion
 

@@ -76,6 +76,12 @@ const router = createRouter({
       props: true,
     },
     {
+      path: '/space_analyze',
+      name: '空间分析',
+      component: () => import('@/views/space/SpaceAnalyzePage.vue'),
+      props: true,
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: '404',
       component: () => import('@/views/404Page.vue'),
