@@ -2,6 +2,7 @@ package com.sei.seipicbackend.controller;
 
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.annotation.AuthCheck;
 import com.sei.seipicbackend.common.BaseResponse;
@@ -161,12 +162,12 @@ public class SpaceController {
      * @return
      */
     @PostMapping("/vo")
-    public BaseResponse<SpaceVO> getSpaceVo(HttpServletRequest request) {
+    public BaseResponse<SpaceVO> getSpaceVo(@RequestBody SpaceQueryRequest spaceQueryRequest, HttpServletRequest request) {
         UserVO loginUser = userService.getLoginUser(request);
         Long userId = loginUser.getId();
         SpaceVO spaceVO = null;
-        Space space = spaceService.lambdaQuery()
-                .eq(Space::getUserId, userId).eq(Space::getSpaceType, SpaceTypeEnum.PRIVATE.getValue()).one();
+        LambdaQueryWrapper<Space> queryWrapper = spaceService.getQueryWrapper(spaceQueryRequest);
+        Space space = spaceService.getOne(queryWrapper);
         ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR);
         spaceVO = spaceService.getSpaceVoWithUser(space);
         // 补充权限列表信息

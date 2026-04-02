@@ -1,5 +1,6 @@
 package com.sei.seipicbackend.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sei.seipicbackend.common.IdRequest;
 import com.sei.seipicbackend.model.dto.picture.SpaceRankAnalyzeRequest;
@@ -68,6 +69,9 @@ public interface SpaceService extends IService<Space> {
     // endregion
 
     // region -------------------------- 通用 --------------------------
+
+    // 构建条件选择器
+    LambdaQueryWrapper<Space> getQueryWrapper(SpaceQueryRequest spaceQueryRequest);
 
     // 获取封装类
     SpaceVO getSpaceVO(Space space, HttpServletRequest request);

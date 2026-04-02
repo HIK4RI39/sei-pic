@@ -115,7 +115,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      * @param spaceQueryRequest
      * @return
      */
-    private LambdaQueryWrapper<Space> getQueryWrapper(SpaceQueryRequest spaceQueryRequest) {
+    @Override
+    public LambdaQueryWrapper<Space> getQueryWrapper(SpaceQueryRequest spaceQueryRequest) {
         Integer spaceType = spaceQueryRequest.getSpaceType();
         Long id = spaceQueryRequest.getId();
         Long userId = spaceQueryRequest.getUserId();
