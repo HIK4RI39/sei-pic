@@ -63,6 +63,7 @@ const router = createRouter({
       path: '/space/create',
       name: '创建空间',
       component: () => import('@/views/space/SpaceCreatePage.vue'),
+      props: true,
     },
     {
       path: '/my_space',

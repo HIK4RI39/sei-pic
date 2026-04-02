@@ -1,6 +1,6 @@
 <template>
     <div id="addSpacePage">
-        <a-card title="创建空间" class="add-card">
+        <a-card :title="(route.query?.id ? '修改' : '创建') + SPACE_TYPE_MAP[spaceType]" class="add-card">
             <a-form :model="form" layout="vertical" @finish="handleSubmit" ref="formRef" :rules="rules">
                 <a-form-item label="空间名称" name="spaceName">
                     <a-input v-model:value="form.spaceName" placeholder="请输入空间名称" allow-clear />
@@ -70,7 +70,7 @@ import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { createSpaceUsingPost } from '@/api/spaceController';
-import { SPACE_LEVEL_OPTIONS } from '@/constants/space'; // 引入常量文件
+import { SPACE_LEVEL_OPTIONS, SPACE_TYPE_ENUM, SPACE_TYPE_MAP } from '@/constants/space'; // 引入常量文件
 import { DatabaseFilled, DatabaseOutlined, RocketFilled, RocketOutlined } from '@ant-design/icons-vue';
 
 const route = useRoute();
@@ -99,11 +99,14 @@ const rules = {
 const handleSubmit = async () => {
     loading.value = true;
     try {
-        const res = await createSpaceUsingPost({ ...form.value });
+        const res = await createSpaceUsingPost({
+            ...form.value,
+            spaceType: spaceType.value
+        });
         if (res.data.code === 0) {
             message.success('创建成功');
             // TODO 跳转个人空间页面
-            router.push('/my_space');
+            router.push('/space/' + res.data.data);
         } else {
             message.error('创建失败: ' + res.data.message);
         }
@@ -111,6 +114,18 @@ const handleSubmit = async () => {
         loading.value = false;
     }
 };
+
+// #region 创建团队空间
+// 空间类别
+const spaceType = computed(() => {
+    if (route.query?.type) {
+        return Number(route.query.type)
+    }
+    return SPACE_TYPE_ENUM.PRIVATE
+})
+
+
+// #endregion
 
 </script>
 

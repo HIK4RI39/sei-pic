@@ -173,9 +173,16 @@ export async function updateSpaceUsingPost(
 }
 
 /** getSpaceVo POST /api/space/vo */
-export async function getSpaceVoUsingPost(options?: { [key: string]: any }) {
+export async function getSpaceVoUsingPost(
+  body: API.SpaceQueryRequest,
+  options?: { [key: string]: any }
+) {
   return request<API.BaseResponseSpaceVO_>('/api/space/vo', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
     ...(options || {}),
   })
 }

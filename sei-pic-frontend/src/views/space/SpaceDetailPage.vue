@@ -5,10 +5,9 @@
     <a-form-item label="按颜色搜索" style="margin-top: 16px">
         <color-picker format="hex" @pureColorChange="onColorChange" />
     </a-form-item>
-
     <!-- 空间信息 -->
     <a-flex justify="space-between">
-        <h2>{{ space.spaceName }}（私有空间）</h2>
+        <h2>{{ space.spaceName }} {{ space.spaceType == SPACE_TYPE_ENUM.PRIVATE ? '(私有空间)' : '' }}</h2>
         <a-space size="middle">
             <a-button type="primary" ghost :icon="h(BarChartOutlined)" :href="`/space_analyze?spaceId=${id}`"
                 target="_blank">空间分析</a-button>
@@ -93,18 +92,21 @@ import { editPictureUsingPost, listPictureTagCategoryUsingGet } from '@/api/pict
 import PictureUpload from '@/components/PictureUpload.vue';
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue';
 import { message } from 'ant-design-vue';
-import { onMounted, ref, reactive, h } from 'vue';
+import { onMounted, ref, reactive, h, watch } from 'vue';
 
 import { ColorPicker } from 'vue3-colorpicker'
 import 'vue3-colorpicker/style.css'
 import { BarChartOutlined, EditOutlined } from '@ant-design/icons-vue';
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue';
+import { SPACE_TYPE_ENUM } from '@/constants/space';
+import { useRoute } from 'vue-router';
 
 // #region 空间
 interface Props {
     id: string | number
 }
 const props = defineProps<{ id: string | number }>()
+
 const space = ref<API.SpaceVO>({})
 const dataList = ref<API.PictureVO[]>([])
 const total = ref(0)
@@ -126,8 +128,12 @@ const categoryOptions = ref<any[]>([]);
  * 获取空间详情
  */
 async function fetchSpaceDetail() {
+    // console.log("spaceId: ", route.params.id)
+
     try {
-        const res = await getSpaceVoUsingPost()
+        const res = await getSpaceVoUsingPost({
+            id: route.params.id
+        })
         if (res.data.code === 0 && res.data.data) {
             space.value = res.data.data
         } else {
@@ -137,9 +143,20 @@ async function fetchSpaceDetail() {
         message.error('获取空间详情失败：' + e.message)
     }
 }
-onMounted(() => {
-    fetchSpaceDetail()
-})
+
+const route = useRoute()
+
+watch(() => route.params.id, (newId) => {
+    if (newId) {
+        fetchSpaceDetail();
+        searchParams.value.current = 1
+        fetchData()
+    }
+}, { immediate: true }); // 建议加上 immediate，确保第一次进入页面也能触发
+
+// onMounted(() => {
+// fetchSpaceDetail()
+// })
 
 /**
  * 覆盖搜索参数, 拉取数据

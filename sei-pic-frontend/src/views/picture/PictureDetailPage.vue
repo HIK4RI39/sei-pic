@@ -16,6 +16,11 @@ const props = defineProps<Props>()
 
 const picture = ref<API.PictureVO>({})
 
+const doCopy = (color: string) => {
+    navigator.clipboard.writeText(color)
+    message.success("成功复制主色调")
+}
+
 const fetchDetailPicture = async () => {
     const res = await getPictureVoByIdUsingPost({ id: props.id })
     if (res.data.code === 0 && res.data.data) {
@@ -164,7 +169,13 @@ const doDownload = () => {
                                         width: '16px',
                                         height: '16px',
                                     }" />
-                                    {{ picture.picColor?.slice(2) ?? '-' }}
+
+
+                                    <span class="copyable-text" @click="doCopy(picture?.picColor?.slice(2))"
+                                        title="点击复制主色调">
+                                        {{ picture.picColor ? `${picture.picColor.slice(2)}` : '-' }}
+                                    </span>
+
                                 </a-space>
                             </a-col>
                         </a-row>
@@ -367,5 +378,15 @@ const doDownload = () => {
     font-size: 14px;
     color: #262626;
     font-weight: 500;
+}
+
+
+.copyable-text {
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.copyable-text:hover {
+    opacity: 0.8;
 }
 </style>
