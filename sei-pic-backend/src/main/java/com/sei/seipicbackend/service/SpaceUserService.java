@@ -52,6 +52,9 @@ public interface SpaceUserService extends IService<SpaceUser> {
     // 编辑成员信息 (设置权限)
     boolean editSpaceUser(SpaceUserEditRequest spaceUserEditRequest);
 
+    // 查询用户加入的团队空间
+    List<SpaceUserVO> listMyTeamSpace(HttpServletRequest request);
+
     // endregion
 
 }

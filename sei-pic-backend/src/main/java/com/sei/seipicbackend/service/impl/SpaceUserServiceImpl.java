@@ -236,6 +236,23 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         ThrowUtils.throwIf(!result, ErrorCode.SYSTEM_ERROR, "编辑成员信息失败");
         return true;
     }
+
+    /**
+     * 查询用户加入的团队空间列表
+     * @param request
+     * @return
+     */
+    @Override
+    public List<SpaceUserVO> listMyTeamSpace(HttpServletRequest request) {
+        UserVO loginUser = userService.getLoginUser(request);
+        List<SpaceUser> spaceUsers = this.lambdaQuery().eq(SpaceUser::getUserId, loginUser.getId()).list();
+        if (CollUtil.isEmpty(spaceUsers)) {
+            return Collections.emptyList();
+        }
+
+        return getSpaceUserVOList(spaceUsers);
+    }
+
     // endregion
 
 }

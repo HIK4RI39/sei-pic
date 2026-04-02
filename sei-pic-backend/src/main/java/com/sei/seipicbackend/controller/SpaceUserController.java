@@ -102,6 +102,18 @@ public class SpaceUserController {
         return ResponseUtils.success(result);
     }
 
+    /**
+     * 查询用户加入的团队空间列表
+     * @param request
+     * @return
+     */
+    @PostMapping("/list/my")
+    public BaseResponse<List<SpaceUserVO>> listMyTeamSpace(HttpServletRequest request) {
+        List<SpaceUserVO> spaceUserList = spaceUserService.listMyTeamSpace(request);
+        return ResponseUtils.success(spaceUserList);
+    }
+
+
 
     // endregion
 
