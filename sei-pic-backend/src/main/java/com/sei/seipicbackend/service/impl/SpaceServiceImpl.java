@@ -20,19 +20,13 @@ import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceAnalyzeRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceTagAnalyzeRequest;
-import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.*;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.*;
-import com.sei.seipicbackend.model.vo.space.SpaceCategoryAnalyzeResponse;
-import com.sei.seipicbackend.model.vo.space.SpaceTagAnalyzeResponse;
-import com.sei.seipicbackend.model.vo.space.SpaceUsageAnalyzeResponse;
-import com.sei.seipicbackend.model.vo.space.SpaceVO;
+import com.sei.seipicbackend.model.vo.space.*;
 import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.mapper.SpaceMapper;
@@ -42,10 +36,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -304,6 +295,42 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+
+    /**
+     * 图片大小分段分析
+     * @param analyzeRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public List<SpaceSizeAnalyzeResponse> getSpaceSizeAnalyze(SpaceSizeAnalyzeRequest analyzeRequest, HttpServletRequest request) {
+        Long spaceId = analyzeRequest.getSpaceId();
+
+        // 校验权限和查询参数
+        UserVO loginUser = userService.getLoginUser(request);
+        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
+
+        // 填写查询条件
+        QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
+        fillAnalyzeQueryWrapper(analyzeRequest,queryWrapper);
+        queryWrapper.select("picSize");
+
+        List<Long> sizeList = pictureService.getBaseMapper().selectObjs(queryWrapper).stream()
+                .map(size -> ((Number) size).longValue())
+                .collect(Collectors.toList());
+
+        Map<String, Long> sizeRanges = new LinkedHashMap<>();
+        sizeRanges.put("<100KB", sizeList.stream().filter(size -> size < 100*1024).count());
+        sizeRanges.put("100KB-500KB", sizeList.stream().filter(size -> 100*1024<=size && size<500*1024).count());
+        sizeRanges.put("500KB-1MB", sizeList.stream().filter(size -> 500*1024<= size && size< 1024 * 1024).count());
+        sizeRanges.put(">1MB", sizeList.stream().filter(size -> size >= 1024 * 1024).count());
+
+        return sizeRanges.entrySet().stream()
+                .map(sizeRange -> new SpaceSizeAnalyzeResponse(sizeRange.getKey(), sizeRange.getValue()))
+                .collect(Collectors.toList());
+    }
+
 
     /**
      * 标签分析

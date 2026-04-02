@@ -15,6 +15,7 @@ import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceQueryRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceUpdateRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
+import com.sei.seipicbackend.model.dto.space.analyze.SpaceSizeAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceTagAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.analyze.SpaceUsageAnalyzeRequest;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
@@ -76,6 +77,20 @@ public class SpaceController {
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    /**
+     * 根据图片大小对图库进行分段分析
+     * @param analyzeRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/analyze/size")
+    public BaseResponse<List<SpaceSizeAnalyzeResponse>> getSpaceSizeAnalyze(@RequestBody SpaceSizeAnalyzeRequest analyzeRequest, HttpServletRequest request) {
+        List<SpaceSizeAnalyzeResponse> responseList = spaceService.getSpaceSizeAnalyze(analyzeRequest, request);
+        return ResponseUtils.success(responseList);
+    }
+
+
 
     @PostMapping("/analyze/tag")
     public BaseResponse<List<SpaceTagAnalyzeResponse>> getSpaceTagAnalyze(@RequestBody SpaceTagAnalyzeRequest analyzeRequest, HttpServletRequest request) {
