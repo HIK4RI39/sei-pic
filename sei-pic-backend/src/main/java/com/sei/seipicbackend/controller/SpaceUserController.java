@@ -6,6 +6,7 @@ import com.sei.seipicbackend.common.ResponseUtils;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserAddRequest;
+import com.sei.seipicbackend.model.dto.space.user.SpaceUserQueryRequest;
 import com.sei.seipicbackend.model.pojo.SpaceUser;
 import com.sei.seipicbackend.service.SpaceUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +61,18 @@ public class SpaceUserController {
         ThrowUtils.throwIf(!result, ErrorCode.PARAMS_ERROR, "删除失败");
 
         return ResponseUtils.success(true);
+    }
+
+    /**
+     * 查询某个团队空间成员
+     * @param spaceUserQueryRequest
+     * @return
+     */
+    @PostMapping("/get")
+    public BaseResponse<SpaceUser> deleteSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(spaceUserQueryRequest==null, ErrorCode.PARAMS_ERROR);
+        SpaceUser spaceUser = spaceUserService.getSpaceUser(spaceUserQueryRequest);
+        return ResponseUtils.success(spaceUser);
     }
 
 
