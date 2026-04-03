@@ -623,6 +623,9 @@ declare namespace API {
     userPassword?: string
     userProfile?: string
     userRole?: string
+    vipCode?: string
+    vipExpiredTime?: string
+    vipNumber?: number
   }
 
   type UserAddRequest = {
@@ -679,5 +682,13 @@ declare namespace API {
     userName?: string
     userProfile?: string
     userRole?: string
+    vipCode?: string
+    vipExpiredTime?: string
+    vipNumber?: number
+  }
+
+  type VipCode = {
+    code?: string
+    hasUsed?: boolean
   }
 }

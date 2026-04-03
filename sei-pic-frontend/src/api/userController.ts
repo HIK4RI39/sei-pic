@@ -64,6 +64,14 @@ export async function getLoginUserUsingGet(options?: { [key: string]: any }) {
   })
 }
 
+/** getLoginUserWithoutCache GET /api/user/get/login/withoutCache */
+export async function getLoginUserWithoutCacheUsingGet(options?: { [key: string]: any }) {
+  return request<API.BaseResponseUserVO_>('/api/user/get/login/withoutCache', {
+    method: 'GET',
+    ...(options || {}),
+  })
+}
+
 /** getUserVoById POST /api/user/get/vo */
 export async function getUserVoByIdUsingPost(
   body: API.IdRequest,
@@ -135,6 +143,18 @@ export async function updateUserUsingPost(
   options?: { [key: string]: any }
 ) {
   return request<API.BaseResponseBoolean_>('/api/user/update', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** exchangeVip POST /api/user/vip */
+export async function exchangeVipUsingPost(body: API.VipCode, options?: { [key: string]: any }) {
+  return request<API.BaseResponseBoolean_>('/api/user/vip', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

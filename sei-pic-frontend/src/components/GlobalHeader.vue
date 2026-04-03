@@ -15,56 +15,153 @@
                     @click="doMenuClick" />
             </a-col>
             <!-- 用户信息 -->
-            <a-col flex="200px">
+            <a-col flex="auto" style="display: flex; justify-content: flex-end">
                 <div class="userLoginStatus">
-                    <!-- dropdown -->
-                    <a-space>
+                    <a-space :size="12">
+                        <template v-if="loginUserStore?.loginUser?.id">
+                            <a-dropdown>
+                                <a-space class="user-info-clickable">
+                                    <a-avatar :src="loginUserStore.loginUser.userAvatar" />
+                                    <span class="user-name">
+                                        {{ loginUserStore.loginUser.userName ?? '无名' }}
+                                    </span>
+                                </a-space>
+                                <template #overlay>
+                                    <a-menu>
+                                        <!-- 我的空间 -->
+                                        <a-menu-item>
+                                            <router-link to="/my_space">
+                                                <user-outlined />
+                                                我的空间
+                                            </router-link>
+                                        </a-menu-item>
+                                        <!-- 会员兑换 -->
+                                        <a-menu-item>
+                                            <router-link to="/user/exchangeVip" style="color: goldenrod">
+                                                <CrownOutlined />
+                                                会员兑换
+                                            </router-link>
+                                        </a-menu-item>
+                                        <!-- 个人资料 -->
+                                        <a-menu-item>
+                                            <router-link to="/user/profile">
+                                                <profile-outlined />
+                                                个人资料
+                                            </router-link>
+                                        </a-menu-item>
+                                        <!-- 上传的图片列表 -->
+                                        <a-menu-item>
+                                            <router-link to="/my/pictures">
+                                                <PictureOutlined />
+                                                我的图片
+                                            </router-link>
+                                        </a-menu-item>
+
+                                        <!-- 团队空间列表 -->
+                                        <a-menu-item>
+                                            <router-link to="/space/team/list">
+                                                <team-outlined />
+                                                我的团队
+                                            </router-link>
+                                        </a-menu-item>
+
+                                        <!-- 团队邀请 -->
+                                        <a-menu-item>
+                                            <router-link to="/space/confirm">
+                                                <user-add-outlined />
+                                                团队邀请
+                                            </router-link>
+                                        </a-menu-item>
+
+                                        <!-- 退出登录 -->
+                                        <a-menu-item @click="doLogOut" style="color: red;">
+                                            <logout-outlined />
+                                            <a href="javascript:" style="margin-left: 5px;">退出登录</a>
+                                        </a-menu-item>
+                                    </a-menu>
+                                </template>
+                            </a-dropdown>
+
+
+                            <div class="badges-container">
+                                <a-tag v-if="loginUserStore.loginUser.userRole === 'admin'" color="red"
+                                    class="role-badge">
+                                    <template #icon><setting-outlined /></template>
+                                    管理员
+                                </a-tag>
+
+                                <a-tag v-if="loginUserStore.loginUser.userRole === 'vip'" color="gold"
+                                    class="role-badge vip-badge">
+                                    <template #icon><crown-outlined /></template>
+                                    VIP {{ loginUserStore.loginUser.id ?
+                                        `NO.${loginUserStore.loginUser.id}` : '' }}
+                                </a-tag>
+                            </div>
+                        </template>
+
+                        <a-button v-else type="primary" href="/user/login">登录</a-button>
+                    </a-space>
+                </div>
+            </a-col>
+
+            <!-- 
+            <a-col flex="200px">
+                <div class="userLoginStatus"> -->
+            <!-- dropdown -->
+            <!-- <a-space>
                         <a-dropdown>
                             <a-space>
                                 <a-avatar :src="loginUserStore?.loginUser?.userAvatar" />
                                 {{ (loginUserStore?.loginUser?.userName?.length ?? 0) > 0
                                     ? loginUserStore.loginUser.userName
                                     : '无名' }}
-                            </a-space>
-                            <template #overlay>
-                                <a-menu>
-                                    <!-- 我的空间 -->
-                                    <a-menu-item>
+                            </a-space> -->
+            <!-- <template #overlay>
+                                <a-menu> -->
+            <!-- 我的空间 -->
+            <!-- <a-menu-item>
                                         <router-link to="/my_space">
                                             <user-outlined />
                                             我的空间
                                         </router-link>
-                                    </a-menu-item>
-                                    <!-- 个人资料 -->
-                                    <a-menu-item>
+                                    </a-menu-item> -->
+            <!-- 个人资料 -->
+            <!-- <a-menu-item>
                                         <router-link to="/user/profile">
                                             <profile-outlined />
                                             个人资料
                                         </router-link>
-                                    </a-menu-item>
-                                    <!-- 上传的图片列表 -->
-                                    <a-menu-item>
+                                    </a-menu-item> -->
+            <!-- 上传的图片列表 -->
+            <!-- <a-menu-item>
                                         <router-link to="/my/pictures">
                                             <PictureOutlined />
                                             我的图片
                                         </router-link>
-                                    </a-menu-item>
-                                    <!-- 团队空间列表 -->
-                                    <a-menu-item>
-                                        <router-link to="/space/team/list">
-                                            <team-outlined />
-                                            我的团队
-                                        </router-link>
-                                    </a-menu-item>
-                                    <!-- 团队邀请 -->
-                                    <a-menu-item>
-                                        <router-link to="/space/confirm">
-                                            <user-add-outlined />
-                                            团队邀请
-                                        </router-link>
-                                    </a-menu-item>
-                                    <!-- 退出登录 -->
-                                    <a-menu-item @click="doLogOut" style="color: red;">
+                                    </a-menu-item> -->
+            <!-- 团队空间列表 -->
+            <!-- <a-menu-item> -->
+            <!-- <router-link to="/space/team/list"> -->
+            <!-- <team-outlined /> -->
+            <!-- 我的团队 -->
+            <!-- </router-link> -->
+            <!-- </a-menu-item> -->
+            <!-- 团队邀请 -->
+            <!-- <a-menu-item> -->
+            <!-- <router-link to="/space/confirm"> -->
+            <!-- <user-add-outlined /> -->
+            <!-- 团队邀请 -->
+            <!-- </router-link>
+                                    </a-menu-item> -->
+            <!-- 会员兑换 -->
+            <!-- <a-menu-item>
+                                        <router-link to="/user/exchangeVip">
+                                            <CrownOutlined /> -->
+            <!-- 会员兑换 -->
+            <!-- </router-link>
+                                    </a-menu-item> -->
+            <!-- 退出登录 -->
+            <!-- <a-menu-item @click="doLogOut" style="color: red;">
                                         <logout-outlined />
                                         <a href="javascript:" style="margin-left: 5px;">退出登录</a>
                                     </a-menu-item>
@@ -74,16 +171,17 @@
                         <a-button v-if="!loginUserStore?.loginUser?.id" type="primary" href="/user/login"
                             style="margin-left: 5px;">登录</a-button>
                     </a-space>
-
                 </div>
-            </a-col>
+            </a-col> -->
+
+
         </a-row>
     </div>
 </template>
 
 <script lang="ts" setup>
 import { h, ref } from 'vue';
-import { InsertRowAboveOutlined, HomeOutlined, LogoutOutlined, PictureOutlined, UserOutlined, TeamOutlined, UserAddOutlined, ProfileOutlined } from '@ant-design/icons-vue';
+import { InsertRowAboveOutlined, HomeOutlined, LogoutOutlined, PictureOutlined, UserOutlined, TeamOutlined, UserAddOutlined, ProfileOutlined, CrownOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { useLoginUserStore } from '@/stores/useLoginStore';

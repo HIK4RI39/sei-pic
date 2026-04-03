@@ -94,6 +94,7 @@ const router = createRouter({
       component: () => import('@/views/space/SpaceUserManagePage.vue'),
       props: true,
     },
+
     // my
     {
       path: '/space/confirm',
@@ -114,6 +115,11 @@ const router = createRouter({
       path: '/space/team/list',
       name: '管理已加入的团队空间列表',
       component: () => import('@/views/my/MyTeamSpaceListPage.vue'),
+    },
+    {
+      path: '/user/exchangeVip',
+      name: '兑换VIP',
+      component: () => import('@/views/my/ExchangeVipPage.vue'),
     },
 
     {
