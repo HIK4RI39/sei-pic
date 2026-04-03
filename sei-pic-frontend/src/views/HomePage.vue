@@ -27,8 +27,8 @@
         <div class="tag-bar">
             <span style="margin-right: 8px">标签：</span>
             <a-space :size="[0, 8]" wrap>
-                <a-checkable-tag v-for="(tag, index) in tagList" :key="tag" v-model:checked="selectedTagList[index]"
-                    @change="doSearch">
+                <a-checkable-tag v-for="tag in tagList" :key="tag" :checked="searchParams.tags?.includes(tag)"
+                    @change="(checked) => handleTagChange(tag, checked)">
                     {{ tag }}
                 </a-checkable-tag>
             </a-space>
@@ -37,7 +37,8 @@
         <PictureList :dataList="dataList" :loading="loading" />
 
         <a-pagination style="text-align: right; margin-top: 20px" v-model:current="searchParams.current"
-            v-model:pageSize="searchParams.pageSize" :total="total" @change="onPageChange" />
+            :page-size-options="['5', '10', '20', '30']" v-model:pageSize="searchParams.pageSize" :total="total"
+            @change="onPageChange" />
     </div>
 </template>
 
@@ -50,6 +51,26 @@ import PictureSearchForm from '@/components/PictureSearchForm.vue'
 import { getPictureVoPageWithCacheUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController'
 import { PIC_REVIEW_STATUS_ENUM } from '@/constants/picture'
 
+
+const handleTagChange = (tag: string, checked: boolean) => {
+    // 确保 tags 是个数组
+    const currentTags = [...(searchParams.tags ?? [])];
+
+    if (checked) {
+        currentTags.push(tag);
+    } else {
+        const index = currentTags.indexOf(tag);
+        if (index > -1) currentTags.splice(index, 1);
+    }
+
+    // 更新到响应式对象中
+    searchParams.tags = currentTags;
+    doSearch();
+};
+
+
+
+
 // 控制高级搜索显示
 const showAdvanced = ref(false)
 
@@ -61,7 +82,7 @@ const loading = ref(true)
 // 搜索条件
 const searchParams = reactive<API.PictureQueryRequest>({
     current: 1,
-    pageSize: 16,
+    pageSize: 18,
     sortField: 'createTime',
     sortOrder: 'descend',
     reviewStatus: PIC_REVIEW_STATUS_ENUM.PASS
@@ -73,9 +94,8 @@ const fetchData = async () => {
     const tagsArray = tagList.value.filter((_, index) => selectedTagList.value[index])
     const params: API.PictureQueryRequest = { ...searchParams }
 
-    params.tags = tagsArray.length > 0 ? tagsArray : undefined
     if (selectedCategory.value !== 'all' && selectedCategory.value !== '') {
-        params.category = selectedCategory.value
+        params.category = selectedCategory.value;
     }
 
     try {
@@ -95,9 +115,10 @@ const fetchData = async () => {
 
 // 响应高级搜索组件的回调
 const doAdvancedSearch = (advancedParams: API.PictureQueryRequest) => {
-    Object.assign(searchParams, advancedParams)
-    doSearch()
-}
+    // 直接合并所有参数，包括那些不在 tag-bar 里的自定义 tags
+    Object.assign(searchParams, advancedParams);
+    doSearch();
+};
 
 // 通用搜索触发
 const doSearch = () => {

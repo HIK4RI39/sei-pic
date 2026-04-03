@@ -172,7 +172,10 @@ public class SpaceController {
         SpaceVO spaceVO = null;
         LambdaQueryWrapper<Space> queryWrapper = spaceService.getQueryWrapper(spaceQueryRequest);
         Space space = spaceService.getOne(queryWrapper);
-        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR);
+        if (space==null) {
+            return ResponseUtils.success(null);
+        }
+
         spaceVO = spaceService.getSpaceVoWithUser(space);
         // 补充权限列表信息
         List<String> permissionList = spaceUserAuthManager.getPermissionList(space, userService.getUserById(userId), null);
@@ -180,22 +183,25 @@ public class SpaceController {
 
         // 其实应该写成定时任务, 这相当于懒加载, 只要用户的账号不访问额度就永远不变
         // 关于会员有效期, 如果过期, 将空间大小和类型更新
-        Date vipExpiredTime = loginUser.getVipExpiredTime();
-        ThrowUtils.throwIf(vipExpiredTime==null, ErrorCode.PARAMS_ERROR, "用户没有会员信息");
-        boolean expired = vipExpiredTime.before(new Date());
-        if (expired){
-            // 如果会员过期, 将空间类型和大小更新为免费
-            boolean update = spaceService.lambdaUpdate().eq(Space::getUserId, userId)
-                    .set(Space::getSpaceType, SpaceLevelEnum.COMMON)
-                    .set(Space::getMaxCount, SpaceLevelEnum.COMMON.getMaxCount())
-                    .set(Space::getMaxSize, SpaceLevelEnum.COMMON.getMaxSize())
-                    .update();
+        // 仅更新会员
+        String userRole = loginUser.getUserRole();
+        if (UserConstant.VIP.equals(userRole)) {
+            Date vipExpiredTime = loginUser.getVipExpiredTime();
+            ThrowUtils.throwIf(vipExpiredTime==null, ErrorCode.PARAMS_ERROR, "用户没有会员信息");
+            boolean expired = vipExpiredTime.before(new Date());
+            if (expired){
+                // 如果会员过期, 将空间类型和大小更新为免费
+                boolean update = spaceService.lambdaUpdate().eq(Space::getUserId, userId)
+                        .set(Space::getSpaceType, SpaceLevelEnum.COMMON)
+                        .set(Space::getMaxCount, SpaceLevelEnum.COMMON.getMaxCount())
+                        .set(Space::getMaxSize, SpaceLevelEnum.COMMON.getMaxSize())
+                        .update();
 
-            ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "更新空间失败");
+                ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "更新空间失败");
 
-            boolean result = userService.lambdaUpdate().eq(User::getId, userId).set(User::getUserRole, UserConstant.DEFAULT_ROLE).update();
-            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新用户角色失败");
-
+                boolean result = userService.lambdaUpdate().eq(User::getId, userId).set(User::getUserRole, UserConstant.DEFAULT_ROLE).update();
+                ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新用户角色失败");
+              }
         }
 
         return ResponseUtils.success(spaceVO);

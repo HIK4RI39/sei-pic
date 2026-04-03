@@ -6,14 +6,38 @@
         <color-picker format="hex" @pureColorChange="onColorChange" />
     </a-form-item>
     <!-- 空间信息 -->
-    <a-flex justify="space-between">
-        <h2>{{ space.spaceName }} {{ space.spaceType == SPACE_TYPE_ENUM.PRIVATE ? '(私有空间)' : '' }}</h2>
-        <a-space size="middle">
-            <a-button type="primary" v-if="space.spaceType == SPACE_TYPE_ENUM.TEAM" ghost :icon="h(TeamOutlined)"
-                :href="`/spaceUserManage/${id}`" target="_blank">成员管理</a-button>
+    <!-- <a-flex justify="space-between"> -->
+    <!-- <h2>{{ space.spaceName }} {{ space.spaceType == SPACE_TYPE_ENUM.PRIVATE ? '(私有空间)' : '' }}</h2> -->
+    <a-flex justify="space-between" align="center" style="margin-bottom: 16px">
+        <div class="space-header">
+            <a-input v-if="isEditing" ref="editInputRef" v-model:value="editingName" @blur="doEditSpaceName"
+                @pressEnter="doEditSpaceName" placeholder="请输入空间名称"
+                style="font-size: 24px; font-weight: bold; width: 300px" />
+            <h2 v-else @dblclick="onEnterEditMode"
+                style="cursor: pointer; margin-bottom: 0; display: flex; align-items: center;">
+                {{ space.spaceName }}
+                <span style="font-size: 14px; color: #999; font-weight: normal; margin-left: 8px">
+                    {{ space.spaceType == SPACE_TYPE_ENUM.PRIVATE ? '(私有空间)' : '(团队空间)' }}
+                </span>
+                <a-typography-text type="secondary" style="font-size: 12px; margin-left: 8px">
+                    <EditOutlined /> 双击编辑
+                </a-typography-text>
+            </h2>
+        </div>
+
+        <a-space size="middle" align="center">
+            <a-button v-if="space.spaceType == SPACE_TYPE_ENUM.TEAM" type="primary" ghost :icon="h(TeamOutlined)"
+                :href="`/spaceUserManage/${id}`" target="_blank">
+                成员管理
+            </a-button>
+
             <a-button type="primary" ghost :icon="h(BarChartOutlined)" :href="`/space_analyze?spaceId=${id}`"
-                target="_blank">空间分析</a-button>
+                target="_blank">
+                空间分析
+            </a-button>
+
             <a-button type="primary" @click="openCreateModal">+ 创建图片</a-button>
+
             <a-button :icon="h(EditOutlined)" @click="doBatchEdit"> 批量编辑</a-button>
 
             <a-tooltip :title="`占用空间 ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`">
@@ -30,8 +54,8 @@
     <picture-list :dataList="dataList" :loading="loading" :showOp="true" :canEdit="canEditPicture"
         :canDelete="canDeletePicture" :onReload="fetchData" />
     <a-pagination style="text-align: right" v-model:current="searchParams.current"
-        v-model:pageSize="searchParams.pageSize" :total="total" :show-total="() => `图片总数 ${total} / ${space.maxCount}`"
-        @change="onPageChange" />
+        :page-size-options="['5', '10', '15', '20', '30']" v-model:pageSize="searchParams.pageSize" :total="total"
+        :show-total="() => `图片总数 ${total} / ${space.maxCount}`" @change="onPageChange" />
 
     <!-- 创建图片弹窗 -->
     <a-modal v-if="canUploadPicture" v-model:open="isModalOpen" title="创建图片" :footer="null" width="720px"
@@ -88,14 +112,14 @@
 <script setup lang="ts">
 import { getPictureVoPageUsingPost, searchPictureByColorUsingPost } from '@/api/pictureController';
 import PictureList from '@/components/PictureList.vue';
-import { getSpaceVoUsingPost } from '@/api/spaceController';
+import { editSpaceUsingPost, getSpaceVoUsingPost } from '@/api/spaceController';
 import PictureSearchForm from '@/components/PictureSearchForm.vue';
 import { formatSize } from '@/utils';
 import { editPictureUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController';
 import PictureUpload from '@/components/PictureUpload.vue';
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue';
 import { message } from 'ant-design-vue';
-import { onMounted, ref, reactive, h, watch } from 'vue';
+import { onMounted, ref, reactive, h, watch, nextTick } from 'vue';
 
 import { ColorPicker } from 'vue3-colorpicker'
 import 'vue3-colorpicker/style.css'
@@ -104,6 +128,55 @@ import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue';
 import { SPACE_PERMISSION_ENUM, SPACE_TYPE_ENUM } from '@/constants/space';
 import { useRoute } from 'vue-router';
 import { computed } from 'vue';
+
+
+// #region 编辑标题
+
+const isEditing = ref(false)
+const editingName = ref('')
+const editInputRef = ref()
+
+/**
+ * 进入编辑模式
+ */
+const onEnterEditMode = () => {
+    editingName.value = space.value.spaceName || ''
+    isEditing.value = true
+    // 自动聚焦输入框
+    nextTick(() => {
+        editInputRef.value?.focus()
+    })
+}
+
+/**
+ * 提交修改空间名称
+ */
+const doEditSpaceName = async () => {
+    // 如果名称没变，直接退出编辑
+    if (!editingName.value || editingName.value === space.value.spaceName) {
+        isEditing.value = false
+        return
+    }
+
+    try {
+        const res = await editSpaceUsingPost({
+            id: props.id,
+            spaceName: editingName.value,
+        })
+        if (res.data.code === 0) {
+            message.success('修改空间名称成功')
+            space.value.spaceName = editingName.value // 本地同步更新
+        } else {
+            message.error('修改失败，' + res.data.message)
+        }
+    } catch (e: any) {
+        message.error('修改失败：' + e.message)
+    } finally {
+        isEditing.value = false
+    }
+}
+
+// #endregion
 
 // #region 空间
 interface Props {
