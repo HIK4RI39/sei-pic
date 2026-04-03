@@ -168,7 +168,7 @@ public class PictureEditHandler extends TextWebSocketHandler {
         // 没有用户正在编辑该图片，才能进入编辑
         if (!pictureEditingUsers.containsKey(pictureId)) {
             // 设置当前用户为编辑用户
-            pictureEditingUsers.put(pictureId, user.getId());
+            pictureEditingUsers.putIfAbsent(pictureId, user.getId());
             PictureEditResponseMessage pictureEditResponseMessage = new PictureEditResponseMessage();
             pictureEditResponseMessage.setType(PictureEditMessageTypeEnum.ENTER_EDIT.getValue());
             String message = String.format("%s开始编辑图片", user.getUserName());

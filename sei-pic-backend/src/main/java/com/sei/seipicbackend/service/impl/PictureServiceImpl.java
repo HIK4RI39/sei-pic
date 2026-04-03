@@ -589,7 +589,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             picture = lambdaQuery().eq(Picture::getId, pictureId).one();
             ThrowUtils.throwIf(picture==null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
             Long oldSpaceId = picture.getSpaceId();
-            ThrowUtils.throwIf(!oldSpaceId.equals(newSpaceId), ErrorCode.PARAMS_ERROR, "前后空间id不一致");
+            ThrowUtils.throwIf(!Objects.equals(oldSpaceId, newSpaceId), ErrorCode.PARAMS_ERROR, "前后空间id不一致");
             // 如果是编辑, 需要鉴权
 //            isOwnerOrAdmin(picture, loginUser);
         }
@@ -1045,8 +1045,16 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             int lastIndexOf = compressedUrl.lastIndexOf(".");
             // 有个坑, 文件后缀名转小写才能访问正确url
             String picFormat = oldPicture.getPicFormat().toLowerCase();
-            String originUrl = compressedUrl.substring(0, lastIndexOf+1) + picFormat;
-            cosManager.deleteObject(originUrl);
+
+            if ("jpg".equals(picFormat) || "jpeg".equals(picFormat)) {
+                String jpegUrl = compressedUrl.substring(0, lastIndexOf+1) + "jpeg";
+                String jpgUrl = compressedUrl.substring(0, lastIndexOf+1) + "jpg";
+                cosManager.deleteObject(jpegUrl);
+                cosManager.deleteObject(jpgUrl);
+            } else {
+                String originUrl = compressedUrl.substring(0, lastIndexOf+1) + picFormat;
+                cosManager.deleteObject(originUrl);
+            }
         }
 
         // 清理压缩图 (webp)

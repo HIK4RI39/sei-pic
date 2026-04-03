@@ -70,6 +70,10 @@ public abstract class PictureUploadTemplate {
             // 通过临时文件拿到正确的suffix
             tempFile = File.createTempFile(tempUploadPath, null);
             String realSuffix = processFile(inputSource, tempFile);
+            // 统一为jpeg
+            if ("jpg".equalsIgnoreCase(realSuffix)) {
+                realSuffix = "jpeg";
+            }
             // 添加真正的后缀名
             String originFilename = mainName + "." + realSuffix;
             // 通过正确的suffix构造文件名
