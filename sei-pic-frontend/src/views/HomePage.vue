@@ -33,6 +33,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import PictureList from '@/components/PictureList.vue' // 定义数据
 import { getPictureVoPageWithCacheUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController'
+import { PIC_REVIEW_STATUS_ENUM } from '@/constants/picture'
 
 // 定义数据
 const dataList = ref<API.PictureVO[]>([])
@@ -45,6 +46,7 @@ const searchParams = reactive<API.PictureQueryRequest>({
     pageSize: 16,
     sortField: 'createTime',
     sortOrder: 'descend',
+    reviewStatus: PIC_REVIEW_STATUS_ENUM.PASS
 })
 
 // 获取数据

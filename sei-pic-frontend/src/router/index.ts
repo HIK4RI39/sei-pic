@@ -88,11 +88,28 @@ const router = createRouter({
       component: () => import('@/views/space/SpaceUserManagePage.vue'),
       props: true,
     },
+    // my
     {
       path: '/space/confirm',
       name: '团队邀请确认',
-      component: () => import('@/views/space/SpaceConfirmPage.vue'),
+      component: () => import('@/views/my/SpaceConfirmPage.vue'),
     },
+    {
+      path: '/space/team/list',
+      name: '管理已加入的团队空间列表',
+      component: () => import('@/views/my/MyTeamSpaceListPage.vue'),
+    },
+    {
+      path: '/my/pictures',
+      name: '用户上传到公共图库的照片',
+      component: () => import('@/views/my/MyPicturesPage.vue'),
+    },
+    {
+      path: '/space/team/list',
+      name: '管理已加入的团队空间列表',
+      component: () => import('@/views/my/MyTeamSpaceListPage.vue'),
+    },
+
     {
       path: '/:pathMatch(.*)*',
       name: '404',

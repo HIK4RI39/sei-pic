@@ -35,6 +35,20 @@
                                             我的空间
                                         </router-link>
                                     </a-menu-item>
+                                    <!-- 上传的图片列表 -->
+                                    <a-menu-item>
+                                        <router-link to="/my/pictures">
+                                            <PictureOutlined />
+                                            我的图片
+                                        </router-link>
+                                    </a-menu-item>
+                                    <!-- 团队空间列表 -->
+                                    <a-menu-item>
+                                        <router-link to="/space/team/list">
+                                            <team-outlined />
+                                            已加入团队
+                                        </router-link>
+                                    </a-menu-item>
                                     <!-- 团队邀请 -->
                                     <a-menu-item>
                                         <router-link to="/space/confirm">
