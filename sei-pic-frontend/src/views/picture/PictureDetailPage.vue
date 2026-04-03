@@ -96,6 +96,7 @@ const doDownload = () => {
 // #region 权限校验
 // 通用权限检查函数
 function createPermissionChecker(permission: string) {
+    // console.log("pic: ", picture.value.permissionList)
     return computed(() => {
         return (picture.value.permissionList ?? []).includes(permission)
     })

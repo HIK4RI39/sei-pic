@@ -60,6 +60,8 @@ import ImageCropper from '@/components/ImageCropper.vue';
 import ImageOutPainting from '@/components/ImageOutPainting.vue';
 import PictureUpload from '@/components/PictureUpload.vue';
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue';
+import { PIC_REVIEW_STATUS_ENUM } from '@/constants/picture';
+import { useLoginUserStore } from '@/stores/useLoginStore';
 import { EditOutlined, FullscreenOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
 import { h, onMounted, reactive, watchEffect } from 'vue';
@@ -72,6 +74,8 @@ const route = useRoute()
 
 const picture = ref<API.PictureVO>()
 const uploadType = ref<'file' | 'url'>('file')
+
+const loginUserStore = useLoginUserStore()
 
 // 空间 id
 const spaceId = computed(() => {
@@ -86,7 +90,6 @@ const spaceId = computed(() => {
 const onSuccess = (newPicture: API.PictureVO) => {
     picture.value = newPicture
     pictureForm.name = newPicture.name
-
     // console.log("收到回调: ", newPicture)
 }
 
@@ -103,7 +106,18 @@ const handleSubmit = async (values: any) => {
         ...values
     })
     if (res.data.code === 0 && res.data.data) {
-        message.success("创建图片成功")
+        message.success("上传成功!")
+        if (spaceId.value == null && loginUserStore.loginUser.userRole != 'admin') {
+            if (!route.query.id) message.warning("公共图库图片需要审核, 可在\"我的图片中\"查看")
+            if (
+                pictureForm.name != picture.value?.name
+                || pictureForm.introduction != picture.value?.introduction
+                && picture.value?.reviewStatus == PIC_REVIEW_STATUS_ENUM.PASS
+            ) message.warning("修改名称或简介的图片需要重新提审")
+        }
+
+
+
         // 创建成功, 跳转图片详情页
         router.push({
             path: `/picture/${pictureId}`
