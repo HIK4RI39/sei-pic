@@ -402,6 +402,22 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     public PictureVO getPictureVoById(long pictureId, HttpServletRequest request) {
         Picture picture = this.getById(pictureId);
         ThrowUtils.throwIf(ObjUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+
+        User user = null;
+        UserVO userVO = null;
+
+        Object attribute = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (attribute!=null) {
+            user = (User) attribute;
+            userVO = user.beanToVo();
+        }
+
+        // 审核未通过, 只能由本人或管理员查看
+        if (PictureReviewStatusEnum.PASS.getValue() != picture.getReviewStatus()) {
+            boolean hasPermission = this.isOwnerOrAdmin(picture, userVO);
+            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+        }
+
         // 私有空间需要鉴权
         Long spaceId = picture.getSpaceId();
         Space space = null;
@@ -415,11 +431,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR);
         }
 
-        // 补充权限列表
-        UserVO loginUser = userService.getLoginUser(request);
-        User user = loginUser.voToBean();
-        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, user, picture);
+
         PictureVO pictureVoWithUser = getPictureVoWithUser(picture);
+
+        // 补充权限列表
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, user, picture);
         pictureVoWithUser.setPermissionList(permissionList);
 
         return pictureVoWithUser;
@@ -468,8 +484,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             stringRedisTemplate.opsForValue().set(rediskey, cachedPage, cacheExpireTime, TimeUnit.SECONDS);
         }
 
-        User user = userService.getLoginUser(request).voToBean();
-        return convertToVoPage(picturePage, user);
+//        User user = userService.getLoginUser(request).voToBean();
+        return convertToVoPage(picturePage, null);
     }
 
     /**
@@ -873,8 +889,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         String category = pictureQueryRequest.getCategory();
         List<String> tags = pictureQueryRequest.getTags();
         Long picSize = pictureQueryRequest.getPicSize();
-        Integer picWidth = pictureQueryRequest.getPicWidth();
-        Integer picHeight = pictureQueryRequest.getPicHeight();
+//        Integer picWidth = pictureQueryRequest.getPicWidth();
+//        Integer picHeight = pictureQueryRequest.getPicHeight();
+        String scaleType = pictureQueryRequest.getScaleType();
         Double picScale = pictureQueryRequest.getPicScale();
         String picFormat = pictureQueryRequest.getPicFormat();
         String searchText = pictureQueryRequest.getSearchText();
@@ -894,9 +911,21 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         queryWrapper.like(StrUtil.isNotBlank(name), Picture::getName, name);
         queryWrapper.like(StrUtil.isNotBlank(introduction), Picture::getIntroduction, introduction);
         queryWrapper.like(StrUtil.isNotBlank(reviewMessage), Picture::getReviewMessage, reviewMessage);
+
         queryWrapper.eq(ObjUtil.isNotEmpty(picSize), Picture::getPicSize, picSize);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), Picture::getPicWidth, picWidth);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), Picture::getPicHeight, picHeight);
+
+        // 或者更语义化的分类查询
+        if ("horizontal".equals(scaleType)) {
+            queryWrapper.gt(Picture::getPicScale, 1.1); // 横图
+        } else if ("vertical".equals(scaleType)) {
+            queryWrapper.lt(Picture::getPicScale, 0.9); // 竖图
+        } else if ("square".equals(scaleType)) {
+            queryWrapper.between(Picture::getPicScale, 0.9, 1.1); // 方图
+        }
+
+//        queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), Picture::getPicWidth, picWidth);
+//        queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), Picture::getPicHeight, picHeight);
+
         queryWrapper.eq(ObjUtil.isNotEmpty(picScale), Picture::getPicScale, picScale);
         queryWrapper.eq(StrUtil.isNotBlank(picFormat), Picture::getPicFormat, picFormat);
         queryWrapper.eq(StrUtil.isNotBlank(category), Picture::getCategory, category);
@@ -979,13 +1008,16 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param loginUserVO
      * @return
      */
-    @Deprecated
     private boolean isOwnerOrAdmin(Picture picture, UserVO loginUserVO) {
+        if (loginUserVO==null) {
+            return false;
+        }
+
         Long owner = picture.getUserId();
         Long userId = loginUserVO.getId();
         Long spaceId = picture.getSpaceId();
 
-        boolean isSpaceOwner = true;
+        boolean isSpaceOwner = false;
         if (spaceId!=null) {
             Space space = spaceService.getById(spaceId);
             Long spaceUserId = space.getUserId();

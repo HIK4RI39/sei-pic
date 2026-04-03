@@ -15,6 +15,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class PictureQueryRequest extends PageRequest implements Serializable {
+    /**
+     * 图片宽高比范围
+     * horizontal 横图
+     * vertical 竖图
+     * square 方图
+     */
+    private String scaleType;
 
     /**
      * 状态：0-待审核; 1-通过; 2-拒绝
