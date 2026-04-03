@@ -71,6 +71,7 @@ import { PIC_REVIEW_STATUS_MAP } from '@/constants/picture'
 import { useLoginUserStore } from '@/stores/useLoginStore'
 import { deletePictureByIdUsingPost, getPictureVoByIdUsingPost, getPictureVoPageUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController'
 import dayjs from 'dayjs'
+import { editUserUsingPost } from '@/api/userController'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
@@ -122,8 +123,7 @@ const doSetAvatar = async (url: string) => {
         content: '确定要将选中的图片设为您的个人头像吗？',
         async onOk() {
             try {
-                const res = await updateUserUsingPost({
-                    id: loginUserStore.loginUser.id,
+                const res = await editUserUsingPost({
                     userAvatar: url
                 })
                 if (res.data.code === 0) {

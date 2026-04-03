@@ -629,8 +629,10 @@ declare namespace API {
   }
 
   type UserEditRequest = {
+    newPassWord?: string
+    oldPassword?: string
+    userAvatar?: string
     userName?: string
-    userPassword?: string
     userProfile?: string
   }
 

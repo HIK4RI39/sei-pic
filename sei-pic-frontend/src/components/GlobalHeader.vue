@@ -35,6 +35,13 @@
                                             我的空间
                                         </router-link>
                                     </a-menu-item>
+                                    <!-- 个人资料 -->
+                                    <a-menu-item>
+                                        <router-link to="/user/profile">
+                                            <user-outlined />
+                                            个人资料
+                                        </router-link>
+                                    </a-menu-item>
                                     <!-- 上传的图片列表 -->
                                     <a-menu-item>
                                         <router-link to="/my/pictures">
