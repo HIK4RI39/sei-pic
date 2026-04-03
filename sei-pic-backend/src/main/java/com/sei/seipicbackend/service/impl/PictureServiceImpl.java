@@ -497,8 +497,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Override
     public Page<PictureVO> getPictureVoPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
         // 鉴权
-        boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
-        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+//        boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+//        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
 
         // 缓存key, 将查询条件作为key一并缓存, 可能会较长
         String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);

@@ -208,7 +208,7 @@ public class PictureController {
         ThrowUtils.throwIf(ObjUtil.isEmpty(pictureQueryRequest), ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(pictureQueryRequest.getCurrent() <= 0, ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(pictureQueryRequest.getPageSize() <= 0, ErrorCode.PARAMS_ERROR);
-        ThrowUtils.throwIf(pictureQueryRequest.getPageSize() > 20, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureQueryRequest.getPageSize() > 30, ErrorCode.PARAMS_ERROR);
         Page<PictureVO> pictureVoPage = pictureService.getPictureVoPage(pictureQueryRequest, request);
         return ResponseUtils.success(pictureVoPage);
     }
@@ -224,7 +224,7 @@ public class PictureController {
         ThrowUtils.throwIf(ObjUtil.isEmpty(pictureQueryRequest), ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(pictureQueryRequest.getCurrent() <= 0, ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(pictureQueryRequest.getPageSize() <= 0, ErrorCode.PARAMS_ERROR);
-        ThrowUtils.throwIf(pictureQueryRequest.getPageSize() > 20, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureQueryRequest.getPageSize() > 30, ErrorCode.PARAMS_ERROR);
         Page<PictureVO> pictureVoPage = pictureService.getPictureVoPageWithCache(pictureQueryRequest, request);
         return ResponseUtils.success(pictureVoPage);
     }

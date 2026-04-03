@@ -1,82 +1,42 @@
 [
-  {
-    "code": "A7b9C2dE",
-    "hasUsed": false
-  },
-  {
-    "code": "F4gH5jK8",
-    "hasUsed": false
-  },
-  {
-    "code": "L3mN6pQ7",
-    "hasUsed": false
-  },
-  {
-    "code": "R9sT1uV2",
-    "hasUsed": false
-  },
-  {
-    "code": "W4xY5zA6",
-    "hasUsed": false
-  },
-  {
-    "code": "B8cD3eF7",
-    "hasUsed": false
-  },
-  {
-    "code": "G2hI4jK9",
-    "hasUsed": false
-  },
-  {
-    "code": "M5nO8pQ1",
-    "hasUsed": false
-  },
-  {
-    "code": "S6tU7vW3",
-    "hasUsed": false
-  },
-  {
-    "code": "X9yZ2aB4",
-    "hasUsed": false
-  },
-  {
-    "code": "C3dE5fG6",
-    "hasUsed": false
-  },
-  {
-    "code": "H7iJ8kL2",
-    "hasUsed": false
-  },
-  {
-    "code": "N1oP9qR4",
-    "hasUsed": false
-  },
-  {
-    "code": "T5uV6wX8",
-    "hasUsed": false
-  },
-  {
-    "code": "Y7zA1bC9",
-    "hasUsed": false
-  },
-  {
-    "code": "D4eF2gH3",
-    "hasUsed": false
-  },
-  {
-    "code": "I6jK7lM5",
-    "hasUsed": false
-  },
-  {
-    "code": "O8pQ9rS2",
-    "hasUsed": false
-  },
-  {
-    "code": "U3vW4xY6",
-    "hasUsed": false
-  },
-  {
-    "code": "Z5aB6cD7",
-    "hasUsed": false
-  }
+  { "code": "K2mN5pQ8", "hasUsed": false },
+  { "code": "B9vC4xR1", "hasUsed": false },
+  { "code": "G7hJ3kL6", "hasUsed": false },
+  { "code": "W5sT9uY2", "hasUsed": false },
+  { "code": "D8eF6gH4", "hasUsed": false },
+  { "code": "M1nP3qR7", "hasUsed": false },
+  { "code": "X4yZ7aB9", "hasUsed": false },
+  { "code": "H2iJ5kL8", "hasUsed": false },
+  { "code": "S6tU1vW4", "hasUsed": false },
+  { "code": "N9oP2qR5", "hasUsed": false },
+  { "code": "Y3zA6bC1", "hasUsed": false },
+  { "code": "E8fG4hJ7", "hasUsed": false },
+  { "code": "V5wX9yZ2", "hasUsed": false },
+  { "code": "Q7rS1tU4", "hasUsed": false },
+  { "code": "L3mN6oP9", "hasUsed": false },
+  { "code": "A2bC5dE8", "hasUsed": false },
+  { "code": "T6uV9wX1", "hasUsed": false },
+  { "code": "K4mN7pQ2", "hasUsed": false },
+  { "code": "J5hI8kL3", "hasUsed": false },
+  { "code": "R1sT4uV7", "hasUsed": false },
+  { "code": "D9eF2gH5", "hasUsed": false },
+  { "code": "P6qR9sT2", "hasUsed": false },
+  { "code": "U4vW7xY1", "hasUsed": false },
+  { "code": "Z8aB1cD4", "hasUsed": false },
+  { "code": "G3hI6jK9", "hasUsed": false },
+  { "code": "M7nO1pQ4", "hasUsed": false },
+  { "code": "C2dE5fG8", "hasUsed": false },
+  { "code": "X9yZ3aB6", "hasUsed": false },
+  { "code": "L5mN8oP1", "hasUsed": false },
+  { "code": "V7wX2yZ5", "hasUsed": false },
+  { "code": "B4vC7xR9", "hasUsed": false },
+  { "code": "S1tU4vW8", "hasUsed": false },
+  { "code": "H6iJ9kL2", "hasUsed": false },
+  { "code": "Q3rS6tU9", "hasUsed": false },
+  { "code": "N1oP4qR7", "hasUsed": false },
+  { "code": "F8gH2jK5", "hasUsed": false },
+  { "code": "W9sT3uY6", "hasUsed": false },
+  { "code": "Y4zA7bC2", "hasUsed": false },
+  { "code": "E1fG5hJ8", "hasUsed": false },
+  { "code": "P3qR6sT9", "hasUsed": false }
 ]
