@@ -111,7 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String encryptPassword = DigestUtils.md5DigestAsHex((userConfig.getSalt() + password).getBytes());
 
         User user = lambdaQuery().eq(User::getUserAccount, userAccount).eq(User::getUserPassword, encryptPassword).one();
-        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.OPERATION_ERROR);
+        ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.OPERATION_ERROR, "用户不存在或密码错误");
         // 记录登录态到session
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
         // 记录登录态到sa-token

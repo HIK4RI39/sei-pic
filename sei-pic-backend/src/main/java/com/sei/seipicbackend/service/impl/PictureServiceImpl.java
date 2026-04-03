@@ -501,6 +501,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     public boolean editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request) {
         Long pictureId = pictureEditRequest.getId();
         Picture oldPicture = this.getById(pictureId);
+        String name = pictureEditRequest.getName();
+        String introduction = pictureEditRequest.getIntroduction();
         ThrowUtils.throwIf(oldPicture==null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
 
         // 鉴权
@@ -520,8 +522,18 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         // 校验
         validPicture(newPicture);
-        // 填充审核参数
-        fillReviewParams(newPicture, loginUser);
+        // 如果是公共图库, 填充审核参数
+        if (oldPicture.getSpaceId()==null) {
+            String oldName = oldPicture.getName();
+            String oldIntro = oldPicture.getIntroduction();
+            // 如果name和intro不全为空, 且与旧name/intro不相同, 需要重新提审
+            if(!StrUtil.isAllBlank(name, introduction) && !( Objects.equals(oldName, name)&&Objects.equals(oldIntro, introduction) )) {
+                fillReviewParams(newPicture, loginUser);
+            } else {
+                // 不需要重新提审
+                newPicture.setReviewStatus(null);
+            }
+        }
 
         boolean result = updateById(newPicture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -646,6 +658,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (pictureId!=null) {
             newPicture.setId(pictureId);
             newPicture.setEditTime(new Date());
+            // 如果是公共图库, 重新审核
+            if (newSpaceId!=null) {
+                newPicture.setReviewStatus(PictureReviewStatusEnum.REVIEWING.getValue());
+            }
         }
 
         // 填写审核参数
