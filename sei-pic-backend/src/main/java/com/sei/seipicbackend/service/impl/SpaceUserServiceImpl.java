@@ -7,12 +7,16 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sei.seipicbackend.common.IdRequest;
+import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserAddRequest;
+import com.sei.seipicbackend.model.dto.space.user.SpaceUserConfirmRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserEditRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserQueryRequest;
 import com.sei.seipicbackend.model.enums.SpaceRoleEnum;
+import com.sei.seipicbackend.model.enums.SpaceUserStatusEnum;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.SpaceUser;
 import com.sei.seipicbackend.model.pojo.User;
@@ -23,6 +27,7 @@ import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.service.SpaceUserService;
 import com.sei.seipicbackend.mapper.SpaceUserMapper;
 import com.sei.seipicbackend.service.UserService;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -45,12 +50,12 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
 
     // region -------------------------- 通用 --------------------------
 
-    @Override
     /**
      * 将SpaceUser列表转换为SpaceUserVO列表
      * @param spaceUserList SpaceUser实体列表
      * @return SpaceUserVO视图对象列表
      */
+    @Override
     public List<SpaceUserVO> getSpaceUserVOList(List<SpaceUser> spaceUserList) {
         // 判断输入列表是否为空，为空则返回空列表
         if (CollUtil.isEmpty(spaceUserList)) {
@@ -86,7 +91,6 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         return spaceUserVOList;
     }
 
-
     /**
      * 获取封装类
      * @param spaceUser
@@ -112,6 +116,44 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
             spaceUserVO.setSpace(spaceVO);
         }
         return spaceUserVO;
+    }
+
+    /**
+     * 确认空间用户的方法
+     * @param spaceUserConfirmRequest 包含用户ID和确认状态的请求对象
+     * @param request HTTP请求对象
+     * @return 返回空间ID
+     */
+    @Override
+    public Boolean confirmSpaceUser(SpaceUserConfirmRequest spaceUserConfirmRequest, HttpServletRequest request) {
+        Long id = spaceUserConfirmRequest.getId();
+        Integer confirmStatus = spaceUserConfirmRequest.getConfirmStatus();
+        ThrowUtils.throwIf(id == null || id<=0, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(confirmStatus == null, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(confirmStatus==0, ErrorCode.PARAMS_ERROR, "请选择确认状态");
+        SpaceUserStatusEnum enumByValue = SpaceUserStatusEnum.getEnumByValue(confirmStatus);
+        ThrowUtils.throwIf(enumByValue == null, ErrorCode.PARAMS_ERROR, "确认状态不存在");
+
+        SpaceUser spaceUser = this.getById(id);
+        ThrowUtils.throwIf(spaceUser == null, ErrorCode.NOT_FOUND_ERROR, "邀请不存在");
+        // 如果不是待确认
+        if (SpaceUserStatusEnum.CONFIRMING.getValue() != (spaceUser.getConfirmStatus())) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "错误的确认状态");
+        }
+
+        // 更新确认状态
+        SpaceUser newSpaceUser = new SpaceUser();
+        newSpaceUser.setId(id);
+        newSpaceUser.setConfirmStatus(confirmStatus);
+        // 如果是同意, 将权限设置为viewer
+        if (SpaceUserStatusEnum.AGREED.getValue() == confirmStatus) {
+            newSpaceUser.setSpaceRole(SpaceRoleEnum.VIEWER.getValue());
+        }
+
+        boolean result = this.updateById(newSpaceUser);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "确认失败");
+
+        return true;
     }
 
 
@@ -171,13 +213,18 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
 
     // 添加空间用户
     @Override
-    public Long addSpaceUser(SpaceUserAddRequest spaceUserAddRequest) {
+    public Long addSpaceUser(SpaceUserAddRequest spaceUserAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(spaceUserAddRequest==null, ErrorCode.PARAMS_ERROR);
 
         SpaceUser spaceUser = new SpaceUser();
         BeanUtil.copyProperties(spaceUserAddRequest, spaceUser);
 
         this.validSpaceUser(spaceUser, true);
+
+        // 填写邀请人和邀请状态
+        UserVO loginUser = userService.getLoginUser(request);
+        spaceUser.setCreateUserId(loginUser.getId());
+        spaceUser.setConfirmStatus(SpaceUserStatusEnum.CONFIRMING.getValue());
 
         boolean save = this.save(spaceUser);
         ThrowUtils.throwIf(!save, ErrorCode.SYSTEM_ERROR, "添加空间用户失败");
@@ -258,6 +305,35 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         }
 
         return getSpaceUserVOList(spaceUsers);
+    }
+
+    /**
+     * 退出团队空间
+     * @param idRequest
+     * @param request
+     * @return
+     */
+    @Override
+    public boolean quitSpaceUser(IdRequest idRequest, HttpServletRequest request) {
+        long id = idRequest.getId();
+        ThrowUtils.throwIf(id<=0, ErrorCode.PARAMS_ERROR);
+        UserVO loginUser = userService.getLoginUser(request);
+        Long userId = loginUser.getId();
+        SpaceUser spaceUser = this.lambdaQuery().eq(SpaceUser::getUserId, id)
+                .eq(SpaceUser::getUserId, userId)
+                .eq(SpaceUser::getConfirmStatus, SpaceUserStatusEnum.AGREED.getValue())
+                .one();
+        ThrowUtils.throwIf(spaceUser==null, ErrorCode.NOT_FOUND_ERROR, "成员不存在");
+        // 创始人不可退出
+        SpaceUserVO spaceUserVO = getSpaceUserVO(spaceUser, request);
+        SpaceVO space = spaceUserVO.getSpace();
+        Long spaceOwner = space.getUserId();
+        ThrowUtils.throwIf(spaceOwner.equals(userId), ErrorCode.PARAMS_ERROR, "创始人不可退出");
+        // 退出
+        boolean result = this.removeById(id);
+        ThrowUtils.throwIf(!result, ErrorCode.SYSTEM_ERROR, "退出失败");
+
+        return true;
     }
 
     // endregion

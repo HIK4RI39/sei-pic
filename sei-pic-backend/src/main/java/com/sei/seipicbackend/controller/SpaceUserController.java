@@ -8,6 +8,7 @@ import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.manager.auth.annotation.SaSpaceCheckPermission;
 import com.sei.seipicbackend.manager.auth.model.SpaceUserPermissionConstant;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserAddRequest;
+import com.sei.seipicbackend.model.dto.space.user.SpaceUserConfirmRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserEditRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserQueryRequest;
 import com.sei.seipicbackend.model.pojo.Space;
@@ -42,6 +43,29 @@ public class SpaceUserController {
 
     // region -------------------------- 用户 --------------------------
 
+    // 退出团队空间
+    @PostMapping("/quit")
+    public BaseResponse<Boolean> quitSpaceUser(@RequestBody IdRequest idRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(idRequest==null, ErrorCode.PARAMS_ERROR);
+        boolean result = spaceUserService.quitSpaceUser(idRequest, request);
+        return ResponseUtils.success(result);
+    }
+
+    /**
+     * 确认团队空间邀请
+
+ * 该接口用于处理用户确认加入团队空间的请求
+     * @param spaceUserConfirmRequest 包含邀请确认所需信息的请求体
+     * @return 返回操作结果，成功则返回true，失败则返回错误信息
+     */
+    @PostMapping("/confirm")  // HTTP POST请求映射到"/confirm"路径
+    public BaseResponse<Boolean> confirmSpaceUser(@RequestBody SpaceUserConfirmRequest spaceUserConfirmRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(spaceUserConfirmRequest==null, ErrorCode.PARAMS_ERROR);
+        boolean result = spaceUserService.confirmSpaceUser(spaceUserConfirmRequest, request);
+        return ResponseUtils.success(result);
+    }
+
+
     /**
      * 新增团队空间成员
      * @param spaceUserAddRequest
@@ -51,7 +75,7 @@ public class SpaceUserController {
     @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<Long> addSpaceUser(@RequestBody SpaceUserAddRequest spaceUserAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(spaceUserAddRequest==null, ErrorCode.PARAMS_ERROR);
-        Long spaceUserId = spaceUserService.addSpaceUser(spaceUserAddRequest);
+        Long spaceUserId = spaceUserService.addSpaceUser(spaceUserAddRequest, request);
         return ResponseUtils.success(spaceUserId);
     }
 

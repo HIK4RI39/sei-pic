@@ -1,7 +1,9 @@
 package com.sei.seipicbackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.sei.seipicbackend.common.IdRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserAddRequest;
+import com.sei.seipicbackend.model.dto.space.user.SpaceUserConfirmRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserEditRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserQueryRequest;
 import com.sei.seipicbackend.model.pojo.SpaceUser;
@@ -40,8 +42,18 @@ public interface SpaceUserService extends IService<SpaceUser> {
 
     // region -------------------------- 用户 --------------------------
 
+    // 确认团队空间邀请
+    Boolean confirmSpaceUser(SpaceUserConfirmRequest spaceUserConfirmRequest, HttpServletRequest request);
+
     // 新增空间用户
-    Long addSpaceUser(SpaceUserAddRequest spaceUserAddRequest);
+/**
+ * 新增空间用户的方法
+ *
+ * @param spaceUserAddRequest 包含新增空间用户所需信息的请求对象
+ * @param request HttpServletRequest对象，用于获取请求相关信息
+ * @return Long 返回新增用户的ID
+ */
+    Long addSpaceUser(SpaceUserAddRequest spaceUserAddRequest, HttpServletRequest request);
 
     // 查询空间用户
     SpaceUser getSpaceUser(SpaceUserQueryRequest spaceUserQueryRequest);
@@ -54,6 +66,10 @@ public interface SpaceUserService extends IService<SpaceUser> {
 
     // 查询用户加入的团队空间
     List<SpaceUserVO> listMyTeamSpace(HttpServletRequest request);
+
+    // 退出团队空间
+    boolean quitSpaceUser(IdRequest idRequest, HttpServletRequest request);
+
 
     // endregion
 

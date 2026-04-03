@@ -18,8 +18,18 @@ public class SpaceUser implements Serializable {
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
+
+    /**
+     * 确认状态 0-待确认 1-已确认 2-已拒绝
+     */
+    private Integer confirmStatus;
+
+    /**
+     * 邀请人
+     */
+    private Long createUserId;
 
     /**
      * 空间 id

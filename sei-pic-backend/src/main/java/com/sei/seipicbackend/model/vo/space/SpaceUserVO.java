@@ -41,6 +41,16 @@ public class SpaceUserVO implements Serializable {
     private Date createTime;
 
     /**
+     * 确认状态 0-待确认 1-已确认 2-已拒绝
+     */
+    private Integer confirmStatus;
+
+    /**
+     * 邀请人
+     */
+    private Long createUserId;
+
+    /**
      * 更新时间
      */
     private Date updateTime;
