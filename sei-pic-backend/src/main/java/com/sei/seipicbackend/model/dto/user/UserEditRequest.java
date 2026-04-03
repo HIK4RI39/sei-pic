@@ -12,7 +12,12 @@ public class UserEditRequest implements Serializable {
     /**
      * 密码
      */
-    private String userPassword;
+    private String oldPassword;
+
+    /**
+     * 密码
+     */
+    private String newPassWord;
 
     /**
      * 用户昵称
@@ -23,6 +28,11 @@ public class UserEditRequest implements Serializable {
      * 用户简介
      */
     private String userProfile;
+
+    /**
+     * 用户头像url
+     */
+    private String userAvatar;
 
     private static final long serialVersionUID = 1L;
 }

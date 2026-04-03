@@ -108,10 +108,6 @@ public class UserController {
     @PostMapping("/edit")
     public BaseResponse<Boolean> editUser(@RequestBody UserEditRequest userEditRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(ObjUtil.isNull(userEditRequest), ErrorCode.PARAMS_ERROR);
-        String userName = userEditRequest.getUserName();
-        String userProfile = userEditRequest.getUserProfile();
-        String userPassword = userEditRequest.getUserPassword();
-        ThrowUtils.throwIf(StrUtil.isAllBlank(userName, userProfile, userPassword), ErrorCode.PARAMS_ERROR);
         return ResponseUtils.success(userService.editUser(userEditRequest, request));
     }
 

@@ -151,18 +151,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public Boolean editUser(UserEditRequest userEditRequest, HttpServletRequest request) {
-        UserVO loginUser = getLoginUser(request);
         String userName = userEditRequest.getUserName();
         String userProfile = userEditRequest.getUserProfile();
-        String userPassword = userEditRequest.getUserPassword();
+        String oldPassword = userEditRequest.getOldPassword();
+        String newPassWord = userEditRequest.getNewPassWord();
+        String userAvatar = userEditRequest.getUserAvatar();
+        ThrowUtils.throwIf(StrUtil.isAllBlank(userName, userProfile, oldPassword, newPassWord, userAvatar), ErrorCode.PARAMS_ERROR);
+
+        UserVO loginUser = getLoginUser(request);
+
         // 编辑时间
         Date date = new Date();
+
+        /**
+         * 根据密码查询出用户
+         */
+        if (StrUtil.isNotBlank(newPassWord)) {
+            ThrowUtils.throwIf(oldPassword.equals(newPassWord), ErrorCode.PARAMS_ERROR, "新密码不能与旧密码相同");
+            ThrowUtils.throwIf(newPassWord.length()<8, ErrorCode.PARAMS_ERROR, "新密码长度不能小于8");
+            ThrowUtils.throwIf(newPassWord.length()>16, ErrorCode.PARAMS_ERROR, "新密码长度不能大于16");
+            // 新密码只能包含数字和字母以及.
+            ThrowUtils.throwIf(!newPassWord.matches("^[a-zA-Z0-9.]+$"), ErrorCode.PARAMS_ERROR, "新密码只能包含数字和字母以及.");
+            ThrowUtils.throwIf(StrUtil.isNotBlank(oldPassword), ErrorCode.PARAMS_ERROR, "旧密码不能为空");
+
+            String encryptPassword = getEncryptPassword(oldPassword);
+            Long userId = loginUser.getId();
+            User user = lambdaQuery().eq(User::getId, userId).eq(User::getUserPassword, encryptPassword).one();
+            ThrowUtils.throwIf(user==null, ErrorCode.OPERATION_ERROR, "密码错误!");
+        }
 
         LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(User::getId, loginUser.getId())
                 .set(StrUtil.isNotBlank(userName), User::getUserName, userName)
                 .set(StrUtil.isNotBlank(userProfile), User::getUserProfile, userProfile)
-                .set(StrUtil.isNotBlank(userPassword), User::getUserPassword, getEncryptPassword(userPassword))
+                .set(StrUtil.isNotBlank(newPassWord), User::getUserPassword, getEncryptPassword(newPassWord))
+                .set(StrUtil.isNotBlank(userAvatar), User::getUserAvatar, userAvatar)
                 .set(User::getEditTime, date);
 
         boolean result = update(updateWrapper);
