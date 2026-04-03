@@ -23,6 +23,7 @@ import com.sei.seipicbackend.model.dto.space.analyze.*;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.enums.SpaceTypeEnum;
 import com.sei.seipicbackend.model.pojo.Space;
+import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.*;
 import com.sei.seipicbackend.model.vo.space.*;
 import com.sei.seipicbackend.service.SpaceService;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -175,6 +177,27 @@ public class SpaceController {
         // 补充权限列表信息
         List<String> permissionList = spaceUserAuthManager.getPermissionList(space, userService.getUserById(userId), null);
         spaceVO.setPermissionList(permissionList);
+
+        // 其实应该写成定时任务, 这相当于懒加载, 只要用户的账号不访问额度就永远不变
+        // 关于会员有效期, 如果过期, 将空间大小和类型更新
+        Date vipExpiredTime = loginUser.getVipExpiredTime();
+        ThrowUtils.throwIf(vipExpiredTime==null, ErrorCode.PARAMS_ERROR, "用户没有会员信息");
+        boolean expired = vipExpiredTime.before(new Date());
+        if (expired){
+            // 如果会员过期, 将空间类型和大小更新为免费
+            boolean update = spaceService.lambdaUpdate().eq(Space::getUserId, userId)
+                    .set(Space::getSpaceType, SpaceLevelEnum.COMMON)
+                    .set(Space::getMaxCount, SpaceLevelEnum.COMMON.getMaxCount())
+                    .set(Space::getMaxSize, SpaceLevelEnum.COMMON.getMaxSize())
+                    .update();
+
+            ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "更新空间失败");
+
+            boolean result = userService.lambdaUpdate().eq(User::getId, userId).set(User::getUserRole, UserConstant.DEFAULT_ROLE).update();
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新用户角色失败");
+
+        }
+
         return ResponseUtils.success(spaceVO);
     }
 

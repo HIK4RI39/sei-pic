@@ -2,10 +2,7 @@ package com.sei.seipicbackend.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.sei.seipicbackend.model.dto.user.UserAddRequest;
-import com.sei.seipicbackend.model.dto.user.UserEditRequest;
-import com.sei.seipicbackend.model.dto.user.UserPageRequest;
-import com.sei.seipicbackend.model.dto.user.UserUpdateRequest;
+import com.sei.seipicbackend.model.dto.user.*;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.UserVO;
 
@@ -68,6 +65,9 @@ public interface UserService extends IService<User> {
 
     // 编辑用户信息
     Boolean editUser(UserEditRequest userEditRequest, HttpServletRequest request);
+
+    // 兑换VIP
+    boolean exchangeVip(VipCode vipCode, HttpServletRequest request);
 
     // endregion
 }

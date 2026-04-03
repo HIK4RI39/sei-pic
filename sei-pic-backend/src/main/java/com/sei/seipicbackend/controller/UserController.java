@@ -37,6 +37,19 @@ public class UserController {
 
     // region -------------------------- 用户 --------------------------
 
+
+    /**
+     * 用户注册
+     * @param vipCode
+     * @return 用户ID
+     */
+    @PostMapping("/vip")
+    public BaseResponse<Boolean> exchangeVip(@RequestBody VipCode vipCode, HttpServletRequest request) {
+        ThrowUtils.throwIf(ObjUtil.isNull(vipCode), ErrorCode.PARAMS_ERROR);
+        boolean result = userService.exchangeVip(vipCode, request);
+        return ResponseUtils.success(result);
+    }
+
     /**
      * 用户注册
      * @param userRegisterRequest
@@ -65,6 +78,24 @@ public class UserController {
         UserVO userVO = userService.login(userAccount, password, request);
         return ResponseUtils.success(userVO);
     }
+
+    /**
+     * 用户登录 withoutCache
+     * @param request
+     * @return 脱敏后的用户信息
+     */
+    @GetMapping("/get/login/withoutCache")
+    public BaseResponse<UserVO> getLoginUserWithoutCache(HttpServletRequest request) {
+        // 删除1次用户状态
+//        request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+        UserVO loginUser = userService.getLoginUser(request);
+        Long userId = loginUser.getId();
+        User user = userService.getById(userId);
+        // 再存入一次
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
+        return ResponseUtils.success(user.beanToVo());
+    }
+
 
     /**
      * 用户登录

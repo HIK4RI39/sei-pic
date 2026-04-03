@@ -1,34 +1,47 @@
 package com.sei.seipicbackend.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sei.seipicbackend.configuration.UserConfig;
 import com.sei.seipicbackend.constant.UserConstant;
+import com.sei.seipicbackend.exception.BusinessException;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.manager.auth.StpKit;
 import com.sei.seipicbackend.mapper.UserMapper;
-import com.sei.seipicbackend.model.dto.user.UserAddRequest;
-import com.sei.seipicbackend.model.dto.user.UserEditRequest;
-import com.sei.seipicbackend.model.dto.user.UserPageRequest;
-import com.sei.seipicbackend.model.dto.user.UserUpdateRequest;
+import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
+import com.sei.seipicbackend.model.dto.user.*;
+import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
+import com.sei.seipicbackend.model.enums.SpaceTypeEnum;
 import com.sei.seipicbackend.model.enums.UserRoleEnum;
+import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.User;
 import com.sei.seipicbackend.model.vo.UserVO;
+import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
 * @author hikari39
@@ -41,11 +54,96 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         implements UserService {
 
     // 定义加密盐值和默认密码常量
-    @Resource
+    @Autowired
     UserConfig userConfig;
+
+    @Autowired
+    private ResourceLoader resourceLoader;
+
+    @Autowired
+    @Lazy
+    private SpaceService spaceService;
+
+    // 文件读写锁（确保并发安全）
+    private final ReentrantLock fileLock = new ReentrantLock();
 
     // region -------------------------- 通用 --------------------------
 
+
+    /**
+     * 校验兑换码并标记为已使用
+     */
+    private VipCode validateAndMarkVipCode(String vipCode) {
+        fileLock.lock(); // 加锁保证文件操作原子性
+        try {
+            // 读取 JSON 文件
+            JSONArray jsonArray = readVipCodeFile();
+
+            // 查找匹配的未使用兑换码
+            List<VipCode> codes = JSONUtil.toList(jsonArray, VipCode.class);
+            VipCode target = codes.stream()
+                    .filter(code -> code.getCode().equals(vipCode) && !code.isHasUsed())
+                    .findFirst()
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PARAMS_ERROR, "无效的兑换码"));
+
+            // 标记为已使用
+            target.setHasUsed(true);
+
+            // 写回文件
+            writeVipCodeFile(JSONUtil.parseArray(codes));
+            return target;
+        } finally {
+            fileLock.unlock();
+        }
+    }
+
+    /**
+     * 读取兑换码文件
+     */
+    private JSONArray readVipCodeFile() {
+        try {
+            Resource resource = resourceLoader.getResource("classpath:biz/vipCode.json");
+            String content = FileUtil.readString(resource.getFile(), StandardCharsets.UTF_8);
+            return JSONUtil.parseArray(content);
+        } catch (IOException e) {
+            log.error("读取兑换码文件失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "系统繁忙");
+        }
+    }
+
+    /**
+     * 写入兑换码文件
+     */
+    private void writeVipCodeFile(JSONArray jsonArray) {
+        try {
+            org.springframework.core.io.Resource resource = resourceLoader.getResource("classpath:biz/vipCode.json");
+            FileUtil.writeString(jsonArray.toStringPretty(), resource.getFile(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error("更新兑换码文件失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "系统繁忙");
+        }
+    }
+
+    /**
+     * 更新用户会员信息
+     */
+    private void updateUserVipInfo(User user, String usedVipCode) {
+        // 计算过期时间（当前时间 + 1 年）
+        Date expireTime = DateUtil.offsetMonth(new Date(), 12); // 计算当前时间加 1 年后的时间
+
+        // 构建更新对象
+        User updateUser = new User();
+        updateUser.setId(user.getId());
+        updateUser.setVipExpiredTime(expireTime);
+        updateUser.setVipCode(usedVipCode);
+        updateUser.setUserRole(UserConstant.VIP);
+
+        // 执行更新
+        boolean updated = this.updateById(updateUser);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "开通会员失败，操作数据库失败");
+        }
+    }
     /**
      * 校验管理员权限
      * @param userVO
@@ -65,6 +163,58 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     // endregion
 
     // region -------------------------- 用户 --------------------------
+
+    /**
+     * 兑换会员
+     * @param vipCode
+     * @param request
+     * @return
+     */
+    @Override
+    public boolean exchangeVip(VipCode vipCode, HttpServletRequest request) {
+        String code = vipCode.getCode();
+        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(code), ErrorCode.PARAMS_ERROR, "VIP兑换码不能为空");
+        UserVO loginUser = this.getLoginUser(request);
+        User user = loginUser.voToBean();
+        // 1. 参数校验
+        if (user == null || StrUtil.isBlank(code)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 2. 读取并校验兑换码
+        VipCode targetCode = validateAndMarkVipCode(code);
+        // 3. 更新用户信息
+        updateUserVipInfo(user, targetCode.getCode());
+
+        // 对于会员有什么增值服务? => 空间容量 => 升级旗舰版? (暂定)
+        // 如果过期了 => ? 返回普通版
+        // 将该用户名下所有空间转化为旗舰空间, 如果没有, 就创建
+        Space privateSpace = spaceService.lambdaQuery().eq(Space::getUserId, user.getId()).eq(Space::getSpaceType, SpaceTypeEnum.PRIVATE).one();
+        Space teamSpace = spaceService.lambdaQuery().eq(Space::getUserId, user.getId()).eq(Space::getSpaceType, SpaceTypeEnum.TEAM).one();
+        SpaceAddRequest spaceAddRequest = new SpaceAddRequest();
+        spaceAddRequest.setSpaceLevel(SpaceLevelEnum.COMMON.getValue());
+        spaceAddRequest.setSpaceName("默认空间");
+
+        if (privateSpace==null) {
+            spaceAddRequest.setSpaceType(SpaceTypeEnum.PRIVATE.getValue());
+            spaceService.createSpace(spaceAddRequest, request);
+        }
+
+        if (teamSpace==null) {
+            spaceAddRequest.setSpaceType(SpaceTypeEnum.TEAM.getValue());
+            spaceService.createSpace(spaceAddRequest, request);
+        }
+
+        // 更新空间额度
+        boolean update = spaceService.lambdaUpdate().eq(Space::getUserId, user.getId())
+                .set(Space::getSpaceLevel, SpaceLevelEnum.FLAGSHIP.getValue())
+                .set(Space::getMaxCount, SpaceLevelEnum.FLAGSHIP.getMaxCount())
+                .set(Space::getMaxSize, SpaceLevelEnum.FLAGSHIP.getMaxSize())
+                .update();
+
+        ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "兑换失败");
+
+        return true;
+    }
 
     /**
      * 用户注册

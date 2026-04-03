@@ -16,6 +16,12 @@ create table if not exists user
     INDEX idx_userName (userName)
 ) comment '用户' collate = utf8mb4_unicode_ci;
 
+-- 用户表添加新列, 会员相关功能
+ALTER TABLE user
+    ADD COLUMN vipExpiredTime datetime null comment '会员过期时间',
+    ADD COLUMN vipCode varchar(128) null comment '会员兑换码',
+    ADD COLUMN vipNumber bigint null comment '会员编号';
+
 -- 图片表
 create table if not exists picture
 (

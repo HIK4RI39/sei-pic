@@ -26,6 +26,21 @@ public class User implements Serializable {
     private Long id;
 
     /**
+     * VIP 过期时间
+     */
+    private Date vipExpiredTime;
+
+    /**
+     * 会员兑换码
+     */
+    private String vipCode;
+
+    /**
+     * 会员编号
+     */
+    private Long vipNumber;
+
+    /**
      * 账号
      */
     private String userAccount;

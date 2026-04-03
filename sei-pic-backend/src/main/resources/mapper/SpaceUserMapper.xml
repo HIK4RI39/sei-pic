@@ -6,14 +6,16 @@
 
     <resultMap id="BaseResultMap" type="com.sei.seipicbackend.model.pojo.SpaceUser">
         <id property="id" column="id" jdbcType="BIGINT"/>
-        <id property="confirmStatus" column="confirmStatus" jdbcType="INTEGER"/>
-            <result property="spaceId" column="spaceId" jdbcType="BIGINT"/>
+        <result property="spaceRole" column="spaceRole" jdbcType="VARCHAR"/>
+        <result property="confirmStatus" column="confirmStatus" jdbcType="INTEGER"/>
+        <result property="spaceId" column="spaceId" jdbcType="BIGINT"/>
         <result property="userId" column="userId" jdbcType="BIGINT"/>
         <result property="createUserId" column="createUserId" jdbcType="BIGINT"/>
-            <result property="spaceRole" column="spaceRole" jdbcType="VARCHAR"/>
-            <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
     </resultMap>
+
+
 
     <sql id="Base_Column_List">
         id,spaceId,userId,confirmStatus,createUserId,
