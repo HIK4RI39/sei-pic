@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.sei.seipicbackend.model.pojo.User;
+import com.sei.seipicbackend.model.vo.UserVO;
 import com.sei.seipicbackend.service.UserService;
 import com.sei.seipicbackend.websocket.disruptor.PictureEditEventProducer;
 import com.sei.seipicbackend.websocket.model.PictureEditActionEnum;
@@ -87,7 +88,8 @@ public class PictureEditHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         // 保存会话到集合中
-        User user = (User) session.getAttributes().get("user");
+        UserVO userVO = (UserVO) session.getAttributes().get("user");
+        User user = userVO.voToBean();
         Long pictureId = (Long) session.getAttributes().get("pictureId");
         pictureSessions.putIfAbsent(pictureId, ConcurrentHashMap.newKeySet());
         pictureSessions.get(pictureId).add(session);
@@ -114,7 +116,10 @@ public class PictureEditHandler extends TextWebSocketHandler {
         PictureEditRequestMessage pictureEditRequestMessage = JSONUtil.toBean(message.getPayload(), PictureEditRequestMessage.class);
         // 从 Session 属性中获取公共参数
         Map<String, Object> attributes = session.getAttributes();
-        User user = (User) attributes.get("user");
+
+        UserVO userVO = (UserVO) attributes.get("user");
+        User user = userVO.voToBean();
+
         Long pictureId = (Long) attributes.get("pictureId");
         // 生产消息
         pictureEditEventProducer.publishEvent(pictureEditRequestMessage, session, user, pictureId);
@@ -235,7 +240,9 @@ public class PictureEditHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, @NotNull CloseStatus status) throws Exception {
         Map<String, Object> attributes = session.getAttributes();
         Long pictureId = (Long) attributes.get("pictureId");
-        User user = (User) attributes.get("user");
+        UserVO userVO = (UserVO) attributes.get("user");
+        User user = userVO.voToBean();
+
         // 移除当前用户的编辑状态
         handleExitEditMessage(null, session, user, pictureId);
 

@@ -575,23 +575,24 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Override
     public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, HttpServletRequest request) throws IOException {
         ThrowUtils.throwIf(inputSource==null, ErrorCode.NOT_FOUND_ERROR);
-
-        Long spaceId = pictureUploadRequest.getSpaceId();
+        Long newSpaceId = pictureUploadRequest.getSpaceId();
+        Picture picture = null;
 
         // 校验登录, 需要填充上传者id
         UserVO loginUser = userService.getLoginUser(request);
         ThrowUtils.throwIf(ObjUtil.isNull(loginUser), ErrorCode.NOT_LOGIN_ERROR);
 
         // 如果存在pictureId, 说明是图片更新
+        // 需要校验spaceId是否一致
         Long pictureId = pictureUploadRequest.getId();
         if (pictureId!=null) {
-            Picture picture = lambdaQuery().eq(Picture::getId, pictureId).one();
+            picture = lambdaQuery().eq(Picture::getId, pictureId).one();
             ThrowUtils.throwIf(picture==null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+            Long oldSpaceId = picture.getSpaceId();
+            ThrowUtils.throwIf(!oldSpaceId.equals(newSpaceId), ErrorCode.PARAMS_ERROR, "前后空间id不一致");
             // 如果是编辑, 需要鉴权
 //            isOwnerOrAdmin(picture, loginUser);
         }
-
-
 
         // 上传图片
         String uploadPathPrefix = String.format("public/%s", loginUser.getId());
@@ -606,12 +607,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 如果是更新, 删除原图片 (待新图片上传成功后执行)
         if (pictureId!=null) {
             // 更新图片后, 对原图片进行删除
-            Picture picture = lambdaQuery().eq(Picture::getId, pictureId).one();
             this.clearPictureFile(picture);
             // 如果是私有空间释放空间额度
-            if (spaceId!=null) {
+            if (newSpaceId!=null) {
                 boolean update = spaceService.lambdaUpdate()
-                        .eq(Space::getId, spaceId)
+                        .eq(Space::getId, newSpaceId)
                         .setSql("totalCount = totalCount-1")
                         .setSql("totalSize = totalSize-" + picture.getPicSize())
                         .update();
@@ -620,78 +620,72 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
 
         // 从上传结果中获取图片信息, 并填充
-        Picture picture = fillPictureParams(loginUser, uploadPictureResult);
+        Picture newPicture = fillPictureParams(loginUser, uploadPictureResult);
+        newPicture.setSpaceId(newSpaceId);
 
         // 如果有category或tags信息, 填充
         String category = pictureUploadRequest.getCategory();
         if (StrUtil.isNotBlank(category)) {
-            picture.setCategory(category);
+            newPicture.setCategory(category);
         }
 
         // tags需要转化为 json数组 字符串
         List<String> tags = pictureUploadRequest.getTags();
         if (CollUtil.isNotEmpty(tags)) {
-            picture.setTags(JSONUtil.toJsonStr(tags));
+            newPicture.setTags(JSONUtil.toJsonStr(tags));
         }
 
         String picName = pictureUploadRequest.getPicName();
         if (StrUtil.isNotBlank(picName)) {
-            picture.setName(picName);
+            newPicture.setName(picName);
         }
 
         // 如果是更新, 设置编辑时间和id
         if (pictureId!=null) {
-            picture.setId(pictureId);
-            picture.setEditTime(new Date());
+            newPicture.setId(pictureId);
+            newPicture.setEditTime(new Date());
         }
 
         // 填写审核参数
         // 如果是私人空间, 没必要审核
-        if (spaceId==null) {
-            fillReviewParams(picture, loginUser);
+        if (newSpaceId==null) {
+            fillReviewParams(newPicture, loginUser);
         }
 
         // 上传到非公共图库, 需要鉴权
-        if (spaceId!=null) {
+        if (newSpaceId!=null) {
             // 鉴权
-            spaceService.checkSpaceAuth(spaceId, loginUser);
+            spaceService.checkSpaceAuth(newSpaceId, loginUser);
 
             // 校验额度
-            Space space = spaceService.getById(spaceId);
+            Space space = spaceService.getById(newSpaceId);
             Long maxCount = space.getMaxCount();
             Long maxSize = space.getMaxSize();
             Long totalCount = space.getTotalCount();
             Long totalSize = space.getTotalSize();
             ThrowUtils.throwIf(totalCount>=maxCount, ErrorCode.OPERATION_ERROR, "空间图片数量达到上限");
             ThrowUtils.throwIf(totalSize>=maxSize, ErrorCode.OPERATION_ERROR, "空间图片容量达到上限");
-
-            // 如果是更新请求, 需要校验spaceId是否一致
-            if (pictureId!=null) {
-                Long oldSpaceId = picture.getSpaceId();
-                ThrowUtils.throwIf(!oldSpaceId.equals(spaceId), ErrorCode.PARAMS_ERROR, "前后空间id不一致");
-            }
-            picture.setSpaceId(spaceId);
         }
 
         // 开启事务
-        Long finalSpaceId = spaceId;
+        Long finalSpaceId = newSpaceId;
         transactionTemplate.execute(status -> {
-            boolean result = this.saveOrUpdate(picture);
+            boolean result = this.saveOrUpdate(newPicture);
             ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片上传失败");
             // 更新空间额度
             if(finalSpaceId!=null) {
                 boolean update = spaceService.lambdaUpdate()
-                        .eq(Space::getId, spaceId)
+                        .eq(Space::getId, newSpaceId)
                         .setSql("totalCount = totalCount+1")
-                        .setSql("totalSize = totalSize+" + picture.getPicSize())
+                        .setSql("totalSize = totalSize+" + newPicture.getPicSize())
                         .update();
                 ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "图片额度更新失败");
             }
-            return getPictureVoWithUser(picture);
+            return getPictureVoWithUser(newPicture);
         });
 
         // 封装图片
-        return getPictureVoWithUser(picture);
+        return getPictureVoWithUser(newPicture);
     }
 
     /**
