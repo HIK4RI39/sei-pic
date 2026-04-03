@@ -9,6 +9,8 @@
     <a-flex justify="space-between">
         <h2>{{ space.spaceName }} {{ space.spaceType == SPACE_TYPE_ENUM.PRIVATE ? '(私有空间)' : '' }}</h2>
         <a-space size="middle">
+            <a-button type="primary" v-if="space.spaceType == SPACE_TYPE_ENUM.TEAM" ghost :icon="h(TeamOutlined)"
+                :href="`/spaceUserManage/${id}`" target="_blank">成员管理</a-button>
             <a-button type="primary" ghost :icon="h(BarChartOutlined)" :href="`/space_analyze?spaceId=${id}`"
                 target="_blank">空间分析</a-button>
             <a-button type="primary" @click="openCreateModal">+ 创建图片</a-button>
@@ -25,14 +27,15 @@
     <div style="margin-bottom: 16px;" />
 
     <!-- 图片列表 -->
-    <picture-list :dataList="dataList" :loading="loading" :showOp="true" :canEdit="true" :canDelete="true"
-        :onReload="fetchData" />
+    <picture-list :dataList="dataList" :loading="loading" :showOp="true" :canEdit="canEditPicture"
+        :canDelete="canDeletePicture" :onReload="fetchData" />
     <a-pagination style="text-align: right" v-model:current="searchParams.current"
         v-model:pageSize="searchParams.pageSize" :total="total" :show-total="() => `图片总数 ${total} / ${space.maxCount}`"
         @change="onPageChange" />
 
     <!-- 创建图片弹窗 -->
-    <a-modal v-model:open="isModalOpen" title="创建图片" :footer="null" width="720px" @cancel="handleCancel">
+    <a-modal v-if="canUploadPicture" v-model:open="isModalOpen" title="创建图片" :footer="null" width="720px"
+        @cancel="handleCancel">
         <div v-if="isModalOpen">
             <!-- 选择上传方式 -->
             <a-tabs v-model:activeKey="uploadType">
@@ -96,10 +99,11 @@ import { onMounted, ref, reactive, h, watch } from 'vue';
 
 import { ColorPicker } from 'vue3-colorpicker'
 import 'vue3-colorpicker/style.css'
-import { BarChartOutlined, EditOutlined } from '@ant-design/icons-vue';
+import { BarChartOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue';
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue';
-import { SPACE_TYPE_ENUM } from '@/constants/space';
+import { SPACE_PERMISSION_ENUM, SPACE_TYPE_ENUM } from '@/constants/space';
 import { useRoute } from 'vue-router';
+import { computed } from 'vue';
 
 // #region 空间
 interface Props {
@@ -325,6 +329,23 @@ const onColorChange = async (color: string) => {
         message.error('获取数据失败，' + res.data.message)
     }
 }
+
+
+// #endregion
+
+// #region 权限管理
+// 通用权限检查函数
+function createPermissionChecker(permission: string) {
+    return computed(() => {
+        return (space.value.permissionList ?? []).includes(permission)
+    })
+}
+
+// 定义权限检查
+const canManageSpaceUser = createPermissionChecker(SPACE_PERMISSION_ENUM.SPACE_USER_MANAGE)
+const canUploadPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_UPLOAD)
+const canEditPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
+const canDeletePicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
 
 
 // #endregion

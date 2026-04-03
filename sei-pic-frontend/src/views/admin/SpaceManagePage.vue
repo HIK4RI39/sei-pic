@@ -9,6 +9,12 @@
                 <a-select v-model:value="searchParams.spaceLevel" style="min-width: 120px" placeholder="选择级别"
                     allow-clear :options="SPACE_LEVEL_OPTIONS" />
             </a-form-item>
+            <!-- 空间类型 -->
+            <a-form-item label="空间类别" name="spaceType">
+                <a-select v-model:value="searchParams.spaceType" :options="SPACE_TYPE_OPTIONS" placeholder="请输入空间类型"
+                    style="min-width: 180px" allow-clear />
+            </a-form-item>
+
             <a-form-item>
                 <a-button type="primary" html-type="submit">搜索</a-button>
             </a-form-item>
@@ -32,6 +38,10 @@
             <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'spaceLevel'">
                     <a-tag color="blue">{{ SPACE_LEVEL_MAP[record.spaceLevel] }}</a-tag>
+                </template>
+                <!-- 空间类别 -->
+                <template v-else-if="column.key === 'spaceType'">
+                    <a-tag>{{ SPACE_TYPE_MAP[record.spaceType] }}</a-tag>
                 </template>
                 <template v-else-if="column.key === 'usage'">
                     <div>数量：{{ record.totalCount }} / {{ record.maxCount }}</div>
@@ -67,13 +77,14 @@ import {
     deleteSpaceUsingPost,
     getSpacePageUsingPost
 } from '@/api/spaceController'; //
-import { SPACE_LEVEL_MAP, SPACE_LEVEL_OPTIONS } from '@/constants/space'; //
+import { SPACE_LEVEL_MAP, SPACE_LEVEL_OPTIONS, SPACE_TYPE_MAP, SPACE_TYPE_OPTIONS } from '@/constants/space'; //
 
 // 表格列定义
 const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id' },
     { title: '空间名称', dataIndex: 'spaceName', key: 'spaceName' },
     { title: '空间级别', dataIndex: 'spaceLevel', key: 'spaceLevel' },
+    { title: '空间类别', dataIndex: 'spaceType', key: "spaceType" },
     { title: '使用情况', key: 'usage' },
     { title: '创建人ID', dataIndex: 'userId', key: 'userId' },
     { title: '创建时间', dataIndex: 'createTime', key: 'createTime' },

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { deletePictureByIdUsingPost, editPictureUsingPost, getPictureVoByIdUsingPost } from '@/api/pictureController';
+import { SPACE_PERMISSION_ENUM } from '@/constants/space';
 import { useLoginUserStore } from '@/stores/useLoginStore';
 import { downloadImage, formatSize, toHexColor } from '@/utils';
 import { DeleteOutlined, DownloadOutlined, EditOutlined, ExclamationCircleFilled } from '@ant-design/icons-vue';
@@ -39,14 +40,14 @@ onMounted(() => {
 const loginUserStore = useLoginUserStore()
 const router = useRouter()
 
-const canEdit = computed(() => {
-    const loginUser = loginUserStore.loginUser
-    if (!loginUser.id) {
-        return false
-    }
-    const user = picture.value.user || {}
-    return loginUser.id === user.id || loginUser.userRole === 'admin'
-})
+// const canEdit = computed(() => {
+//     const loginUser = loginUserStore.loginUser
+//     if (!loginUser.id) {
+//         return false
+//     }
+//     const user = picture.value.user || {}
+//     return loginUser.id === user.id || loginUser.userRole === 'admin'
+// })
 
 const doEdit = () => {
     if (canEdit) {
@@ -92,7 +93,23 @@ const doDownload = () => {
     downloadImage(url)
 }
 
+// #region 权限校验
+// 通用权限检查函数
+function createPermissionChecker(permission: string) {
+    return computed(() => {
+        return (picture.value.permissionList ?? []).includes(permission)
+    })
+}
+
+// 定义权限检查
+const canEdit = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
+const canDelete = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
+// #endregion
+
+
 </script>
+
+
 
 <template>
     <div id="pictureDetailPage" class="page-container">
@@ -188,7 +205,7 @@ const doDownload = () => {
                                 编辑
                             </a-button>
                             <a-button size="small" danger ghost @click="doDelete" :icon="h(DeleteOutlined)"
-                                v-if="canEdit">
+                                v-if="canDelete">
                                 删除
                             </a-button>
                             <a-button size="small" type="primary" @click="doDownload" :icon="h(DownloadOutlined)">
@@ -201,6 +218,9 @@ const doDownload = () => {
         </a-row>
     </div>
 </template>
+
+
+
 
 <style scoped>
 /* 页面背景与基础容器 */

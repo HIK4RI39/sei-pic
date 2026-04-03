@@ -83,6 +83,12 @@ const router = createRouter({
       props: true,
     },
     {
+      path: '/spaceUserManage/:id',
+      name: '团队空间成员管理',
+      component: () => import('@/views/space/SpaceUserManagePage.vue'),
+      props: true,
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: '404',
       component: () => import('@/views/404Page.vue'),

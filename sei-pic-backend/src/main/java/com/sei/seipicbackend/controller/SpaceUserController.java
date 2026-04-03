@@ -10,8 +10,10 @@ import com.sei.seipicbackend.manager.auth.model.SpaceUserPermissionConstant;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserAddRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserEditRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserQueryRequest;
+import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.SpaceUser;
 import com.sei.seipicbackend.model.vo.space.SpaceUserVO;
+import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.service.SpaceUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +36,9 @@ public class SpaceUserController {
 
     @Resource
     private SpaceUserService spaceUserService;
+
+    @Resource
+    private SpaceService spaceService;
 
     // region -------------------------- 用户 --------------------------
 
@@ -64,6 +69,13 @@ public class SpaceUserController {
 
         SpaceUser spaceUser = spaceUserService.getById(id);
         ThrowUtils.throwIf(spaceUser==null, ErrorCode.NOT_FOUND_ERROR, "成员不存在");
+        // 不能删除创始人
+        Long userId = spaceUser.getUserId();
+        Long spaceId = spaceUser.getSpaceId();
+        Space space = spaceService.getById(spaceId);
+        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+        ThrowUtils.throwIf(userId.equals(space.getUserId()), ErrorCode.PARAMS_ERROR, "不能删除空间创建者");
+
         boolean result = spaceUserService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.PARAMS_ERROR, "删除失败");
 
@@ -77,7 +89,7 @@ public class SpaceUserController {
      */
     @PostMapping("/get")
     @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
-    public BaseResponse<SpaceUser> deleteSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest, HttpServletRequest request) {
+    public BaseResponse<SpaceUser> getSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(spaceUserQueryRequest==null, ErrorCode.PARAMS_ERROR);
         SpaceUser spaceUser = spaceUserService.getSpaceUser(spaceUserQueryRequest);
         return ResponseUtils.success(spaceUser);

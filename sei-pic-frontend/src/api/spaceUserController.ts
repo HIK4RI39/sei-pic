@@ -18,7 +18,7 @@ export async function addSpaceUserUsingPost(
 }
 
 /** deleteSpaceUser POST /api/spaceUser/delete */
-export async function deleteSpaceUserUsingPost1(
+export async function deleteSpaceUserUsingPost(
   body: API.IdRequest,
   options?: { [key: string]: any }
 ) {
@@ -47,8 +47,8 @@ export async function editSpaceUserUsingPost(
   })
 }
 
-/** deleteSpaceUser POST /api/spaceUser/get */
-export async function deleteSpaceUserUsingPost(
+/** getSpaceUser POST /api/spaceUser/get */
+export async function getSpaceUserUsingPost(
   body: API.SpaceUserQueryRequest,
   options?: { [key: string]: any }
 ) {

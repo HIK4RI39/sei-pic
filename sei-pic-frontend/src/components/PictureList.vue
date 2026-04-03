@@ -56,9 +56,9 @@ interface Props {
     dataList?: API.PictureVO[]
     loading?: boolean
     showOp?: boolean
+    onReload?: () => void
     canEdit?: boolean
     canDelete?: boolean
-    onReload?: () => void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -68,6 +68,7 @@ const props = withDefaults(defineProps<Props>(), {
     canEdit: false,
     canDelete: false,
 })
+
 
 const router = useRouter()
 // 跳转至图片详情页

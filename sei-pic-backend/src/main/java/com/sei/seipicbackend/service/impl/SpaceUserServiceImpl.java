@@ -230,7 +230,14 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
 
         Long id = spaceUserEditRequest.getId();
         SpaceUser oldSpaceUser = this.getById(id);
-        ThrowUtils.throwIf(oldSpaceUser==null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        ThrowUtils.throwIf(oldSpaceUser==null, ErrorCode.NOT_FOUND_ERROR, "成员不存在");
+
+        Long spaceId = oldSpaceUser.getSpaceId();
+        Space space = spaceService.getById(spaceId);
+        ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+        // 不能修改创建者权限
+        Long userId = oldSpaceUser.getUserId();
+        ThrowUtils.throwIf(userId.equals(space.getUserId()), ErrorCode.PARAMS_ERROR, "不能修改创建者权限");
 
         boolean result = this.updateById(spaceUser);
         ThrowUtils.throwIf(!result, ErrorCode.SYSTEM_ERROR, "编辑成员信息失败");
