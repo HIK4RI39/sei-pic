@@ -47,7 +47,7 @@
             <!-- submit -->
             <a-form-item>
                 <a-button type="primary" style="width: 100%;" html-type="submit">{{ route.query?.id ? '修改' : '创建'
-                }}</a-button>
+                    }}</a-button>
             </a-form-item>
         </a-form>
     </div>
@@ -75,7 +75,11 @@ const uploadType = ref<'file' | 'url'>('file')
 
 // 空间 id
 const spaceId = computed(() => {
-    return route.query?.spaceId
+    const sid = route.query?.spaceId
+    if (sid == 'null' || sid == 'undefined') {
+        return undefined
+    }
+    return sid
 })
 
 
@@ -96,7 +100,6 @@ const handleSubmit = async (values: any) => {
 
     const res = await editPictureUsingPost({
         id: pictureId,
-        spaceId: spaceId.value,
         ...values
     })
     if (res.data.code === 0 && res.data.data) {

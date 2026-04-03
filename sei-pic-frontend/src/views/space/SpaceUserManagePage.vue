@@ -30,6 +30,18 @@
                 <template v-else-if="column.dataIndex === 'createTime'">
                     {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
                 </template>
+                <!-- 用户id -->
+                <template v-if="column.dataIndex === 'userId'">
+                    <a-space>
+                        {{ record.userId }}
+                    </a-space>
+                </template>
+                <!-- 邀请人 -->
+                <template v-if="column.dataIndex === 'createUserId'">
+                    <a-space>
+                        {{ record.createUserId }}
+                    </a-space>
+                </template>
                 <!-- 删除 -->
                 <template v-else-if="column.key === 'action'">
                     <a-space wrap>
@@ -58,6 +70,15 @@ const columns = [
     {
         title: '角色',
         dataIndex: 'spaceRole',
+    },
+
+    {
+        title: 'id',
+        dataIndex: 'userId',
+    },
+    {
+        title: '邀请人',
+        dataIndex: 'createUserId',
     },
     {
         title: '创建时间',

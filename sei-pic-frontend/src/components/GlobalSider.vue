@@ -9,6 +9,7 @@
 <script setup lang="ts">
 import { listMyTeamSpaceUsingPost } from '@/api/spaceUserController'
 import { SPACE_TYPE_ENUM } from '@/constants/space'
+import { SPACE_USER_CONFIRM_ENUM } from '@/constants/spaceUser'
 import { useLoginUserStore } from '@/stores/useLoginStore'
 import { PictureOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
@@ -79,7 +80,9 @@ const menuItems = computed(() => {
 
 // 加载团队空间列表
 const fetchTeamSpaceList = async () => {
-  const res = await listMyTeamSpaceUsingPost()
+  const res = await listMyTeamSpaceUsingPost({
+    confirmStatus: SPACE_USER_CONFIRM_ENUM.AGREED
+  })
   if (res.data.code === 0 && res.data.data) {
     teamSpaceList.value = res.data.data
   } else {

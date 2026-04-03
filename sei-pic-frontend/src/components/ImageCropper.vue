@@ -1,6 +1,6 @@
 <template>
     <a-modal class="image-cropper" v-model:open="visible" @cancel="closeModal" :footer="null">
-        <vue-cropper ref="cropperRef" :img="imageUrl" :autoCrop="true" :fixedBox="false" :centerBox="true"
+        <vue-cropper ref="cropperRef" :img="internalImageUrl" :autoCrop="canEdit" :fixedBox="false" :centerBox="true"
             :infoTrue="true" :full="true" :canMoveBox="true" :info="true" outputType="png" />
         <div style="margin-bottom: 16px" />
         <!-- 图片操作 -->
@@ -37,9 +37,8 @@ import { SPACE_TYPE_ENUM } from '@/constants/space'
 import { useLoginUserStore } from '@/stores/useLoginStore'
 import PictureEditWebSocket from '@/utils'
 import { message } from 'ant-design-vue'
-import { computed, onUnmounted, watch, watchEffect } from 'vue'
+import { computed, nextTick, onUnmounted, watch, watchEffect } from 'vue'
 import { ref } from 'vue'
-
 
 // #region 图片编辑
 interface Props {
@@ -83,9 +82,21 @@ const changeScale = (num: number) => {
 const visible = ref(false)
 
 // 打开弹窗
+// 定义一个内部使用的图片地址变量
+const internalImageUrl = ref<string>('')
+
+// 修改 openModal 方法
 const openModal = () => {
-    visible.value = true
+    // 方案：重新给图片地址赋值，触发组件刷新
+    // 如果地址没变，vue-cropper 可能不会重置裁剪框，可以加个时间戳强制刷新（如果后端支持）
+    // 或者先清空再赋值
+    internalImageUrl.value = ''
+    nextTick(() => {
+        internalImageUrl.value = props.imageUrl || ''
+        visible.value = true
+    })
 }
+
 
 // // 关闭弹窗
 // const closeModal = () => {
@@ -324,5 +335,12 @@ const editAction = (action: string) => {
 
 .image-cropper .vue-cropper {
     height: 400px;
+}
+
+.image-edit-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 16px;
 }
 </style>

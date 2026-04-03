@@ -89,6 +89,11 @@ const router = createRouter({
       props: true,
     },
     {
+      path: '/space/confirm',
+      name: '团队邀请确认',
+      component: () => import('@/views/space/SpaceConfirmPage.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: '404',
       component: () => import('@/views/404Page.vue'),

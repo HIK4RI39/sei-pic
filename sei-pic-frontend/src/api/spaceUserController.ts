@@ -17,6 +17,21 @@ export async function addSpaceUserUsingPost(
   })
 }
 
+/** confirmSpaceUser POST /api/spaceUser/confirm */
+export async function confirmSpaceUserUsingPost(
+  body: API.SpaceUserConfirmRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/spaceUser/confirm', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** deleteSpaceUser POST /api/spaceUser/delete */
 export async function deleteSpaceUserUsingPost(
   body: API.IdRequest,
@@ -78,9 +93,31 @@ export async function listSpaceUserUsingPost(
 }
 
 /** listMyTeamSpace POST /api/spaceUser/list/my */
-export async function listMyTeamSpaceUsingPost(options?: { [key: string]: any }) {
+export async function listMyTeamSpaceUsingPost(
+  body: API.SpaceUserQueryRequest,
+  options?: { [key: string]: any }
+) {
   return request<API.BaseResponseListSpaceUserVO_>('/api/spaceUser/list/my', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** quitSpaceUser POST /api/spaceUser/quit */
+export async function quitSpaceUserUsingPost(
+  body: API.IdRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/spaceUser/quit', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
     ...(options || {}),
   })
 }
