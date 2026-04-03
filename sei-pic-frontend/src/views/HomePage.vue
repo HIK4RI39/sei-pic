@@ -1,11 +1,24 @@
 <template>
     <div id="homePage">
-        <!-- 搜索框 -->
-        <div class="search-bar">
-            <a-input-search v-model:value="searchParams.searchText" placeholder="从海量图片中搜索" enter-button="搜索"
-                size="large" @search="doSearch" />
+        <div class="search-section">
+            <div class="search-bar">
+                <a-input-search v-model:value="searchParams.searchText" placeholder="从海量图片中搜索" enter-button="搜索"
+                    size="large" @search="doSearch" />
+                <div class="advanced-filter-btn">
+                    <a-button type="link" @click="showAdvanced = !showAdvanced">
+                        {{ showAdvanced ? '收起筛选' : '高级筛选' }}
+                        <template #icon>
+                            <component :is="showAdvanced ? 'UpOutlined' : 'DownOutlined'" />
+                        </template>
+                    </a-button>
+                </div>
+            </div>
         </div>
-        <!-- 分类和标签筛选 -->
+
+        <div v-show="showAdvanced" class="advanced-search-panel">
+            <PictureSearchForm :onSearch="doAdvancedSearch" />
+        </div>
+
         <a-tabs v-model:active-key="selectedCategory" @change="doSearch">
             <a-tab-pane key="all" tab="全部" />
             <a-tab-pane v-for="category in categoryList" :tab="category" :key="category" />
@@ -20,10 +33,10 @@
                 </a-checkable-tag>
             </a-space>
         </div>
-        <!-- 图片列表 -->
+
         <PictureList :dataList="dataList" :loading="loading" />
-        <!-- 分页 -->
-        <a-pagination style="text-align: right" v-model:current="searchParams.current"
+
+        <a-pagination style="text-align: right; margin-top: 20px" v-model:current="searchParams.current"
             v-model:pageSize="searchParams.pageSize" :total="total" @change="onPageChange" />
     </div>
 </template>
@@ -31,11 +44,16 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
-import PictureList from '@/components/PictureList.vue' // 定义数据
+import { UpOutlined, DownOutlined } from '@ant-design/icons-vue'
+import PictureList from '@/components/PictureList.vue'
+import PictureSearchForm from '@/components/PictureSearchForm.vue'
 import { getPictureVoPageWithCacheUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController'
 import { PIC_REVIEW_STATUS_ENUM } from '@/constants/picture'
 
-// 定义数据
+// 控制高级搜索显示
+const showAdvanced = ref(false)
+
+// 数据定义
 const dataList = ref<API.PictureVO[]>([])
 const total = ref(0)
 const loading = ref(true)
@@ -49,32 +67,16 @@ const searchParams = reactive<API.PictureQueryRequest>({
     reviewStatus: PIC_REVIEW_STATUS_ENUM.PASS
 })
 
-// 获取数据
-// 获取数据
+// 获取数据逻辑
 const fetchData = async () => {
-    loading.value = true;
+    loading.value = true
+    const tagsArray = tagList.value.filter((_, index) => selectedTagList.value[index])
+    const params: API.PictureQueryRequest = { ...searchParams }
 
-    // 1. 准备标签数组 (使用 ref 需要 .value)
-    const tagsArray = tagList.value.filter((_, index) => selectedTagList.value[index]);
-
-    // 2. 构建最终的请求参数
-    // 修正：searchParams 是 reactive，不要加 .value
-    const params: API.PictureQueryRequest = {
-        ...searchParams,
-    };
-
-    // 3. 处理标签
-    params.tags = tagsArray.length > 0 ? tagsArray : undefined;
-
-    // 4. 处理分类 (selectedCategory 是 ref，需要 .value)
+    params.tags = tagsArray.length > 0 ? tagsArray : undefined
     if (selectedCategory.value !== 'all' && selectedCategory.value !== '') {
-        params.category = selectedCategory.value;
-    } else {
-        delete params.category;
+        params.category = selectedCategory.value
     }
-
-    // 现在这里就能正常打印了
-    // console.log("最终发送的参数: ", params.searchText);
 
     try {
         const res = await getPictureVoPageWithCacheUsingPost(params)
@@ -91,41 +93,31 @@ const fetchData = async () => {
     }
 }
 
-// 建议合并获取配置和获取数据的逻辑
-onMounted(async () => {
-    await getTagCategoryOptions(); // 先拿配置（分类、标签）
-    fetchData(); // 再拿第一页数据
-})
+// 响应高级搜索组件的回调
+const doAdvancedSearch = (advancedParams: API.PictureQueryRequest) => {
+    Object.assign(searchParams, advancedParams)
+    doSearch()
+}
 
-// 页面加载时获取数据，请求一次
-onMounted(() => {
+// 通用搜索触发
+const doSearch = () => {
+    searchParams.current = 1
     fetchData()
-})
+}
 
-// 分页参数
+// 分页切换
 const onPageChange = (page: number, pageSize: number) => {
     searchParams.current = page
     searchParams.pageSize = pageSize
     fetchData()
 }
 
-// 搜索
-const doSearch = () => {
-    // 重置搜索条件
-    searchParams.current = 1
-    fetchData()
-}
-
-// 标签和分类列表
+// 标签和分类配置
 const categoryList = ref<string[]>([])
 const selectedCategory = ref<string>('all')
 const tagList = ref<string[]>([])
 const selectedTagList = ref<boolean[]>([])
 
-/**
- * 获取标签和分类选项
- * @param values
- */
 const getTagCategoryOptions = async () => {
     const res = await listPictureTagCategoryUsingGet()
     if (res.data.code === 0 && res.data.data) {
@@ -136,8 +128,9 @@ const getTagCategoryOptions = async () => {
     }
 }
 
-onMounted(() => {
-    getTagCategoryOptions()
+onMounted(async () => {
+    await getTagCategoryOptions()
+    fetchData()
 })
 </script>
 
@@ -146,12 +139,43 @@ onMounted(() => {
     margin-bottom: 16px;
 }
 
-#homePage .search-bar {
-    max-width: 480px;
-    margin: 0 auto 16px;
+/* 搜索区域外层，负责居中 */
+.search-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
 }
 
-#homePage .tag-bar {
+/* 搜索条内部，负责单行排列 */
+.search-bar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    /* 适当调大宽度以容纳按钮 */
+}
+
+/* 输入框占据主要宽度 */
+.search-bar :deep(.ant-input-search) {
+    flex: 1;
+}
+
+/* 高级筛选按钮样式，紧跟在搜索框后面 */
+.advanced-filter-btn {
+    margin-left: 8px;
+    white-space: nowrap;
+    /* 防止文字换行 */
+}
+
+.advanced-search-panel {
+    background: #fafafa;
+    padding: 24px;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    margin-bottom: 24px;
+}
+
+.tag-bar {
     margin-bottom: 16px;
 }
 </style>

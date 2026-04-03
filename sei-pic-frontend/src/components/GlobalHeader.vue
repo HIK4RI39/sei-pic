@@ -5,7 +5,7 @@
                 <router-link to="/">
                     <div class="title-bar">
                         <img class="logo" src="../../public/favicon.png" alt="logo">
-                        <div class="title">猫图库</div>
+                        <div class="title">𝑴𝒆𝒐𝒘𝑷𝒊𝒄</div>
                     </div>
                 </router-link>
             </a-col>
@@ -38,7 +38,7 @@
                                     <!-- 个人资料 -->
                                     <a-menu-item>
                                         <router-link to="/user/profile">
-                                            <user-outlined />
+                                            <profile-outlined />
                                             个人资料
                                         </router-link>
                                     </a-menu-item>
@@ -53,13 +53,13 @@
                                     <a-menu-item>
                                         <router-link to="/space/team/list">
                                             <team-outlined />
-                                            已加入团队
+                                            我的团队
                                         </router-link>
                                     </a-menu-item>
                                     <!-- 团队邀请 -->
                                     <a-menu-item>
                                         <router-link to="/space/confirm">
-                                            <team-outlined />
+                                            <user-add-outlined />
                                             团队邀请
                                         </router-link>
                                     </a-menu-item>
@@ -83,7 +83,7 @@
 
 <script lang="ts" setup>
 import { h, ref } from 'vue';
-import { InsertRowAboveOutlined, HomeOutlined, LogoutOutlined, PictureOutlined, UserOutlined, TeamOutlined } from '@ant-design/icons-vue';
+import { InsertRowAboveOutlined, HomeOutlined, LogoutOutlined, PictureOutlined, UserOutlined, TeamOutlined, UserAddOutlined, ProfileOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { useLoginUserStore } from '@/stores/useLoginStore';

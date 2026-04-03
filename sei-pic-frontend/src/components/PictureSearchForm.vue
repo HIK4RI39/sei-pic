@@ -1,54 +1,43 @@
 <template>
     <div class="picture-search-form">
-        <!-- 搜索表单 -->
-        <a-form layout="inline" :model="searchParams" @finish="doSearch">
+        <a-form layout="inline" :model="searchParams" @finish="doSearch" class="search-form-container">
             <a-form-item label="关键词" name="searchText">
                 <a-input v-model:value="searchParams.searchText" placeholder="从名称和简介搜索" allow-clear />
             </a-form-item>
-            <!-- category -->
+
             <a-form-item label="分类" name="category">
-                <a-auto-complete v-model:value="searchParams.category" style="min-width: 180px"
+                <a-auto-complete v-model:value="searchParams.category" style="min-width: 150px"
                     :options="categoryOptions" placeholder="请输入分类" allowClear />
             </a-form-item>
-            <!-- tags -->
+
             <a-form-item label="标签" name="tags">
-                <a-select v-model:value="searchParams.tags" style="min-width: 180px" :options="tagOptions" mode="tags"
+                <a-select v-model:value="searchParams.tags" style="min-width: 150px" :options="tagOptions" mode="tags"
                     placeholder="请输入标签" allowClear />
             </a-form-item>
-            <a-form-item label="日期" name="">
-                <a-range-picker style="width: 400px" show-time v-model:value="dateRange"
-                    :placeholder="['编辑开始日期', '编辑结束时间']" format="YYYY/MM/DD HH:mm:ss" :presets="rangePresets"
-                    @change="onRangeChange" />
+
+            <a-form-item label="比例" name="scaleType">
+                <a-select v-model:value="searchParams.scaleType" style="min-width: 120px" :options="scaleOptions"
+                    placeholder="图片比例" allowClear />
             </a-form-item>
-            <a-form-item label="名称" name="name">
-                <a-input v-model:value="searchParams.name" placeholder="请输入名称" allow-clear />
-            </a-form-item>
-            <a-form-item label="简介" name="introduction">
-                <a-input v-model:value="searchParams.introduction" placeholder="请输入简介" allow-clear />
-            </a-form-item>
-            <a-form-item label="宽度" name="picWidth">
-                <a-input-number v-model:value="searchParams.picWidth" />
-            </a-form-item>
-            <a-form-item label="高度" name="picHeight">
-                <a-input-number v-model:value="searchParams.picHeight" />
-            </a-form-item>
-            <!-- format -->
+
             <a-form-item label="格式" name="picFormat">
-                <a-auto-complete v-model:value="searchParams.category" style="min-width: 180px" :options="formatOptions"
-                    placeholder="请选择格式" allowClear />
+                <a-select v-model:value="searchParams.picFormat" style="min-width: 120px" :options="formatOptions"
+                    placeholder="格式" allowClear />
             </a-form-item>
-            <!-- 搜索 -->
-            <!-- 重置 -->
-            <a-form-item>
+
+            <a-form-item label="编辑日期" name="">
+                <a-range-picker style="width: 340px" show-time v-model:value="dateRange" :placeholder="['开始日期', '结束时间']"
+                    format="YYYY/MM/DD HH:mm:ss" :presets="rangePresets" @change="onRangeChange" />
+            </a-form-item>
+
+            <a-form-item class="buttons-item">
                 <a-space>
-                    <a-button type="primary" html-type="submit" style="width: 96px">搜索</a-button>
+                    <a-button type="primary" html-type="submit" style="width: 80px">搜索</a-button>
                     <a-button html-type="reset" @click="doClear">重置</a-button>
                 </a-space>
             </a-form-item>
-
         </a-form>
     </div>
-
 </template>
 
 
@@ -104,6 +93,13 @@ const formatOptions = [
     { value: 'jpeg', label: 'jpeg' },
     { value: 'webp', label: 'webp' }
 ]
+
+const scaleOptions = [
+    { value: 'horizontal', label: '横图' },
+    { value: 'vertical', label: '竖图' },
+    { value: 'square', label: '方图' }
+]
+
 // const sortOptions = [
 //     { value: 'id', label: 'id' },
 //     { value: 'userId', label: '用户id' },
@@ -155,12 +151,27 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 表单项边距 */
 .picture-search-form {
     margin-bottom: 16px;
 }
 
-.picture-search-form .ant-form-item {
+/* 核心布局：允许换行，并垂直居中 */
+.search-form-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.picture-search-form :deep(.ant-form-item) {
     margin-top: 16px;
+    margin-right: 24px;
+    /* 增加项之间的间距 */
+}
+
+/* 关键：将按钮组推向最右侧 */
+.buttons-item {
+    margin-left: auto;
+    margin-right: 0 !important;
+    /* 覆盖全局 margin-right */
 }
 </style>

@@ -329,6 +329,7 @@ declare namespace API {
     reviewMessage?: string
     reviewStatus?: number
     reviewerId?: number
+    scaleType?: string
     searchText?: string
     sortField?: string
     sortOrder?: string

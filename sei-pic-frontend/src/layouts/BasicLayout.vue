@@ -11,7 +11,8 @@
                 </a-layout-content>
             </a-layout>
             <a-layout-footer class="footer">
-                <a href="https://www.codefather.cn" target="_blank"> 编程导航 by 程序员鱼皮 </a>
+                <a href="https://github.com/HIK4RI39/sei-pic/commit/73308978597e2e056b2e9e5d600b0a0ef6eff958"
+                    target="_blank"> CopyRight @Sei </a>
             </a-layout-footer>
         </a-layout>
     </div>

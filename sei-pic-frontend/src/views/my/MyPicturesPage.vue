@@ -21,10 +21,20 @@
 
         <a-table row-key="id" :columns="columns" :data-source="dataList" :loading="loading" :pagination="false">
             <template #bodyCell="{ column, record }">
+                <!-- url -->
                 <template v-if="column.dataIndex === 'url'">
                     <a-image :src="record.url" :width="60" style="border-radius: 4px" />
                 </template>
 
+                <template v-else-if="column.dataIndex === 'name'">
+                    <span @click="router.push(`/picture/${record.id}`)">
+                        {{ record.name }}
+                    </span>
+                </template>
+
+
+
+                <!-- 审核状态 -->
                 <template v-else-if="column.dataIndex === 'reviewStatus'">
                     <a-tag :color="getReviewStatusColor(record.reviewStatus)">
                         {{ PIC_REVIEW_STATUS_MAP[record.reviewStatus] }}
