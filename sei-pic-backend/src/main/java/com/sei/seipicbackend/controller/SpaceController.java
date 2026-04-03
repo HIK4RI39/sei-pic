@@ -173,7 +173,7 @@ public class SpaceController {
         ThrowUtils.throwIf(space==null, ErrorCode.NOT_FOUND_ERROR);
         spaceVO = spaceService.getSpaceVoWithUser(space);
         // 补充权限列表信息
-        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, userService.getUserById(userId));
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, userService.getUserById(userId), null);
         spaceVO.setPermissionList(permissionList);
         return ResponseUtils.success(spaceVO);
     }

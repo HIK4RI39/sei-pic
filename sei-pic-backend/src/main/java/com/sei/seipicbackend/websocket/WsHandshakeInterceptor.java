@@ -84,7 +84,7 @@ public class WsHandshakeInterceptor implements HandshakeInterceptor {
                     return false;
                 }
             }
-            List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser.voToBean());
+            List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser.voToBean(), null);
             if (!permissionList.contains(SpaceUserPermissionConstant.PICTURE_EDIT)) {
                 log.error("没有图片编辑权限，拒绝握手");
                 return false;

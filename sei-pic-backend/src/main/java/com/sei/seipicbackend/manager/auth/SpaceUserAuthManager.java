@@ -9,11 +9,14 @@ import com.sei.seipicbackend.manager.auth.model.SpaceUserPermissionConstant;
 import com.sei.seipicbackend.manager.auth.model.SpaceUserRole;
 import com.sei.seipicbackend.model.enums.SpaceRoleEnum;
 import com.sei.seipicbackend.model.enums.SpaceTypeEnum;
+import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.SpaceUser;
 import com.sei.seipicbackend.model.pojo.User;
+import com.sei.seipicbackend.service.PictureService;
 import com.sei.seipicbackend.service.SpaceUserService;
 import com.sei.seipicbackend.service.UserService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -31,6 +34,10 @@ public class SpaceUserAuthManager {
     private UserService userService;
 
     @Resource
+    private PictureService pictureService;
+
+    @Resource
+    @Lazy
     private SpaceUserService spaceUserService;
 
     public static final SpaceUserAuthConfig SPACE_USER_AUTH_CONFIG;
@@ -68,7 +75,7 @@ public class SpaceUserAuthManager {
      * @param loginUser
      * @return
      */
-    public List<String> getPermissionList(Space space, User loginUser) {
+    public List<String> getPermissionList(Space space, User loginUser, Picture picture) {
         if (loginUser == null) {
             return new ArrayList<>();
         }
@@ -77,6 +84,9 @@ public class SpaceUserAuthManager {
         // 公共图库
         if (space == null) {
             if (userService.isAdmin(loginUser)) {
+                return ADMIN_PERMISSIONS;
+            }
+            if (picture!=null && pictureService.checkPictureAuth(picture, loginUser)) {
                 return ADMIN_PERMISSIONS;
             }
             return Collections.singletonList(SpaceUserPermissionConstant.PICTURE_VIEW);

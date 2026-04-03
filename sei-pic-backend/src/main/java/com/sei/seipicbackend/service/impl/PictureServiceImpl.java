@@ -97,10 +97,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     private AliYunAiApi aliYunAiApi;
 
     @Resource
+    @Lazy
     private SpaceUserAuthManager spaceUserAuthManager;
 
 
     // region -------------------------- 管理员 --------------------------
+
+
 
     /**
      * 管理员 根据id查询图片
@@ -415,7 +418,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 补充权限列表
         UserVO loginUser = userService.getLoginUser(request);
         User user = loginUser.voToBean();
-        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, user);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, user, picture);
         PictureVO pictureVoWithUser = getPictureVoWithUser(picture);
         pictureVoWithUser.setPermissionList(permissionList);
 
@@ -465,7 +468,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             stringRedisTemplate.opsForValue().set(rediskey, cachedPage, cacheExpireTime, TimeUnit.SECONDS);
         }
 
-        return convertToVoPage(picturePage);
+        User user = userService.getLoginUser(request).voToBean();
+        return convertToVoPage(picturePage, user);
     }
 
     /**
@@ -745,6 +749,19 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     // region -------------------------- 公共方法 --------------------------
 
     /**
+     * 图片鉴权
+     * @param picture
+     * @param user
+     * @return
+     */
+    @Override
+    public boolean checkPictureAuth(Picture picture, User user) {
+        Long userId = picture.getUserId();
+        return UserConstant.ADMIN_ROLE.equals(user.getUserRole()) || userId.equals(user.getId());
+
+    }
+
+    /**
      * nameRule 格式：图片{序号}
      * @param pictureList
      * @param nameRule
@@ -780,7 +797,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param picturePage
      * @return
      */
-    private Page<PictureVO> convertToVoPage(Page<Picture> picturePage) {
+    private Page<PictureVO> convertToVoPage(Page<Picture> picturePage, User user) {
         List<Picture> pictureList = picturePage.getRecords();
 
         // 利用mp的Page转换工具，自动拷贝分页元数据
@@ -804,6 +821,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             if (idUserVoMap.containsKey(userId)) {
                 pictureVO.setUser(idUserVoMap.get(userId));
             }
+            // 填充权限列表
+//            List<String> permissionList = spaceUserAuthManager.getPermissionList(null, user, PictureVO.voToObj(pictureVO));
+//            pictureVO.setPermissionList(permissionList);
         });
 
         return pictureVoPage;
@@ -814,7 +834,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param pictureList Picture实体列表
      * @return 包含用户信息的PictureVO视图对象列表
      */
-    private List<PictureVO> convertToVoList(List<Picture> pictureList) {
+    private List<PictureVO> convertToVoList(List<Picture> pictureList, User user) {
     // 如果输入列表为空，返回空列表
         if (CollUtil.isEmpty(pictureList)) {
             return Collections.emptyList();
@@ -832,6 +852,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             if (idUserVoMap.containsKey(id)) {
                 pictureVO.setUser(idUserVoMap.get(id));
             }
+            // 填充权限列表
+//            List<String> permissionList = spaceUserAuthManager.getPermissionList(null, user, PictureVO.voToObj(pictureVO));
+//            pictureVO.setPermissionList(permissionList);
         }
 
         return pictureVOList;

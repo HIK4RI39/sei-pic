@@ -77,6 +77,9 @@ public interface PictureService extends IService<Picture> {
 
     // region 通用
 
+    // 图片鉴权
+    boolean checkPictureAuth(Picture picture, User user);
+
     // 清理COS存储中的图片
     public void clearPictureFile(Picture oldPicture);
 
