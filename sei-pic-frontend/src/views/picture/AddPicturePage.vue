@@ -17,7 +17,7 @@
             <a-button type="primary" ghost :icon="h(FullscreenOutlined)" @click="doImagePainting">AI 扩图</a-button>
         </a-space>
         <ImageCropper ref="imageCropperRef" :imageUrl="picture?.url" :picture="picture" :spaceId="spaceId"
-            :onSuccess="onCropSuccess" />
+            :space="space" :onSuccess="onCropSuccess" />
         <ImageOutPainting ref="imageOutPaintingRef" :picture="picture" :spaceId="spaceId"
             :onSuccess="onImageOutPaintingSuccess" />
 
@@ -47,7 +47,7 @@
             <!-- submit -->
             <a-form-item>
                 <a-button type="primary" style="width: 100%;" html-type="submit">{{ route.query?.id ? '修改' : '创建'
-                    }}</a-button>
+                }}</a-button>
             </a-form-item>
         </a-form>
     </div>
@@ -55,13 +55,14 @@
 
 <script setup lang="ts">
 import { editPictureUsingPost, getPictureVoByIdUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController';
+import { getSpaceVoUsingPost } from '@/api/spaceController';
 import ImageCropper from '@/components/ImageCropper.vue';
 import ImageOutPainting from '@/components/ImageOutPainting.vue';
 import PictureUpload from '@/components/PictureUpload.vue';
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue';
 import { EditOutlined, FullscreenOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
-import { h, onMounted, reactive } from 'vue';
+import { h, onMounted, reactive, watchEffect } from 'vue';
 import { computed } from 'vue';
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -163,6 +164,29 @@ const getOldPicture = async () => {
 onMounted(() => {
     getOldPicture();
 })
+
+
+// #region 获取空间信息 (仅团队空间需要协同编辑)
+const space = ref<API.SpaceVO>()
+// 获取空间信息
+const fetchSpace = async () => {
+    // 获取数据
+    if (spaceId.value) {
+        const res = await getSpaceVoUsingPost({
+            id: spaceId.value,
+        })
+        if (res.data.code === 0 && res.data.data) {
+            space.value = res.data.data
+        }
+    }
+}
+
+watchEffect(() => {
+    fetchSpace()
+})
+
+// #endregion
+
 
 // #region 图片编辑弹窗
 // 图片编辑弹窗引用

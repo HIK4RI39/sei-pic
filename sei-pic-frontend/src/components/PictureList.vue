@@ -73,9 +73,7 @@ const props = withDefaults(defineProps<Props>(), {
 const router = useRouter()
 // 跳转至图片详情页
 const doClickPicture = (picture: API.PictureVO) => {
-    router.push({
-        path: `/picture/${picture.id}`,
-    })
+    router.push(`/picture/${picture.id}`)
 }
 
 // 搜索

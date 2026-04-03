@@ -51,7 +51,7 @@ const router = useRouter()
 
 const doEdit = () => {
     if (canEdit) {
-        router.push('/picture/add?id=' + picture.value.id)
+        router.push(`/picture/add?id=${picture.value.id}&spaceId=${picture.value.spaceId}`)
     }
 }
 
