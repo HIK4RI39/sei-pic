@@ -172,7 +172,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             ThrowUtils.throwIf(newPassWord.length()>16, ErrorCode.PARAMS_ERROR, "新密码长度不能大于16");
             // 新密码只能包含数字和字母以及.
             ThrowUtils.throwIf(!newPassWord.matches("^[a-zA-Z0-9.]+$"), ErrorCode.PARAMS_ERROR, "新密码只能包含数字和字母以及.");
-            ThrowUtils.throwIf(StrUtil.isNotBlank(oldPassword), ErrorCode.PARAMS_ERROR, "旧密码不能为空");
+            ThrowUtils.throwIf(StrUtil.isBlank(oldPassword), ErrorCode.PARAMS_ERROR, "旧密码不能为空");
 
             String encryptPassword = getEncryptPassword(oldPassword);
             Long userId = loginUser.getId();
