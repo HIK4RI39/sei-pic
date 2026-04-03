@@ -12,6 +12,8 @@ import com.sei.seipicbackend.constant.UserConstant;
 import com.sei.seipicbackend.exception.ErrorCode;
 import com.sei.seipicbackend.exception.ThrowUtils;
 import com.sei.seipicbackend.manager.auth.SpaceUserAuthManager;
+import com.sei.seipicbackend.manager.auth.annotation.SaSpaceCheckPermission;
+import com.sei.seipicbackend.manager.auth.model.SpaceUserPermissionConstant;
 import com.sei.seipicbackend.model.dto.picture.SpaceRankAnalyzeRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceAddRequest;
 import com.sei.seipicbackend.model.dto.space.SpaceEditRequest;
@@ -221,6 +223,7 @@ public class SpaceController {
     }
 
     @PostMapping("/edit")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<Boolean> editSpace(@RequestBody SpaceEditRequest spaceEditRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(ObjUtil.isEmpty(spaceEditRequest), ErrorCode.PARAMS_ERROR);
         Long id = spaceEditRequest.getId();

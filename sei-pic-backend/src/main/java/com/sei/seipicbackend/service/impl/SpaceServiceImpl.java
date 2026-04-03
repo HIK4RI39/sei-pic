@@ -718,8 +718,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
         // 鉴权
         Long spaceId = spaceEditRequest.getId();
-        UserVO loginUser = userService.getLoginUser(request);
-        checkSpaceAuth(spaceId, loginUser);
+//        UserVO loginUser = userService.getLoginUser(request);
+//        checkSpaceAuth(spaceId, loginUser);
 
         // 编辑
         Space space = this.getById(spaceId);

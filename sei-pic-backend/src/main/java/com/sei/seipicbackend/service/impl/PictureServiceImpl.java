@@ -432,9 +432,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     public Page<PictureVO> getPictureVoPage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
         Long spaceId = pictureQueryRequest.getSpaceId();
 
+        // 可能需要权限校验, 如果userId为空, 查主页, 如果不为空, 查个人
+
         if (spaceId==null) {
             // 主页仅能查询过审数据
-            pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+//            pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
             pictureQueryRequest.setNullSpaceId(true);
         }
         else {
