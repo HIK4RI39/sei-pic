@@ -11,6 +11,7 @@ import com.sei.seipicbackend.model.dto.space.user.SpaceUserAddRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserConfirmRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserEditRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserQueryRequest;
+import com.sei.seipicbackend.model.enums.SpaceUserConfirmEnum;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.SpaceUser;
 import com.sei.seipicbackend.model.vo.space.SpaceUserVO;
@@ -91,8 +92,12 @@ public class SpaceUserController {
         long id = idRequest.getId();
         ThrowUtils.throwIf(id<=0, ErrorCode.PARAMS_ERROR);
 
-        SpaceUser spaceUser = spaceUserService.getById(id);
+        SpaceUser spaceUser = spaceUserService.query().eq("id", id)
+                .eq("confirmStatus", SpaceUserConfirmEnum.AGREED.getValue())
+                .one();
+
         ThrowUtils.throwIf(spaceUser==null, ErrorCode.NOT_FOUND_ERROR, "成员不存在");
+
         // 不能删除创始人
         Long userId = spaceUser.getUserId();
         Long spaceId = spaceUser.getSpaceId();

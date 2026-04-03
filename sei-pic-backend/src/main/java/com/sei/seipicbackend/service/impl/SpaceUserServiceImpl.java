@@ -16,7 +16,7 @@ import com.sei.seipicbackend.model.dto.space.user.SpaceUserConfirmRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserEditRequest;
 import com.sei.seipicbackend.model.dto.space.user.SpaceUserQueryRequest;
 import com.sei.seipicbackend.model.enums.SpaceRoleEnum;
-import com.sei.seipicbackend.model.enums.SpaceUserStatusEnum;
+import com.sei.seipicbackend.model.enums.SpaceUserConfirmEnum;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.SpaceUser;
 import com.sei.seipicbackend.model.pojo.User;
@@ -27,7 +27,6 @@ import com.sei.seipicbackend.service.SpaceService;
 import com.sei.seipicbackend.service.SpaceUserService;
 import com.sei.seipicbackend.mapper.SpaceUserMapper;
 import com.sei.seipicbackend.service.UserService;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -131,13 +130,13 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         ThrowUtils.throwIf(id == null || id<=0, ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(confirmStatus == null, ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(confirmStatus==0, ErrorCode.PARAMS_ERROR, "请选择确认状态");
-        SpaceUserStatusEnum enumByValue = SpaceUserStatusEnum.getEnumByValue(confirmStatus);
+        SpaceUserConfirmEnum enumByValue = SpaceUserConfirmEnum.getEnumByValue(confirmStatus);
         ThrowUtils.throwIf(enumByValue == null, ErrorCode.PARAMS_ERROR, "确认状态不存在");
 
         SpaceUser spaceUser = this.getById(id);
         ThrowUtils.throwIf(spaceUser == null, ErrorCode.NOT_FOUND_ERROR, "邀请不存在");
         // 如果不是待确认
-        if (SpaceUserStatusEnum.CONFIRMING.getValue() != (spaceUser.getConfirmStatus())) {
+        if (SpaceUserConfirmEnum.CONFIRMING.getValue() != (spaceUser.getConfirmStatus())) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "错误的确认状态");
         }
 
@@ -146,7 +145,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         newSpaceUser.setId(id);
         newSpaceUser.setConfirmStatus(confirmStatus);
         // 如果是同意, 将权限设置为viewer
-        if (SpaceUserStatusEnum.AGREED.getValue() == confirmStatus) {
+        if (SpaceUserConfirmEnum.AGREED.getValue() == confirmStatus) {
             newSpaceUser.setSpaceRole(SpaceRoleEnum.VIEWER.getValue());
         }
 
@@ -224,7 +223,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         // 填写邀请人和邀请状态
         UserVO loginUser = userService.getLoginUser(request);
         spaceUser.setCreateUserId(loginUser.getId());
-        spaceUser.setConfirmStatus(SpaceUserStatusEnum.CONFIRMING.getValue());
+        spaceUser.setConfirmStatus(SpaceUserConfirmEnum.CONFIRMING.getValue());
 
         boolean save = this.save(spaceUser);
         ThrowUtils.throwIf(!save, ErrorCode.SYSTEM_ERROR, "添加空间用户失败");
@@ -259,6 +258,8 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         Long spaceId = spaceUserQueryRequest.getSpaceId();
         ThrowUtils.throwIf(ObjUtil.isEmpty(spaceId), ErrorCode.PARAMS_ERROR);
         QueryWrapper<SpaceUser> queryWrapper = this.getQueryWrapper(spaceUserQueryRequest);
+        // 仅查询同意加入的数据
+        queryWrapper.eq("confirmStatus", SpaceUserConfirmEnum.AGREED.getValue());
 
         List<SpaceUser> list = this.list(queryWrapper);
         return getSpaceUserVOList(list);
@@ -276,7 +277,9 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         this.validSpaceUser(spaceUser, false);
 
         Long id = spaceUserEditRequest.getId();
-        SpaceUser oldSpaceUser = this.getById(id);
+        // 仅查询同意加入的数据
+        SpaceUser oldSpaceUser = this.lambdaQuery().eq(SpaceUser::getUserId, id)
+                .eq(SpaceUser::getConfirmStatus, SpaceUserConfirmEnum.AGREED.getValue()).one();
         ThrowUtils.throwIf(oldSpaceUser==null, ErrorCode.NOT_FOUND_ERROR, "成员不存在");
 
         Long spaceId = oldSpaceUser.getSpaceId();
@@ -299,7 +302,11 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
     @Override
     public List<SpaceUserVO> listMyTeamSpace(HttpServletRequest request) {
         UserVO loginUser = userService.getLoginUser(request);
-        List<SpaceUser> spaceUsers = this.lambdaQuery().eq(SpaceUser::getUserId, loginUser.getId()).list();
+        // 仅查询同意加入的空间
+        List<SpaceUser> spaceUsers = this.lambdaQuery()
+                .eq(SpaceUser::getUserId, loginUser.getId())
+                .eq(SpaceUser::getConfirmStatus, SpaceUserConfirmEnum.AGREED.getValue())
+                .list();
         if (CollUtil.isEmpty(spaceUsers)) {
             return Collections.emptyList();
         }
@@ -321,7 +328,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         Long userId = loginUser.getId();
         SpaceUser spaceUser = this.lambdaQuery().eq(SpaceUser::getUserId, id)
                 .eq(SpaceUser::getUserId, userId)
-                .eq(SpaceUser::getConfirmStatus, SpaceUserStatusEnum.AGREED.getValue())
+                .eq(SpaceUser::getConfirmStatus, SpaceUserConfirmEnum.AGREED.getValue())
                 .one();
         ThrowUtils.throwIf(spaceUser==null, ErrorCode.NOT_FOUND_ERROR, "成员不存在");
         // 创始人不可退出

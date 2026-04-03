@@ -26,6 +26,7 @@ import com.sei.seipicbackend.model.dto.space.analyze.*;
 import com.sei.seipicbackend.model.enums.SpaceLevelEnum;
 import com.sei.seipicbackend.model.enums.SpaceRoleEnum;
 import com.sei.seipicbackend.model.enums.SpaceTypeEnum;
+import com.sei.seipicbackend.model.enums.SpaceUserConfirmEnum;
 import com.sei.seipicbackend.model.pojo.Picture;
 import com.sei.seipicbackend.model.pojo.Space;
 import com.sei.seipicbackend.model.pojo.SpaceUser;
@@ -661,6 +662,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                 spaceUser.setSpaceId(space.getId());
                 spaceUser.setUserId(userId);
                 spaceUser.setSpaceRole(SpaceRoleEnum.ADMIN.getValue());
+                // 自动设置确认状态为同意
+                spaceUser.setConfirmStatus(SpaceUserConfirmEnum.AGREED.getValue());
                 boolean save = spaceUserService.save(spaceUser);
                 ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR, "创建团队成员记录失败");
             }

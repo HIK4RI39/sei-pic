@@ -8,7 +8,7 @@ import lombok.Getter;
  * @since 2026-04-03
  */
 @Getter
-public enum SpaceUserStatusEnum {
+public enum SpaceUserConfirmEnum {
     CONFIRMING("待确认", 0),
     AGREED("同意", 1),
     REJECTED("拒绝", 2);
@@ -16,7 +16,7 @@ public enum SpaceUserStatusEnum {
     private final String text;
     private final int value;
 
-    SpaceUserStatusEnum(String text, int value) {
+    SpaceUserConfirmEnum(String text, int value) {
         this.text = text;
         this.value = value;
     }
@@ -24,11 +24,11 @@ public enum SpaceUserStatusEnum {
     /**
      * 根据 value 获取枚举
      */
-    public static SpaceUserStatusEnum getEnumByValue(Integer value) {
+    public static SpaceUserConfirmEnum getEnumByValue(Integer value) {
         if (ObjUtil.isEmpty(value)) {
             return null;
         }
-        for (SpaceUserStatusEnum spaceUserStatusEnum : SpaceUserStatusEnum.values()) {
+        for (SpaceUserConfirmEnum spaceUserStatusEnum : SpaceUserConfirmEnum.values()) {
             if (spaceUserStatusEnum.value == value) {
                 return spaceUserStatusEnum;
             }
