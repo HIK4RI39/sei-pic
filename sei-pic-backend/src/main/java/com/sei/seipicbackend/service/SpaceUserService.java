@@ -65,7 +65,7 @@ public interface SpaceUserService extends IService<SpaceUser> {
     boolean editSpaceUser(SpaceUserEditRequest spaceUserEditRequest);
 
     // 查询用户加入的团队空间
-    List<SpaceUserVO> listMyTeamSpace(HttpServletRequest request);
+    List<SpaceUserVO> listMyTeamSpace(SpaceUserQueryRequest spaceUserQueryRequest, HttpServletRequest request);
 
     // 退出团队空间
     boolean quitSpaceUser(IdRequest idRequest, HttpServletRequest request);

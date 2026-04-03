@@ -151,13 +151,15 @@ public class SpaceUserController {
     }
 
     /**
-     * 查询用户加入的团队空间列表
+     * 查询用户加入/待确认的团队空间列表
      * @param request
      * @return
      */
     @PostMapping("/list/my")
-    public BaseResponse<List<SpaceUserVO>> listMyTeamSpace(HttpServletRequest request) {
-        List<SpaceUserVO> spaceUserList = spaceUserService.listMyTeamSpace(request);
+    public BaseResponse<List<SpaceUserVO>> listMyTeamSpace(
+            @RequestBody SpaceUserQueryRequest spaceUserQueryRequest,
+            HttpServletRequest request) {
+        List<SpaceUserVO> spaceUserList = spaceUserService.listMyTeamSpace(spaceUserQueryRequest, request);
         return ResponseUtils.success(spaceUserList);
     }
 

@@ -31,5 +31,10 @@ public class SpaceUserQueryRequest implements Serializable {
      */
     private String spaceRole;
 
+    /**
+     * 确认状态 0-待确认 1-同意 2-拒绝
+     */
+    private Integer confirmStatus;
+
     private static final long serialVersionUID = 1L;
 }

@@ -197,10 +197,12 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         Long spaceId = spaceUserQueryRequest.getSpaceId();
         Long userId = spaceUserQueryRequest.getUserId();
         String spaceRole = spaceUserQueryRequest.getSpaceRole();
+        Integer confirmStatus = spaceUserQueryRequest.getConfirmStatus();
         queryWrapper.eq(ObjUtil.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjUtil.isNotEmpty(spaceId), "spaceId", spaceId);
         queryWrapper.eq(ObjUtil.isNotEmpty(userId), "userId", userId);
         queryWrapper.eq(ObjUtil.isNotEmpty(spaceRole), "spaceRole", spaceRole);
+        queryWrapper.eq(ObjUtil.isNotEmpty(confirmStatus), "confirmStatus", confirmStatus);
         return queryWrapper;
     }
 
@@ -296,17 +298,20 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
 
     /**
      * 查询用户加入的团队空间列表
+     *
+     * @param spaceUserQueryRequest
      * @param request
      * @return
      */
     @Override
-    public List<SpaceUserVO> listMyTeamSpace(HttpServletRequest request) {
+    public List<SpaceUserVO> listMyTeamSpace(SpaceUserQueryRequest spaceUserQueryRequest, HttpServletRequest request) {
         UserVO loginUser = userService.getLoginUser(request);
-        // 仅查询同意加入的空间
-        List<SpaceUser> spaceUsers = this.lambdaQuery()
-                .eq(SpaceUser::getUserId, loginUser.getId())
-                .eq(SpaceUser::getConfirmStatus, SpaceUserConfirmEnum.AGREED.getValue())
-                .list();
+        spaceUserQueryRequest.setUserId(loginUser.getId());
+        spaceUserQueryRequest.setConfirmStatus(spaceUserQueryRequest.getConfirmStatus());
+        QueryWrapper<SpaceUser> queryWrapper = this.getQueryWrapper(spaceUserQueryRequest);
+
+        List<SpaceUser> spaceUsers = list(queryWrapper);
+
         if (CollUtil.isEmpty(spaceUsers)) {
             return Collections.emptyList();
         }

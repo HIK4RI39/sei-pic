@@ -513,7 +513,9 @@ declare namespace API {
   }
 
   type SpaceUser = {
+    confirmStatus?: number
     createTime?: string
+    createUserId?: number
     id?: number
     spaceId?: number
     spaceRole?: string
@@ -540,12 +542,18 @@ declare namespace API {
     period?: string
   }
 
+  type SpaceUserConfirmRequest = {
+    confirmStatus?: number
+    id?: number
+  }
+
   type SpaceUserEditRequest = {
     id?: number
     spaceRole?: string
   }
 
   type SpaceUserQueryRequest = {
+    confirmStatus?: number
     id?: number
     spaceId?: number
     spaceRole?: string
@@ -553,7 +561,9 @@ declare namespace API {
   }
 
   type SpaceUserVO = {
+    confirmStatus?: number
     createTime?: string
+    createUserId?: number
     id?: number
     space?: SpaceVO
     spaceId?: number
