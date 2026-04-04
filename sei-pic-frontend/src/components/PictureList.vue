@@ -6,7 +6,8 @@
             <template #renderItem="{ item: picture }">
                 <a-list-item style="padding: 0">
                     <!-- 单张图片 -->
-                    <a-card hoverable @click="doClickPicture(picture)">
+                    <!-- <a-card hoverable @click="doClickPicture(picture)"> -->
+                    <a-card hoverable @click="showDetail(picture.id)">
                         <template #cover>
                             <img :alt="picture.name" :src="picture.thumbnailUrl ?? picture.url"
                                 style="height: 180px; object-fit: cover" />
@@ -34,7 +35,10 @@
                 </a-list-item>
             </template>
         </a-list>
+        <!-- 分享弹窗 -->
         <ShareModal ref="shareModalRef" :link="shareLink" />
+        <!-- 详情弹窗 -->
+        <PictureDetailModal v-model:visible="detailVisible" :id="currentId" />
     </div>
 </template>
 
@@ -51,6 +55,17 @@ import { message, Modal } from 'ant-design-vue'
 import ShareModal from '@/components/ShareModal.vue'
 import { createVNode, ref } from 'vue'
 import { deletePictureByIdUsingPost } from '@/api/pictureController'
+import PictureDetailModal from './picture/PictureDetailModal.vue'
+
+// #region 图片详情弹窗
+const detailVisible = ref(false);
+const currentId = ref<string | number>('');
+// 点击图片时触发
+const showDetail = (id: string | number) => {
+    currentId.value = id;
+    detailVisible.value = true;
+};
+// #endregion
 
 interface Props {
     dataList?: API.PictureVO[]
@@ -71,10 +86,11 @@ const props = withDefaults(defineProps<Props>(), {
 
 
 const router = useRouter()
-// 跳转至图片详情页
-const doClickPicture = (picture: API.PictureVO) => {
-    router.push(`/picture/${picture.id}`)
-}
+
+// // 跳转至图片详情页
+// const doClickPicture = (picture: API.PictureVO) => {
+//     router.push(`/picture/${picture.id}`)
+// }
 
 // 搜索
 const doSearch = (picture, e) => {

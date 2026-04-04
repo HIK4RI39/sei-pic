@@ -27,7 +27,8 @@
                 </template>
 
                 <template v-else-if="column.dataIndex === 'name'">
-                    <span @click="router.push(`/picture/${record.id}`)">
+                    <!-- <span @click="router.push(`/picture/${record.id}`)"> -->
+                    <span @click="showDetail(record.id)">
                         {{ record.name }}
                     </span>
                 </template>
@@ -67,9 +68,11 @@
                 </template>
             </template>
         </a-table>
-
+        <!-- 分页条 -->
         <a-pagination style="margin-top: 20px; text-align: right" v-model:current="searchParams.current"
             v-model:pageSize="searchParams.pageSize" :total="total" @change="fetchData" show-size-changer />
+        <!-- 图片详情弹窗 -->
+        <picture-detail-modal v-model:visible="detailVisible" :id="currentId" />
     </div>
 </template>
 
@@ -82,6 +85,17 @@ import { useLoginUserStore } from '@/stores/useLoginStore'
 import { deletePictureByIdUsingPost, getPictureVoByIdUsingPost, getPictureVoPageUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController'
 import dayjs from 'dayjs'
 import { editUserUsingPost } from '@/api/userController'
+import PictureDetailModal from '@/components/picture/PictureDetailModal.vue'
+
+// #region 图片详情弹窗
+const detailVisible = ref(false);
+const currentId = ref<string | number>('');
+// 点击图片时触发
+const showDetail = (id: string | number) => {
+    currentId.value = id;
+    detailVisible.value = true;
+};
+// #endregion
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()

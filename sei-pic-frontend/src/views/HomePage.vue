@@ -7,6 +7,8 @@
                 <div class="advanced-filter-btn">
                     <a-button type="link" @click="showAdvanced = !showAdvanced">
                         {{ showAdvanced ? '收起筛选' : '高级筛选' }}
+                        <FilterFilled v-if="showAdvanced" />
+                        <FilterOutlined v-if="!showAdvanced" />
                         <template #icon>
                             <component :is="showAdvanced ? 'UpOutlined' : 'DownOutlined'" />
                         </template>
@@ -45,7 +47,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { UpOutlined, DownOutlined } from '@ant-design/icons-vue'
+import { UpOutlined, DownOutlined, FilterOutlined, FilterFilled } from '@ant-design/icons-vue'
 import PictureList from '@/components/PictureList.vue'
 import PictureSearchForm from '@/components/PictureSearchForm.vue'
 import { getPictureVoPageWithCacheUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController'
