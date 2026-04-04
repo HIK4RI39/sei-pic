@@ -225,13 +225,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public long userRegister(String userAccount, String password, String checkPassword) {
-        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, password, checkPassword), ErrorCode.PARAMS_ERROR);
-        // 账号长度>=4
+        // 任何一个都不能为空
+        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, password, checkPassword), ErrorCode.PARAMS_ERROR, "账号密码不能为空!");
+        // 对账号密码做左右空格去除(trim)
+        userAccount = StrUtil.trim(userAccount);
+        password = StrUtil.trim(password);
+        checkPassword = StrUtil.trim(checkPassword);
+        // 账号长度>=4, 且不能包含非法字符
         ThrowUtils.throwIf(userAccount.length()<4, ErrorCode.PARAMS_ERROR);
-        // 密码长度>=4
+        ThrowUtils.throwIf(!userAccount.matches("^[a-zA-Z0-9.]+$"), ErrorCode.PARAMS_ERROR, "账号只能包含数字和字母以及.");
+        // 账号长度>=8, 且不能包含非法字符
         ThrowUtils.throwIf(password.length()<8, ErrorCode.PARAMS_ERROR);
-        ThrowUtils.throwIf(checkPassword.length()<8, ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(!password.equals(checkPassword), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(!password.matches("^[a-zA-Z0-9.]+$"), ErrorCode.PARAMS_ERROR, "密码只能包含数字和字母以及.");
+
 
         boolean exists = lambdaQuery().eq(User::getUserAccount, userAccount).exists();
         ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "账号已存在");
@@ -255,11 +262,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public UserVO login(String userAccount, String password, HttpServletRequest request) {
-        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, password), ErrorCode.PARAMS_ERROR);
+        // 任何一个都不能为空
+        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, password), ErrorCode.PARAMS_ERROR, "账号密码不能为空!");
+        // 对账号密码做左右空格去除(trim)
+        userAccount = StrUtil.trim(userAccount);
+        password = StrUtil.trim(password);
+        // 账号长度>=4, 且不能包含非法字符
         ThrowUtils.throwIf(userAccount.length()<4, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(!userAccount.matches("^[a-zA-Z0-9.]+$"), ErrorCode.PARAMS_ERROR, "账号只能包含数字和字母以及.");
+        // 账号长度>=8, 且不能包含非法字符
         ThrowUtils.throwIf(password.length()<8, ErrorCode.PARAMS_ERROR);
-        String encryptPassword = DigestUtils.md5DigestAsHex((userConfig.getSalt() + password).getBytes());
+        ThrowUtils.throwIf(!password.matches("^[a-zA-Z0-9.]+$"), ErrorCode.PARAMS_ERROR, "密码只能包含数字和字母以及.");
 
+        // 获得加密密码
+        String encryptPassword = DigestUtils.md5DigestAsHex((userConfig.getSalt() + password).getBytes());
         User user = lambdaQuery().eq(User::getUserAccount, userAccount).eq(User::getUserPassword, encryptPassword).one();
         ThrowUtils.throwIf(ObjUtil.isNull(user), ErrorCode.OPERATION_ERROR, "用户不存在或密码错误");
         // 记录登录态到session
@@ -301,17 +317,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public Boolean editUser(UserEditRequest userEditRequest, HttpServletRequest request) {
-        String userName = userEditRequest.getUserName();
-        String userProfile = userEditRequest.getUserProfile();
-        String oldPassword = userEditRequest.getOldPassword();
-        String newPassWord = userEditRequest.getNewPassWord();
-        String userAvatar = userEditRequest.getUserAvatar();
+        // 左右空格去除(trim)
+        String userName = StrUtil.trim(userEditRequest.getUserName());
+        String userProfile = StrUtil.trim(userEditRequest.getUserName());
+        String oldPassword = StrUtil.trim(userEditRequest.getUserName());
+        String newPassWord = StrUtil.trim(userEditRequest.getUserName());
+        String userAvatar = StrUtil.trim(userEditRequest.getUserName());
+        // 不能全部为空
         ThrowUtils.throwIf(StrUtil.isAllBlank(userName, userProfile, oldPassword, newPassWord, userAvatar), ErrorCode.PARAMS_ERROR);
-
-        UserVO loginUser = getLoginUser(request);
 
         // 编辑时间
         Date date = new Date();
+        UserVO loginUser = getLoginUser(request);
 
         /**
          * 根据密码查询出用户
@@ -320,10 +337,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             ThrowUtils.throwIf(oldPassword.equals(newPassWord), ErrorCode.PARAMS_ERROR, "新密码不能与旧密码相同");
             ThrowUtils.throwIf(newPassWord.length()<8, ErrorCode.PARAMS_ERROR, "新密码长度不能小于8");
             ThrowUtils.throwIf(newPassWord.length()>16, ErrorCode.PARAMS_ERROR, "新密码长度不能大于16");
-            // 新密码只能包含数字和字母以及.
             ThrowUtils.throwIf(!newPassWord.matches("^[a-zA-Z0-9.]+$"), ErrorCode.PARAMS_ERROR, "新密码只能包含数字和字母以及.");
-            ThrowUtils.throwIf(StrUtil.isBlank(oldPassword), ErrorCode.PARAMS_ERROR, "旧密码不能为空");
 
+            ThrowUtils.throwIf(StrUtil.isBlank(oldPassword), ErrorCode.PARAMS_ERROR, "旧密码不能为空");
+            ThrowUtils.throwIf(oldPassword.length()<8, ErrorCode.PARAMS_ERROR, "旧密码长度不能小于8");
+            ThrowUtils.throwIf(oldPassword.length()>16, ErrorCode.PARAMS_ERROR, "旧密码长度不能大于16");
+            ThrowUtils.throwIf(!oldPassword.matches("^[a-zA-Z0-9.]+$"), ErrorCode.PARAMS_ERROR, "旧密码只能包含数字和字母以及.");
+            // 得到加密后的旧密码
             String encryptPassword = getEncryptPassword(oldPassword);
             Long userId = loginUser.getId();
             User user = lambdaQuery().eq(User::getId, userId).eq(User::getUserPassword, encryptPassword).one();
