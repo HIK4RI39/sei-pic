@@ -280,7 +280,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
 
         Long id = spaceUserEditRequest.getId();
         // 仅查询同意加入的数据
-        SpaceUser oldSpaceUser = this.lambdaQuery().eq(SpaceUser::getUserId, id)
+        SpaceUser oldSpaceUser = this.lambdaQuery().eq(SpaceUser::getId, id)
                 .eq(SpaceUser::getConfirmStatus, SpaceUserConfirmEnum.AGREED.getValue()).one();
         ThrowUtils.throwIf(oldSpaceUser==null, ErrorCode.NOT_FOUND_ERROR, "成员不存在");
 

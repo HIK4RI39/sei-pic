@@ -107,6 +107,7 @@ public class SpaceController {
      * @return
      */
     @PostMapping("/analyze/user")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<List<SpaceUserAnalyzeResponse>> getSpaceUserAnalyze(@RequestBody SpaceUserAnalyzeRequest analyzeRequest, HttpServletRequest request) {
         List<SpaceUserAnalyzeResponse> responseList = spaceService.getSpaceUserAnalyze(analyzeRequest, request);
         return ResponseUtils.success(responseList);
@@ -119,6 +120,7 @@ public class SpaceController {
      * @return
      */
     @PostMapping("/analyze/size")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<List<SpaceSizeAnalyzeResponse>> getSpaceSizeAnalyze(@RequestBody SpaceSizeAnalyzeRequest analyzeRequest, HttpServletRequest request) {
         List<SpaceSizeAnalyzeResponse> responseList = spaceService.getSpaceSizeAnalyze(analyzeRequest, request);
         return ResponseUtils.success(responseList);
@@ -127,6 +129,7 @@ public class SpaceController {
 
 
     @PostMapping("/analyze/tag")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<List<SpaceTagAnalyzeResponse>> getSpaceTagAnalyze(@RequestBody SpaceTagAnalyzeRequest analyzeRequest, HttpServletRequest request) {
         List<SpaceTagAnalyzeResponse> responseList = spaceService.getSpaceTagAnalyze(analyzeRequest, request);
         return ResponseUtils.success(responseList);
@@ -139,6 +142,7 @@ public class SpaceController {
      * @return
      */
     @PostMapping("/analyze/category")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<List<SpaceCategoryAnalyzeResponse>> getSpaceCategoryAnalyze(@RequestBody SpaceCategoryAnalyzeRequest categoryAnalyzeRequest, HttpServletRequest request) {
         List<SpaceCategoryAnalyzeResponse> responseList = spaceService.getCategoryAnalyzeResponse(categoryAnalyzeRequest, request);
         return ResponseUtils.success(responseList);
@@ -151,6 +155,7 @@ public class SpaceController {
      * @return
      */
     @PostMapping("/analyze/usage")
+    @SaSpaceCheckPermission(value= SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<SpaceUsageAnalyzeResponse> getSpaceUsageAnalyze(
             @RequestBody SpaceUsageAnalyzeRequest analyzeRequest,
             HttpServletRequest request

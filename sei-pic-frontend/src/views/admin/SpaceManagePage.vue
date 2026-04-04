@@ -45,11 +45,13 @@
                 <template v-else-if="column.key === 'spaceType'">
                     <a-tag>{{ SPACE_TYPE_MAP[record.spaceType] }}</a-tag>
                 </template>
+                <!-- 用量 -->
                 <template v-else-if="column.key === 'usage'">
                     <div>数量：{{ record.totalCount }} / {{ record.maxCount }}</div>
                     <div>大小：{{ (record.totalSize / 1024 / 1024).toFixed(2) }} MB / {{ (record.maxSize / 1024 /
                         1024).toFixed(2) }} MB</div>
                 </template>
+                <!-- 创建时间 -->
                 <template v-else-if="column.key === 'createTime'">
                     {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
                 </template>

@@ -169,7 +169,7 @@ const handleSubmit = async () => {
         ...formData,
     })
     if (res.data.code === 0) {
-        message.success('添加成功')
+        message.success('已发送邀请')
         // 刷新数据
         fetchData()
     } else {

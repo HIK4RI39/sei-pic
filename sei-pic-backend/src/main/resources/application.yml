@@ -5,8 +5,7 @@ server:
 spring:
   profiles:
     # 默认开发模式，拉下代码直接跑
-    active: local
-#    active: prod
+    active: prod
   application:
     name: sei-pic-backend
   servlet:

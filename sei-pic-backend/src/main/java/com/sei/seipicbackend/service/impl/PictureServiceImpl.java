@@ -373,7 +373,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(spaceId==null || spaceId<=0, ErrorCode.PARAMS_ERROR, "非法的spaceId");
         // 空间鉴权
         UserVO loginUser = userService.getLoginUser(request);
-        spaceService.checkSpaceAuth(spaceId, loginUser);
+        boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_EDIT);
+        ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+//        spaceService.checkSpaceAuth(spaceId, loginUser);
+
+
         // 查询图片 (仅返回id和spaceId)
         List<Picture> pictureList = this.lambdaQuery().eq(Picture::getSpaceId, spaceId)
                 .select(Picture::getId, Picture::getSpaceId)
@@ -412,8 +416,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             userVO = user.beanToVo();
         }
 
-        // 审核未通过, 只能由本人或管理员查看
-        if (PictureReviewStatusEnum.PASS.getValue() != picture.getReviewStatus()) {
+        // 公共图库, 且 审核未通过, 只能由本人或管理员查看
+        if (picture.getSpaceId()==null && PictureReviewStatusEnum.PASS.getValue()!=picture.getReviewStatus()) {
             boolean hasPermission = this.isOwnerOrAdmin(picture, userVO);
             ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
         }
@@ -693,7 +697,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 上传到非公共图库, 需要鉴权
         if (newSpaceId!=null) {
             // 鉴权
-            spaceService.checkSpaceAuth(newSpaceId, loginUser);
+//            spaceService.checkSpaceAuth(newSpaceId, loginUser);
+            boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_UPLOAD);
+            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
 
             // 校验额度
             Space space = spaceService.getById(newSpaceId);

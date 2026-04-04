@@ -397,9 +397,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     public List<SpaceUserAnalyzeResponse> getSpaceUserAnalyze(SpaceUserAnalyzeRequest analyzeRequest, HttpServletRequest request) {
         Long spaceId = analyzeRequest.getSpaceId();
 
-        // 校验权限和查询参数
-        UserVO loginUser = userService.getLoginUser(request);
-        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
+//         校验权限和查询参数
+//        UserVO loginUser = userService.getLoginUser(request);
+//        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
 
         // 填写查询条件
         QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
@@ -444,9 +444,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     public List<SpaceSizeAnalyzeResponse> getSpaceSizeAnalyze(SpaceSizeAnalyzeRequest analyzeRequest, HttpServletRequest request) {
         Long spaceId = analyzeRequest.getSpaceId();
 
-        // 校验权限和查询参数
-        UserVO loginUser = userService.getLoginUser(request);
-        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
+//         校验权限和查询参数
+//        UserVO loginUser = userService.getLoginUser(request);
+//        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
 
         // 填写查询条件
         QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
@@ -480,8 +480,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         Long spaceId = analyzeRequest.getSpaceId();
 
         // 校验权限和查询参数
-        UserVO loginUser = userService.getLoginUser(request);
-        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
+//        UserVO loginUser = userService.getLoginUser(request);
+//        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
 
         // 填写查询条件
         QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
@@ -522,8 +522,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         Long spaceId = categoryAnalyzeRequest.getSpaceId();
 
         // 校验权限和查询参数
-        UserVO loginUser = userService.getLoginUser(request);
-        checkSpaceAnalyzeAuth(categoryAnalyzeRequest, loginUser);
+//        UserVO loginUser = userService.getLoginUser(request);
+//        checkSpaceAnalyzeAuth(categoryAnalyzeRequest, loginUser);
 
         // 填写查询条件
         QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
@@ -559,8 +559,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         boolean isQueryAll = analyzeRequest.isQueryAll();
 
         // 校验查询参数
-        UserVO loginUser = userService.getLoginUser(request);
-        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
+//        UserVO loginUser = userService.getLoginUser(request);
+//        checkSpaceAnalyzeAuth(analyzeRequest, loginUser);
 
         // 填写查询条件
         QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
