@@ -51,11 +51,7 @@ export default class PictureEditWebSocket {
    */
 
   connect() {
-    const DEV_BASE_URL = 'ws://localhost:8123'
-    const PROD_BASE_URL = 'ws://42.193.172.173'
-
-    const url = `${DEV_BASE_URL}/api/ws/picture/edit?pictureId=${this.pictureId}`
-    // const url = `${PROD_BASE_URL}/api/ws/picture/edit?pictureId=${this.pictureId}`
+    const url = `${import.meta.env.VITE_WS_URL}/api/ws/picture/edit?pictureId=${this.pictureId}`
     this.socket = new WebSocket(url)
 
     // 设置携带 cookie
