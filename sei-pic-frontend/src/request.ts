@@ -2,11 +2,8 @@ import { message } from 'ant-design-vue'
 import axios from 'axios'
 
 // 由vite配置转发/api到后端
-const DEV_BASE_URL = 'http://localhost:8123'
-const PROD_BASE_URL = 'http://42.193.172.173'
 const myAxios = axios.create({
-  baseURL: DEV_BASE_URL,
-  // baseURL: PROD_BASE_URL,
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   timeout: 5000,
   withCredentials: true,
 })
