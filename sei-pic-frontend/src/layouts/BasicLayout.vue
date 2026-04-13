@@ -1,18 +1,24 @@
 <template>
     <div id="basicLayout">
         <a-layout style="min-height: 100vh">
+            <!-- 导航栏 -->
             <a-layout-header class="header">
                 <GlobalHeader />
             </a-layout-header>
+            <!-- 侧边栏 -->
             <a-layout>
                 <GlobalSider class="sider" />
                 <a-layout-content class="content">
                     <router-view />
                 </a-layout-content>
             </a-layout>
+            <!-- footer -->
             <a-layout-footer class="footer">
-                <a href="https://github.com/HIK4RI39/sei-pic/commit/73308978597e2e056b2e9e5d600b0a0ef6eff958"
-                    target="_blank"> CopyRight @Sei </a>
+                <a href="https://github.com/HIK4RI39/sei-pic" target="_blank">CopyRight @Sei</a>
+                <span style="margin: 0 10px; color: #ccc;">|</span>
+                <span style="color: rgba(0, 0, 0, 0.45);">
+                    违法不良信息举报邮箱：ivlis2@163.com
+                </span>
             </a-layout-footer>
         </a-layout>
     </div>

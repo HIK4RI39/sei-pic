@@ -17,6 +17,8 @@ coverage
 *.local
 # 部署配置文件
 .env.production
+# 
+resume.vue
 
 
 /cypress/videos/

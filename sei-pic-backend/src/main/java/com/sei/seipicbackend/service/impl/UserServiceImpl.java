@@ -319,10 +319,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public Boolean editUser(UserEditRequest userEditRequest, HttpServletRequest request) {
         // 左右空格去除(trim)
         String userName = StrUtil.trim(userEditRequest.getUserName());
-        String userProfile = StrUtil.trim(userEditRequest.getUserName());
-        String oldPassword = StrUtil.trim(userEditRequest.getUserName());
-        String newPassWord = StrUtil.trim(userEditRequest.getUserName());
-        String userAvatar = StrUtil.trim(userEditRequest.getUserName());
+        String userProfile = StrUtil.trim(userEditRequest.getUserProfile());
+        String oldPassword = StrUtil.trim(userEditRequest.getOldPassword());
+        String newPassWord = StrUtil.trim(userEditRequest.getNewPassWord());
+        String userAvatar = StrUtil.trim(userEditRequest.getUserAvatar());
         // 不能全部为空
         ThrowUtils.throwIf(StrUtil.isAllBlank(userName, userProfile, oldPassword, newPassWord, userAvatar), ErrorCode.PARAMS_ERROR);
 

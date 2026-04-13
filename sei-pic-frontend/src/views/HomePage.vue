@@ -36,7 +36,8 @@
             </a-space>
         </div>
 
-        <PictureList :dataList="dataList" :loading="loading" />
+        <PictureList :dataList="dataList" :loading="loading"
+            @remove="(id) => dataList = dataList.filter(item => item.id !== id)" />
 
         <a-pagination style="text-align: right; margin-top: 20px" v-model:current="searchParams.current"
             :page-size-options="['5', '10', '20', '30']" v-model:pageSize="searchParams.pageSize" :total="total"
@@ -53,25 +54,14 @@ import PictureSearchForm from '@/components/PictureSearchForm.vue'
 import { getPictureVoPageWithCacheUsingPost, listPictureTagCategoryUsingGet } from '@/api/pictureController'
 import { PIC_REVIEW_STATUS_ENUM } from '@/constants/picture'
 
-
+/**
+ * 标签筛选点击事件（修改为单选逻辑）
+ */
 const handleTagChange = (tag: string, checked: boolean) => {
-    // 确保 tags 是个数组
-    const currentTags = [...(searchParams.tags ?? [])];
-
-    if (checked) {
-        currentTags.push(tag);
-    } else {
-        const index = currentTags.indexOf(tag);
-        if (index > -1) currentTags.splice(index, 1);
-    }
-
-    // 更新到响应式对象中
-    searchParams.tags = currentTags;
+    // 如果是选中状态，则将 tags 设为只包含该标签的数组；如果取消选中，则清空
+    searchParams.tags = checked ? [tag] : [];
     doSearch();
 };
-
-
-
 
 // 控制高级搜索显示
 const showAdvanced = ref(false)
@@ -93,7 +83,6 @@ const searchParams = reactive<API.PictureQueryRequest>({
 // 获取数据逻辑
 const fetchData = async () => {
     loading.value = true
-    const tagsArray = tagList.value.filter((_, index) => selectedTagList.value[index])
     const params: API.PictureQueryRequest = { ...searchParams }
 
     if (selectedCategory.value !== 'all' && selectedCategory.value !== '') {
@@ -117,7 +106,6 @@ const fetchData = async () => {
 
 // 响应高级搜索组件的回调
 const doAdvancedSearch = (advancedParams: API.PictureQueryRequest) => {
-    // 直接合并所有参数，包括那些不在 tag-bar 里的自定义 tags
     Object.assign(searchParams, advancedParams);
     doSearch();
 };
@@ -139,7 +127,6 @@ const onPageChange = (page: number, pageSize: number) => {
 const categoryList = ref<string[]>([])
 const selectedCategory = ref<string>('all')
 const tagList = ref<string[]>([])
-const selectedTagList = ref<boolean[]>([])
 
 const getTagCategoryOptions = async () => {
     const res = await listPictureTagCategoryUsingGet()
@@ -162,32 +149,26 @@ onMounted(async () => {
     margin-bottom: 16px;
 }
 
-/* 搜索区域外层，负责居中 */
 .search-section {
     display: flex;
     justify-content: center;
     margin-bottom: 16px;
 }
 
-/* 搜索条内部，负责单行排列 */
 .search-bar {
     display: flex;
     align-items: center;
     width: 100%;
     max-width: 600px;
-    /* 适当调大宽度以容纳按钮 */
 }
 
-/* 输入框占据主要宽度 */
 .search-bar :deep(.ant-input-search) {
     flex: 1;
 }
 
-/* 高级筛选按钮样式，紧跟在搜索框后面 */
 .advanced-filter-btn {
     margin-left: 8px;
     white-space: nowrap;
-    /* 防止文字换行 */
 }
 
 .advanced-search-panel {

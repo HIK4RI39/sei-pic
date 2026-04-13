@@ -79,7 +79,7 @@
                             <a-space>
                                 <!-- 更新 -->
                                 <a-col>
-                                    <a-button type="primary" ghost>更新</a-button>
+                                    <a-button type="primary" ghost @click="openUpdateModal(record)">更新</a-button>
                                 </a-col>
                                 <!-- 删除 -->
                                 <a-col>
@@ -91,18 +91,21 @@
                 </template>
             </template>
         </a-table>
-
+        <!-- 分页条 -->
         <div class="table-pagination">
             <a-pagination v-model="searchParams.current" :total="total" v-model:page-size="searchParams.pageSize"
                 :pageSizeOptions="['5', '10', '15', '20', '30']" show-size-changer show-quick-jumper
                 @change="handlePageChange" />
         </div>
+        <!-- 用户更新modal -->
+        <UserUpdateModal v-model:visible="updateModalVisible" :oldData="currentRow" @success="fetchData" />
 
     </div>
 </template>
 
 <script lang="ts" setup>
 import { deleteUserByIdUsingPost, listUserVoByPageUsingPost } from '@/api/userController';
+import UserUpdateModal from '@/components/UserUpdateModal.vue';
 import { message } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import { computed } from 'vue';
@@ -245,6 +248,20 @@ const doDelete = async (id: number) => {
         message.error("删除失败," + e.message);
     }
 }
+
+
+// #region 用户更新弹窗
+// 2. 定义弹窗控制状态
+const updateModalVisible = ref(false);
+const currentRow = ref<API.UserVO>({});
+
+// 3. 定义打开弹窗的方法
+const openUpdateModal = (record: API.UserVO) => {
+    currentRow.value = record;
+    updateModalVisible.value = true;
+};
+
+// #endregion
 
 </script>
 

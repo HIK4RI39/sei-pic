@@ -2,9 +2,11 @@
     <div id="spaceManagePage">
         <h2>空间管理</h2>
         <a-form :model="searchParams" layout="inline" autocomplete="off" @finish="doSearch">
+            <!-- 空间名称 -->
             <a-form-item label="空间名称" name="spaceName">
                 <a-input v-model:value="searchParams.spaceName" placeholder="输入空间名称" allow-clear />
             </a-form-item>
+            <!-- 空间级别 -->
             <a-form-item label="空间级别" name="spaceLevel">
                 <a-select v-model:value="searchParams.spaceLevel" style="min-width: 120px" placeholder="选择级别"
                     allow-clear :options="SPACE_LEVEL_OPTIONS" />
@@ -36,10 +38,21 @@
 
         <a-table :columns="columns" :data-source="dataList" :pagination="false">
             <template #bodyCell="{ column, record }">
+                <!-- 空间级别 -->
                 <template v-if="column.key === 'spaceLevel'">
                     <a-tag
                         :color="record.spaceLevel === SPACE_LEVEL_ENUM.COMMON ? 'blue' : record.spaceLevel === SPACE_LEVEL_ENUM.PROFESSIONAL ? 'gold' : 'purple'">
                         {{ SPACE_LEVEL_MAP[record.spaceLevel] }}</a-tag>
+                </template>
+                <!-- 空间名称 -->
+                <template v-else-if="column.dataIndex === 'spaceName'">
+                    <a-tooltip placement="topLeft">
+                        <template #title>{{ record.spaceName }}</template>
+                        <router-link :to="`/space/${record.id}`"
+                            style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ record.spaceName }}
+                        </router-link>
+                    </a-tooltip>
                 </template>
                 <!-- 空间类别 -->
                 <template v-else-if="column.key === 'spaceType'">

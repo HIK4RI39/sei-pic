@@ -51,7 +51,14 @@ export default class PictureEditWebSocket {
    */
 
   connect() {
-    const url = `${import.meta.env.VITE_WS_URL}/api/ws/picture/edit?pictureId=${this.pictureId}`
+    // const url = `${import.meta.env.VITE_WS_URL}/api/ws/picture/edit?pictureId=${this.pictureId}`
+
+    // 动态获取当前域名和协议 (自动匹配 ws 或 wss)
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = window.location.host // 包含域名和端口
+    // 最终拼接结果：ws://seipic.top/api/ws/picture/edit...
+    const url = `${protocol}//${host}/api/ws/picture/edit?pictureId=${this.pictureId}`
+
     this.socket = new WebSocket(url)
 
     // 设置携带 cookie

@@ -52,7 +52,8 @@
 
     <!-- 图片列表 -->
     <picture-list :dataList="dataList" :loading="loading" :showOp="true" :canEdit="canEditPicture"
-        :canDelete="canDeletePicture" :onReload="fetchData" />
+        :canDelete="canDeletePicture" :onReload="fetchData"
+        @remove="(id) => dataList = dataList.filter(item => item.id !== id)" />
     <a-pagination style="text-align: right" v-model:current="searchParams.current"
         :page-size-options="['5', '10', '15', '20', '30']" v-model:pageSize="searchParams.pageSize" :total="total"
         :show-total="() => `图片总数 ${total} / ${space.maxCount}`" @change="onPageChange" />
@@ -332,23 +333,36 @@ const handleCancel = () => {
  * 提交创建图片表单
  */
 const uploadPictureSubmit = async (values: any) => {
-    // 如果是创建模式，currentPicture.value 应该由上传组件填充
-    if (!currentPicture.value) {
+    if (!currentPicture.value || !currentPicture.value.id) {
         message.error("请先上传图片");
         return;
     }
 
-    const res = await editPictureUsingPost({
+    // 合并表单数据进行提交
+    const updateData = {
+        ...values,
+        ...pictureForm,
         id: currentPicture.value.id,
         spaceId: props.id,
-        ...values,
-        ...pictureForm
-    });
+    };
 
-    if (res.data.code === 0 && res.data.data) {
+    const res = await editPictureUsingPost(updateData);
+
+    if (res.data.code === 0) {
         message.success("操作成功");
+
+        // 修复点：将最新的数据合并到 currentPicture 中并插入列表
+        // 这样可以确保列表显示的是用户刚刚填写的名称、分类等信息
+        const newPictureItem = {
+            ...currentPicture.value,
+            ...updateData
+        };
+
+        dataList.value.unshift(newPictureItem);
+        total.value += 1;
+
         handleCancel();
-        fetchData(); // 刷新列表
+        // fetchData(); // 刷新列表
     } else {
         message.error("操作失败，" + res.data.data.message);
     }

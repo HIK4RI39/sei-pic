@@ -38,7 +38,13 @@
         <!-- 分享弹窗 -->
         <ShareModal ref="shareModalRef" :link="shareLink" />
         <!-- 详情弹窗 -->
-        <PictureDetailModal v-model:visible="detailVisible" :id="currentId" />
+        <!-- <PictureDetailModal v-model:visible="detailVisible" :id="currentId" @done="() => emit('remove', currentId)" /> -->
+        <PictureDetailModal v-model:visible="detailVisible" :id="currentId" @done="() => {
+            const index = props.dataList.findIndex(item => item.id === currentId);
+            if (index > -1) {
+                props.dataList.splice(index, 1);
+            }
+        }" />
     </div>
 </template>
 
@@ -56,6 +62,11 @@ import ShareModal from '@/components/ShareModal.vue'
 import { createVNode, ref } from 'vue'
 import { deletePictureByIdUsingPost } from '@/api/pictureController'
 import PictureDetailModal from './picture/PictureDetailModal.vue'
+
+
+// #region emits
+const emit = defineEmits(['remove']) // 插入在 props 定义附近
+// #endregion
 
 // #region 图片详情弹窗
 const detailVisible = ref(false);
@@ -126,7 +137,7 @@ const doDelete = async (picture, e) => {
         okText: '确认删除',
         okType: 'danger', // 按钮颜色变为红色，提醒这是危险操作
         cancelText: '取消',
-        // 点击确认后的回调
+        // 点击确认后的回调 (不需要重新拉取后端)
         async onOk() {
             const id = picture.id
             if (!id) {

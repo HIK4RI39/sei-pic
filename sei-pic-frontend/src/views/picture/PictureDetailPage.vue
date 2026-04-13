@@ -88,8 +88,9 @@ const doDelete = async () => {
 const doDownload = () => {
     // 下载原图, 从format拿到后缀, 自行拼接url
     let compressedUrl = picture.value.url
+    if (!compressedUrl) return
     let lastDotIndex = compressedUrl?.lastIndexOf(".")
-    let url = compressedUrl?.slice(0, lastDotIndex + 1) + picture.value.picFormat
+    let url = compressedUrl?.slice(0, lastDotIndex + 1) + picture.value.picFormat.toLowerCase()
     downloadImage(url)
 }
 
